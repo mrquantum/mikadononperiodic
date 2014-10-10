@@ -41,8 +41,15 @@ double inbox(double x,double boxsize){
 return x;
 }
   
-int main ()
+int main (int argc,char **argv)
 {
+  
+if(argc>1){
+  int SEED=stoi(argv[1]);
+  my_random::set_seed(SEED);
+}  
+  
+  
 int NumberMikado=100;
 double LStick=.25; //Stick Length
 double k=1;
@@ -155,8 +162,8 @@ s0=-gradE;
 //Here comes the conjugate gradient
 
 ofstream XYfile("test.txt");
-
-for(int i=0;i<10;i++)
+int Nit=100;
+for(int i=0;i<Nit;i++)
 {
   for(int k=0;k<XY.size();k++)
   {
