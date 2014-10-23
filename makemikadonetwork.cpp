@@ -209,7 +209,9 @@ return ELONSTICK;
 }
 
 //With the points per stick, we can now make nodes and springs.
-void SpringsAndNodes(const vector<elonstick> &ELONSTICK,const vector<stick> &mikorig, vector<spring> &springlist, vector<node> &nodes){
+void SpringsAndNodes(const vector<elonstick> &ELONSTICK,const vector<stick> &mikorig, vector<spring> &springlist, 
+		     vector<node> &nodes,
+		     double rlenshort, double rlenlong,double k1,double k2){
 for(int i=0;i<ELONSTICK.size();i++){
  int sticki=ELONSTICK[i].sticki;
  vector<int> nodesonsticki=ELONSTICK[i].nr;
@@ -224,6 +226,17 @@ for(int i=0;i<ELONSTICK.size();i++){
     x2=CURRENTSTICK.x+posonsticki[j+1]*cos(CURRENTSTICK.th);//and the position of the adjacent one
     y1=CURRENTSTICK.y+posonsticki[j]*sin(CURRENTSTICK.th);
     y2=CURRENTSTICK.y+posonsticki[j+1]*sin(CURRENTSTICK.th);
+    
+    if(sticki%2==0){
+      SPRING.rlen=rlenshort;
+      SPRING.k=k1;
+    }
+      else{
+	SPRING.rlen=rlenlong;
+	SPRING.k=k2;
+      }
+      SPRING.sticki=sticki;
+    
     if((x1<1 && x1>0)&&(x2>0&&x2<1)){ //Check if crossed wlr or wud wall. 
       SPRING.wlr=0;
       }

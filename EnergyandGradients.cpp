@@ -4,12 +4,75 @@
 #include <eigen3/Eigen/Core>
 #include <eigen3/Eigen/LU>
 #include <vector>
+#include "EnergyandGradients.h"
+#include<iostream>
 using namespace Eigen;
 using namespace std;
 const double pi=4.0*atan(1.0);
    
+double distance(const Eigen::VectorXd &XY,int one, int two)
+{
+  double l;
+  int num=XY.size()/2;
+  l=sqrt(pow(XY(two)-XY(one),2)+pow(XY(two+num)-XY(one+num),2));
+  return l;
+}
   
-double Energynetwork(const vector<spring> &springlist, const VectorXd &XY,double k,double L)
+double dldxi(const Eigen::VectorXd &XY,int one, int two)
+{
+   double deri;
+   deri=-1*(1/distance(XY,one,two))*(XY(two)-XY(one));
+return deri;
+}  
+  
+double dldyi(const Eigen::VectorXd &XY,int one,int two)
+{
+  double deri;
+  int num=XY.size()/2;
+  deri=-1*(1/distance(XY,one,two))*(XY(two+num)-XY(one+num));
+return deri;
+}
+
+VectorXd gradL(const Eigen::VectorXd &XY,int one,int two)
+{
+ VectorXd grad(XY.size());
+ for(int i=0;i<XY.size();i++){
+     grad(i)=0;
+ }
+ 
+ int num=XY.size()/2;
+ double x1=XY(one);
+ double x2=XY(two);
+ double y1=XY(one+num);
+ double y2=XY(two+num);
+ 
+    grad(one)=grad(one)+(1/distance(XY,one,two))*(-(x2-x1));
+    grad(two)=grad(two)+(1/distance(XY,one,two))*(x2-x1);
+    grad(one+num)=grad(one+num)+(1/distance(XY,one,two))*(-(y2-y1));
+    grad(two+num)=grad(two+num)+(1/distance(XY,one,two))*(y2-y1);
+return grad;
+}
+
+
+  
+double angle(const Eigen::VectorXd &XY,int one,int two,int three)
+{
+ int num=XY.size()/2;
+ double x1=XY(one);
+ double x2=XY(two);
+ double x3=XY(three);
+ double y1=XY(one+num);
+ double y2=XY(two+num);
+ double y3=XY(three+num);
+ 
+ double numerator=x2*x3-x2*x2-x1*x3+x1*x2+y2*y3-y2*y2-y1*y3+y1*y2;
+ double denumerator=distance(XY,one,two)*distance(XY,two,three);
+ double th=acos(numerator/denumerator);
+ return th;
+}
+  
+    
+double Energynetwork(const vector<spring> &springlist, const VectorXd &XY,const vector<anchor> &Anchor)
 {
   VectorXd X(XY.size()/2);
   VectorXd Y(XY.size()/2);
@@ -18,65 +81,168 @@ double Energynetwork(const vector<spring> &springlist, const VectorXd &XY,double
   double Energy=0;
     for(int i=0;i<springlist.size();i++){
       Energy=Energy+
-      0.5*k*pow(sqrt(pow(X(springlist[i].one)-(X(springlist[i].two)+springlist[i].wlr),2)
-      +pow(Y(springlist[i].one)-(Y(springlist[i].two)+springlist[i].wud),2))-L,2);
+      0.5*springlist[i].k*pow(sqrt(pow(X(springlist[i].one)-(X(springlist[i].two)+springlist[i].wlr),2)
+      +pow(Y(springlist[i].one)-(Y(springlist[i].two)+springlist[i].wud),2))-springlist[i].rlen,2);
     }
+//  for(int j=0;j<Anchor.size();j++){
+//   Energy=Energy+0.5*k*pow(sqrt(pow(X(Anchor[j].label)-Anchor[j].xpos,2)+pow(Y(Anchor[j].label)-Anchor[j].ypos,2))-L,2);
+//  }
   return Energy;  
 }
+
+double Ebend(const vector<triplet> &tripl,const VectorXd &XY)  
+{
+ double Energy=0;
+ double kappa=1;
+ int num=XY.size()/2;
+ int one,two,three;;
+ double theta;
+  for(int i=0;i<tripl.size();i++)
+    {
+      one=tripl[i].one;
+      two=tripl[i].two;
+      three=tripl[i].three;
+      theta=angle(XY,one,two,three);
+      Energy=Energy+.5*(kappa/(distance(XY,one,two)+distance(XY,two,three)))*pow((theta),2);
+    }
+ return Energy; 
+}
   
-  
-VectorXd Gradient(const vector<spring> &springlist,const VectorXd &XY,double k, double L)
+
+
+VectorXd Gradient(const vector<spring> &springlist,const VectorXd &XY,const vector<anchor> &Anchor)
 {
   VectorXd gradE(XY.size());
   for(int i=0;i<gradE.size();i++){
     gradE(i)=0;
   }
-  
   VectorXd X(XY.size()/2);
   VectorXd Y(XY.size()/2);
   X=XY.head(XY.size()/2);
   Y=XY.tail(XY.size()/2);
   
 for(int i=0;i<springlist.size();i++){
- gradE(springlist[i].one)=gradE(springlist[i].one)+
- k*(sqrt(pow(X(springlist[i].one)-(X(springlist[i].two)+springlist[i].wlr),2)
- +pow(Y(springlist[i].one)-(Y(springlist[i].two)+springlist[i].wud),2))-L)*
- (X(springlist[i].one)-(X(springlist[i].two)+springlist[i].wlr))/
- sqrt(pow(X(springlist[i].one)-(X(springlist[i].two)+springlist[i].wlr),2)
- +pow(Y(springlist[i].one)-(Y(springlist[i].two)+springlist[i].wud),2));
+    int one=springlist[i].one;
+    int two=springlist[i].two;
+    int num=XY.size()/2;
+ gradE(one)=gradE(one)+
+ springlist[i].k*(sqrt(pow(X(one)-(X(two)+springlist[i].wlr),2)
+ +pow(Y(one)-(Y(two)+springlist[i].wud),2))-springlist[i].rlen)*
+ (X(one)-(X(two)+springlist[i].wlr))/
+ sqrt(pow(X(one)-(X(two)+springlist[i].wlr),2)
+ +pow(Y(one)-(Y(two)+springlist[i].wud),2));
  
- 
- gradE(springlist[i].two)=gradE(springlist[i].two)-
- k*(sqrt(pow(X(springlist[i].one)-(X(springlist[i].two)+springlist[i].wlr),2)
- +pow(Y(springlist[i].one)-(Y(springlist[i].two)+springlist[i].wud),2))-L)*
- (X(springlist[i].one)-(X(springlist[i].two)+springlist[i].wlr))/
- sqrt(pow(X(springlist[i].one)-(X(springlist[i].two)+springlist[i].wlr),2)
- +pow(Y(springlist[i].one)-(Y(springlist[i].two)+springlist[i].wud),2));
+ gradE(two)=gradE(two)-
+ springlist[i].k*(sqrt(pow(X(one)-(X(two)+springlist[i].wlr),2)
+ +pow(Y(one)-(Y(two)+springlist[i].wud),2))-springlist[i].rlen)*
+ (X(one)-(X(two)+springlist[i].wlr))/
+ sqrt(pow(X(one)-(X(two)+springlist[i].wlr),2)
+ +pow(Y(one)-(Y(two)+springlist[i].wud),2));
 
+ gradE(one+num)=gradE(one+num)+
+  springlist[i].k*(sqrt(pow(X(one)-(X(two)+springlist[i].wlr),2)
+ +pow(Y(one)-(Y(two)+springlist[i].wud),2))-springlist[i].rlen)*
+ (Y(one)-(Y(two)+springlist[i].wud))/
+ sqrt(pow(X(one)-(X(two)+springlist[i].wlr),2)
+ +pow(Y(one)-(Y(two)+springlist[i].wud),2));
  
- gradE(springlist[i].one+X.size())=gradE(springlist[i].one+X.size())+
-  k*(sqrt(pow(X(springlist[i].one)-(X(springlist[i].two)+springlist[i].wlr),2)
- +pow(Y(springlist[i].one)-(Y(springlist[i].two)+springlist[i].wud),2))-L)*
- (Y(springlist[i].one)-(Y(springlist[i].two)+springlist[i].wud))/
- sqrt(pow(X(springlist[i].one)-(X(springlist[i].two)+springlist[i].wlr),2)
- +pow(Y(springlist[i].one)-(Y(springlist[i].two)+springlist[i].wud),2));
- 
- 
-  gradE(springlist[i].two+X.size())=gradE(springlist[i].two+X.size())-
-  k*(sqrt(pow(X(springlist[i].one)-(X(springlist[i].two)+springlist[i].wlr),2)
- +pow(Y(springlist[i].one)-(Y(springlist[i].two)+springlist[i].wud),2))-L)*
- (Y(springlist[i].one)-(Y(springlist[i].two)+springlist[i].wud))/
- sqrt(pow(X(springlist[i].one)-(X(springlist[i].two)+springlist[i].wlr),2)
- +pow(Y(springlist[i].one)-(Y(springlist[i].two)+springlist[i].wud),2));
+  gradE(two+num)=gradE(two+num)-
+  springlist[i].k*(sqrt(pow(X(one)-(X(two)+springlist[i].wlr),2)
+ +pow(Y(one)-(Y(two)+springlist[i].wud),2))-springlist[i].rlen)*
+ (Y(one)-(Y(two)+springlist[i].wud))/
+ sqrt(pow(X(one)-(X(two)+springlist[i].wlr),2)
+ +pow(Y(one)-(Y(two)+springlist[i].wud),2));
 }
-
 return gradE;  
 }  
 
 
-double dEda(const VectorXd &XY,const VectorXd &s0,const vector<spring> &springlist,double k,double L) 
+VectorXd gradEbend(const vector<triplet> &tripl,const Eigen::VectorXd &XY)
+{
+  VectorXd grad(XY.size());
+  VectorXd firstpart(grad.size());
+  VectorXd secondpart(grad.size());
+
+  //Initiate the gradient with zero
+  for(int i=0;i<grad.size();i++){
+      grad(i)=0;
+      firstpart(i)=0;
+      secondpart(i)=0;
+  }  
+
+  int num=grad.size()/2;
+  double kappa=1;
+  double numerator,denumerator;
+  double c; //c=cos(theta)
+  //add the first term of the gradient arccos(...)^2*grad(1/l12+l23)
+  for(int i=0;i<tripl.size();i++)
+  {
+    int one=tripl[i].one;
+    int two=tripl[i].two;
+    int three=tripl[i].three;
+    numerator=XY(two)*XY(three)-pow(XY(two),2)-XY(one)*XY(three)+XY(one)*XY(two)+
+		XY(two+num)*XY(three+num)-pow(XY(two+num),2)-XY(one+num)*XY(three+num)+
+		XY(one+num)*XY(two+num);
+    denumerator=distance(XY,one,two)*distance(XY,two,three); 
+
+   c=numerator/denumerator;
+   if(c>1) c=1;
+   if(c<-1) c=-1;
+   firstpart=firstpart+pow(acos(c),2)*(-1/pow((distance(XY,one,two)+distance(XY,two,three)),2))*
+        (gradL(XY,one,two)+gradL(XY,two,three));
+   } 
+  
+  //now the second part = 1/(l1+l2) * grad theta^2;
+  for(int i=0;i<tripl.size();i++){
+   int one=tripl[i].one;
+   int two=tripl[i].two;
+   int three=tripl[i].three;
+   numerator=XY(two)*XY(three)-pow(XY(two),2)-XY(one)*XY(three)+XY(one)*XY(two)+
+                XY(two+num)*XY(three+num)-pow(XY(two+num),2)-XY(one+num)*XY(three+num)+
+                XY(one+num)*XY(two+num);
+   denumerator=distance(XY,one,two)*distance(XY,two,three); 
+   
+   //This is the argument of the arccos. Arccos(c)=arccos(cos(theta))=theta --> c=cos(theta)
+   double c=numerator/denumerator;
+   if(c>1) c=1;
+   if(c<-1) c=-1;
+   //This is the sin(theta);
+   double s=sqrt(1-c*c);
+   if(s<0.0001) s=0.0001;
+   
+   VectorXd GRADc(secondpart.size());
+   VectorXd GRADnumerator(secondpart.size());
+   VectorXd GRADdenumerator(secondpart.size());
+   
+   for(int j=0;j<GRADnumerator.size();j++){
+       GRADnumerator(j)=0;
+       GRADdenumerator(j)=0;
+    }
+   GRADnumerator(one)=(XY(two)-XY(three));
+   GRADnumerator(two)=(XY(three)-2*XY(two)+XY(one));
+   GRADnumerator(three)=(XY(two)-XY(one));
+   GRADnumerator(one+num)=(XY(two+num)-XY(three+num));
+   GRADnumerator(two+num)=(XY(three+num)-2*XY(two+num)+XY(one+num));
+   GRADnumerator(three+num)=(XY(two+num)-XY(one+num));
+
+   GRADdenumerator=distance(XY,two,three)*gradL(XY,one,two)+distance(XY,one,two)*gradL(XY,one,two);
+   GRADc=(denumerator*GRADnumerator-numerator*GRADdenumerator)/(denumerator*denumerator);
+  
+   secondpart=secondpart+
+   (1/(distance(XY,one,two)+distance(XY,two,three)))*
+   (2*acos(c)*(-1/s))*GRADc;
+  
+  }
+  grad=.5*kappa*(firstpart+secondpart);
+   return grad; 
+}
+
+
+
+double dEda(const VectorXd &XY,const vector<anchor> &Anchor,const VectorXd &s0,const vector<spring> &springlist)
 {  
-  double dEda=s0.dot(Gradient(springlist,XY,k,L));
-  return dEda;
+    double out;
+    out=s0.dot(Gradient(springlist,XY,Anchor));
+    return out;  
 }
 
