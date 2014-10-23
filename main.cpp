@@ -51,7 +51,7 @@ if(argc>1){
 }  
   
   
-int NumberMikado=200;
+int NumberMikado=50;
 double LStick=.24; //Stick Length
 double k1=100;
 double k2=1;
@@ -173,6 +173,39 @@ for(int i=1;i<singleNodes.size(); i++){
 }
 singleNodes[0].number=0;
 
+
+
+//**************MAKE HERE THE PAIR OF SPRINGS
+
+//springpairs is an vector, coding a triplet in each row: 
+//springpairs[i][1]= ith triplet first spring
+//springpairs[i][2] ith triplet second spring. 
+//springpairs[i][3] ith triplet mikado nr.
+//the labels for the springs are the indexnumbers of coding the
+//springs in the springslist.
+
+vector<vector<int>> springpairs(0);
+for(int i=0;i<springlist.size()-1;i++){
+    if(springlist[i].sticki==springlist[i+1].sticki){
+        vector<int> pair(3);
+        pair[0]=i;
+        pair[1]=i+1;
+        pair[2]=springlist[i].sticki;
+        springpairs.push_back(pair);
+    }   
+}
+for(int i=0;i<springpairs.size();i++){
+    cout<<springpairs[i][0]<<"  "<<springpairs[i][1]<<"  "<<springpairs[i][2]<<"  "<<i<<endl;
+}
+
+for(int i=0;i<springlist.size();i++){
+ cout<<springlist[i].one<<"  "<<springlist[i].two<<"  "<<i<<endl;   
+    
+}
+
+
+
+//********************
 
 //The xy positions
 VectorXd X(singleNodes.size()),Y(singleNodes.size());
@@ -303,7 +336,7 @@ FILE *fp2=fopen("nodes.txt","w");
  fclose(fp2);
 FILE *fp3 = fopen("springs.txt","w");
 for(int i=0;i<springlist.size();i++){
-  fprintf(fp3,"%d \t %d \t %d \t %d \t %1.8f \t %1.8f \n",springlist[i].one,springlist[i].two,springlist[i].wlr,springlist[i].wud,springlist[i].rlen, springlist[i].k);
+  fprintf(fp3,"%d \t %d \t %d \t %d \t %1.8f \t %1.8f \t %d\n",springlist[i].one,springlist[i].two,springlist[i].wlr,springlist[i].wud,springlist[i].rlen, springlist[i].k , springlist[i].sticki);
  }
  fclose(fp3);
 FILE *fp4=fopen("mikado1.txt","w");
