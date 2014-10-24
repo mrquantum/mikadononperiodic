@@ -14,9 +14,10 @@ double distance(const Eigen::VectorXd &XY,int one, int two);
 double dldxi(const Eigen::VectorXd &XY,int one, int two);
 double dldyi(const Eigen::VectorXd &XY,int one,int two);
 Eigen::VectorXd gradL(const Eigen::VectorXd &XY,int one,int two);
-double angle(const Eigen::VectorXd &XY,int one,int two,int three);
+double distance1(const Eigen::VectorXd &XY,const double x1, const double y1, const double x2,const double y2);
 double Energynetwork(const std::vector<spring> &springlist, const Eigen::VectorXd &XY,const std::vector<anchor> &Anchor);
-double Ebend(const std::vector<triplet> &tripl,const Eigen::VectorXd &XY); 
+double Ebend(const std::vector<std::vector<int>> &springpairs,const std::vector<spring> &springlist,const Eigen::VectorXd &XY);
+
 Eigen::VectorXd Gradient(const std::vector<spring> &springlist,const Eigen::VectorXd &XY,
 			 const std::vector<anchor> &Anchor);
 Eigen::VectorXd gradEbend(const std::vector<triplet> &tripl,const Eigen::VectorXd &XY);

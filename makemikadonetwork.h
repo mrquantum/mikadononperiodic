@@ -37,10 +37,7 @@ struct triplet{
   int one, two, three, sticki;
 };
 
-struct springpair{
- // labels the index from the list of springs
-    int spring1, spring2, nrstick;
-};
+
 
 std::vector<stick> make_sticks(int N);
 std::vector<stick> make_ghost_lr( const std::vector<stick> &m, double LStick, int NumberMikado);

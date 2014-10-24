@@ -204,7 +204,6 @@ for(int i=0;i<springlist.size();i++){
 }
 
 
-
 //********************
 
 //The xy positions
@@ -230,8 +229,6 @@ XY<<X,
     Y;
 
 double Energy=Energynetwork(springlist,XY,Anchor);
-
-
 
 
 //*********************************************************************************
@@ -280,7 +277,6 @@ for(int i=0;i<Nit;i++)
 	tempspring.wud=-1;
       }
     newsprings[k]=tempspring;
-  
   }
   
   for(int j=0;j<newsprings.size();j++){ //write the newsprings to a file [row wlr ---------- y wud ------]
@@ -322,7 +318,6 @@ XY=XYn;
 
 XYfile.close();
 springfile.close();
-
 
 FILE *fp = fopen("mikado.txt","w");
   for(int i=0;i<m.size();i++){

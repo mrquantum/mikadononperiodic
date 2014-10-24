@@ -51,26 +51,7 @@ VectorXd gradL(const Eigen::VectorXd &XY,int one,int two)
     grad(one+num)=grad(one+num)+(1/distance(XY,one,two))*(-(y2-y1));
     grad(two+num)=grad(two+num)+(1/distance(XY,one,two))*(y2-y1);
 return grad;
-}
-
-
-  
-double angle(const Eigen::VectorXd &XY,int one,int two,int three)
-{
- int num=XY.size()/2;
- double x1=XY(one);
- double x2=XY(two);
- double x3=XY(three);
- double y1=XY(one+num);
- double y2=XY(two+num);
- double y3=XY(three+num);
- 
- double numerator=x2*x3-x2*x2-x1*x3+x1*x2+y2*y3-y2*y2-y1*y3+y1*y2;
- double denumerator=distance(XY,one,two)*distance(XY,two,three);
- double th=acos(numerator/denumerator);
- return th;
-}
-  
+}  
     
 double Energynetwork(const vector<spring> &springlist, const VectorXd &XY,const vector<anchor> &Anchor)
 {
@@ -90,21 +71,45 @@ double Energynetwork(const vector<spring> &springlist, const VectorXd &XY,const 
   return Energy;  
 }
 
-double Ebend(const vector<triplet> &tripl,const VectorXd &XY)  
+double distance1(const VectorXd &XY,const double x1, const double y1, const double x2,const double y2)
+{
+ double dist=sqrt(pow((x2-x1),2)+pow((y2-y1),2));
+ return dist;
+}
+
+
+
+
+double Ebend(const vector<vector<int>> &springpairs,
+             const vector<spring> &springlist,
+             const VectorXd &XY)  
 {
  double Energy=0;
  double kappa=1;
  int num=XY.size()/2;
- int one,two,three;;
- double theta;
-  for(int i=0;i<tripl.size();i++)
-    {
-      one=tripl[i].one;
-      two=tripl[i].two;
-      three=tripl[i].three;
-      theta=angle(XY,one,two,three);
-      Energy=Energy+.5*(kappa/(distance(XY,one,two)+distance(XY,two,three)))*pow((theta),2);
-    }
+ 
+ for(int i=0;i<springpairs.size();i++){
+ int springone=springpairs[i][0];
+ int springtwo=springpairs[i][1];
+ int coordNRone=springlist[springone].one;
+ int coordNRtwo=springlist[springone].two;
+ int coordNRthree=springlist[springtwo].two;
+ 
+ double x1=XY(coordNRone);
+ double y1=XY(coordNRone+num);
+ double x2=XY(coordNRtwo);
+ double y2=XY(coordNRtwo+num);
+ double x3=XY(coordNRthree);
+ double y3=XY(coordNRthree+num);
+ 
+ double c=x2*x3-x2*x2-x1*x3+x1*x2+y2*y3-y2*y2-y1*y3+y1*y2; //cos theta
+ if(c<-1) c=-1;
+ if(c>1) c=1;
+ 
+ Energy=Energy+
+    (0.5*kappa/(distance1(XY,x1,y1,x2,y2)+distance1(XY,x2,y2,x3,y3)))*pow(acos(c),2);
+ }
+ 
  return Energy; 
 }
   
