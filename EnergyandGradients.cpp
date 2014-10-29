@@ -71,7 +71,7 @@ double Energynetwork(const vector<spring> &springlist, const VectorXd &XY,const 
   return Energy;  
 }
 
-double distance1(const VectorXd &XY,const double x1, const double y1, const double x2,const double y2)
+double distance1(const double x1, const double y1, const double x2,const double y2)
 {
  double dist=sqrt(pow((x2-x1),2)+pow((y2-y1),2));
  return dist;
@@ -91,25 +91,51 @@ double Ebend(const vector<vector<int>> &springpairs,
  for(int i=0;i<springpairs.size();i++){
  int springone=springpairs[i][0];
  int springtwo=springpairs[i][1];
+ 
  int coordNRone=springlist[springone].one;
  int coordNRtwo=springlist[springone].two;
  int coordNRthree=springlist[springtwo].two;
  
  double x1=XY(coordNRone);
  double y1=XY(coordNRone+num);
- double x2=XY(coordNRtwo);
- double y2=XY(coordNRtwo+num);
- double x3=XY(coordNRthree);
- double y3=XY(coordNRthree+num);
  
- double c=x2*x3-x2*x2-x1*x3+x1*x2+y2*y3-y2*y2-y1*y3+y1*y2; //cos theta
+ double x21=XY(coordNRtwo)+springlist[i].wlr; //version of (x2,y2) that lies in on spring 1, so possibly outside of the box
+ double y21=XY(coordNRtwo+num)+springlist[springone].wud;
+ 
+ double x23=XY(coordNRtwo);                 //version of (x2,y2) that is on spring 2, so MUST be inside the box
+ double y23=XY(coordNRtwo+num);
+ 
+ double x3=XY(coordNRthree)+springlist[springtwo].wlr;
+ double y3=XY(coordNRthree+num)+springlist[springtwo].wud;
+
+ double dotv1v2=x21*x3-x21*x23-x1*x3+x1*x23
+                +y21*y3-y21*y23-y1*y3+y1*y23; //dot product between the two springs;
+ double lenv1v2=distance1(x1,y1,x21,y21)*distance1(x23,y23,x3,y3);
+ double c=dotv1v2/lenv1v2;
  if(c<-1) c=-1;
  if(c>1) c=1;
+ double dE=(0.5*kappa/(distance1(x1,y1,x21,y21)+distance1(x23,y23,x3,y3)))*pow(acos(c),2);
+ if(dE<0.000001) dE=0;
+ Energy=Energy+dE;
+// cout<<"c:     "<< c <<"\t"<<"  angle     "<<acos(c)<<"\t"<<endl;    
+//cout<<"dx        "<<x21-x1<<"\t"<<x3-x23<<"      dy     "<<y23-y1<<"\t"<<y3-y23<<endl;
+     
  
- Energy=Energy+
-    (0.5*kappa/(distance1(XY,x1,y1,x2,y2)+distance1(XY,x2,y2,x3,y3)))*pow(acos(c),2);
- }
- 
+}
+ //cout<<springpairs[1][0]<<"  "<<springpairs[1][1]<<endl;
+//  cout<<"spring  "<<springpairs[1][0]<<"  connects "<<springlist[springpairs[1][0]].one<<"  with  "<<springlist[springpairs[1][0]].two<<endl;
+//  cout<<"spring  "<<springpairs[1][0]<<"  has wlr  "<<springlist[springpairs[1][0]].wlr<<"  and wud  "<<springlist[springpairs[1][0]].wud<<endl;
+//  cout<<"spring  "<<springpairs[1][1]<<"  connects "<<springlist[springpairs[1][1]].one<<"  with  "<<springlist[springpairs[1][1]].two<<endl;
+//  cout<<"spring  "<<springpairs[1][1]<<"  has wlr  "<<springlist[springpairs[1][1]].wlr<<"  and wud  "<<springlist[springpairs[1][1]].wud<<endl;
+// 
+//  
+// 
+//  cout<<XY(2)<<"  "<<XY(2+num)<<endl;
+//  cout<<XY(0)<<"  "<<XY(num)<<endl;
+//  cout<<XY(1)<<"  "<<XY(num+1);
+//cout<<"x1="<<XY(springlist[springpairs[1][0]].one)<<"  y1="<<XY(springlist[springpairs[1][0]].two+num)<<endl;
+//cout<<"x2="<<XY(springlist[springpairs[1][0]].one)<<"  y1="<<XY(springlist[springpairs[1][0]].two+num)<<endl;
+
  return Energy; 
 }
   
