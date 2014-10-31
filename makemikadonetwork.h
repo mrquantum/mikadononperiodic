@@ -13,10 +13,7 @@ struct connected{
   double s1,s2;
 };
 
-struct numberpos{
-  int i; 
-  double s;
-};
+
 struct elonstick{
   int sticki;
   //vector<numberpos> NumberAndPos;
@@ -28,14 +25,12 @@ struct spring{
   double rlen,k;
 };
 struct node{
+  //int number, sticki;
   int number;
   double x;
   double y;
 };
 
-struct triplet{
-  int one, two, three, sticki;
-};
 
 
 

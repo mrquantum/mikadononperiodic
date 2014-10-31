@@ -20,7 +20,7 @@ double Ebend(const std::vector<std::vector<int>> &springpairs,const std::vector<
 
 Eigen::VectorXd Gradient(const std::vector<spring> &springlist,const Eigen::VectorXd &XY,
 			 const std::vector<anchor> &Anchor);
-Eigen::VectorXd gradEbend(const std::vector<triplet> &tripl,const Eigen::VectorXd &XY);
+//Eigen::VectorXd gradEbend(const std::vector<triplet> &tripl,const Eigen::VectorXd &XY);
 
 double dEda(const Eigen::VectorXd &XY,const std::vector<anchor> &Anchor,const Eigen::VectorXd &s0,
             const std::vector<spring> &springlist);//,const std::vector<triplet> &tripl,const int BendOn); 

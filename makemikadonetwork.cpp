@@ -4,10 +4,10 @@
 #include <eigen3/Eigen/Core>
 #include <eigen3/Eigen/LU>
 #include <vector>
+#include <iostream>
 using namespace Eigen;
 using namespace std;
 const double pi=4.0*atan(1.0);
-
 
 //This function overloads the < operator, so that it can
 //compare nodes
@@ -26,8 +26,6 @@ bool operator<(const elonstick& first, const elonstick& second){
       return true;
     }
 }
-
-
 
 //Here we make the initial mikadonetwork
 std::vector<stick> make_sticks(int N)
@@ -153,34 +151,34 @@ vector<connected> make_connections(const vector<stick> &m, double LStick){
 vector<elonstick> sortELEMENTSperMIKADO(vector<connected> &Connection)
 {
 vector<elonstick> ELONSTICK;
- for(int i=0;i<Connection.size()-1;i++){
- if(Connection[i].recur==1){
-   elonstick extrarow;
-   vector<double> extrarowpos(1);
-    vector<int> extrarownumber(1);
-    extrarowpos[0]=Connection[i].s1;
-    extrarownumber[0]=Connection[i].nrCon;
-    for(int j=i+1;j<Connection.size();j++)
-    {
-  if(Connection[j].recur==1){
-      if(Connection[i].first==Connection[j].first){
-	Connection[j].recur=0; 
-	//Connection[i].recur=0;  
-	extrarownumber.push_back(Connection[j].nrCon);
-	extrarowpos.push_back(Connection[j].s1);
-	extrarow.sticki=Connection[j].first;
-	extrarow.nr=extrarownumber;
-	extrarow.S=extrarowpos;
-      }
-   }      
-    }
+for(int i=0;i<Connection.size()-1;i++){
+    if(Connection[i].recur==1){
+        elonstick extrarow;
+        vector<double> extrarowpos(1);
+        vector<int> extrarownumber(1);
+        extrarowpos[0]=Connection[i].s1;
+        extrarownumber[0]=Connection[i].nrCon;
+    
+        for(int j=i+1;j<Connection.size();j++){
+            if(Connection[j].recur==1){
+                if(Connection[i].first==Connection[j].first){
+                    Connection[j].recur=0; 
+                        //Connection[i].recur=0;  
+                    extrarownumber.push_back(Connection[j].nrCon);
+                    extrarowpos.push_back(Connection[j].s1);
+                    extrarow.sticki=Connection[j].first;
+                    extrarow.nr=extrarownumber;
+                    extrarow.S=extrarowpos;
+                }
+            }
+        }
 ELONSTICK.push_back(extrarow);
    }
  }
 // now sort extrarow on descending order per stick;
-    for(int j=0; j<ELONSTICK.size();j++){
-     vector<double> distances=ELONSTICK[j].S;
-      vector<int> numbers=ELONSTICK[j].nr;
+for(int j=0; j<ELONSTICK.size();j++){
+    vector<double> distances=ELONSTICK[j].S;
+    vector<int> numbers=ELONSTICK[j].nr;
 // now sort extrarow on descending order per stick;
     int swapped=0;
       do{
@@ -208,84 +206,84 @@ std::sort(ELONSTICK.begin(),ELONSTICK.end());
 return ELONSTICK;
 }
 
+
 //With the points per stick, we can now make nodes and springs.
-void SpringsAndNodes(const vector<elonstick> &ELONSTICK,const vector<stick> &mikorig, vector<spring> &springlist, 
-		     vector<node> &nodes,
-		     double rlenshort, double rlenlong,double k1,double k2){
+void SpringsAndNodes(const vector<elonstick> &ELONSTICK,const vector<stick> &mikorig, vector<spring> &springlist,
+vector<node> &nodes,
+double rlenshort, double rlenlong,double k1,double k2)
+{
 for(int i=0;i<ELONSTICK.size();i++){
- int sticki=ELONSTICK[i].sticki;
- vector<int> nodesonsticki=ELONSTICK[i].nr;
- vector<double> posonsticki=ELONSTICK[i].S;
- stick CURRENTSTICK=mikorig[sticki];
-   for(int j=0;j<nodesonsticki.size()-1;j++){
-   spring SPRING;
-    SPRING.one=nodesonsticki[j];
-    SPRING.two=nodesonsticki[j+1];
-    double x1, x2, y1, y2;
-    x1=CURRENTSTICK.x+posonsticki[j]*cos(CURRENTSTICK.th); //calculate the position of the node 
-    x2=CURRENTSTICK.x+posonsticki[j+1]*cos(CURRENTSTICK.th);//and the position of the adjacent one
-    y1=CURRENTSTICK.y+posonsticki[j]*sin(CURRENTSTICK.th);
-    y2=CURRENTSTICK.y+posonsticki[j+1]*sin(CURRENTSTICK.th);
-    
-    if(sticki%2==0){
-      SPRING.rlen=rlenshort;
-      SPRING.k=k1;
+    int sticknr=ELONSTICK[i].sticki;
+    vector<int> nodesonsticki=ELONSTICK[i].nr;
+    vector<double> posonsticki=ELONSTICK[i].S;
+    stick CURRENTSTICK=mikorig[sticknr];
+        
+        for(int j=0;j<nodesonsticki.size()-1;j++){
+            spring newspring;
+            newspring.one=nodesonsticki[j];
+            newspring.two=nodesonsticki[j+1];
+            
+            double x1, x2, y1, y2;
+            x1=CURRENTSTICK.x+posonsticki[j]*cos(CURRENTSTICK.th); //calculate the position of the node
+            x2=CURRENTSTICK.x+posonsticki[j+1]*cos(CURRENTSTICK.th);//and the position of the adjacent one
+            y1=CURRENTSTICK.y+posonsticki[j]*sin(CURRENTSTICK.th);
+            y2=CURRENTSTICK.y+posonsticki[j+1]*sin(CURRENTSTICK.th);
+            
+            if(sticknr%2==0){
+                newspring.rlen=rlenshort;
+                newspring.k=k1;
+            }
+            else{
+                newspring.rlen=rlenlong;
+                newspring.k=k2;
+            }
+
+            newspring.sticki=sticknr;
+            if((x1<1 && x1>0)&&(x2>0&&x2<1)){ //Check if crossed wlr or wud wall.
+                newspring.wlr=0;
+            }
+            else if((x1>0&&x1<1)&&x2>1){
+                newspring.wlr=1;       
+            }
+            else if((x1>0&&x1<1)&&x2<0){
+                newspring.wlr=-1;
+            }
+            else if(x1<0&&x2<0){
+                newspring.wlr=0;
+            }
+            else if(x1>1&&x2>1){
+                newspring.wlr=0;
+            }
+            if((y1<1 && y1>0)&&(y2>0&&y2<1)){
+                newspring.wud=0;
+            }
+            else if((y1>0&&y1<1)&&y2>1){
+                newspring.wud=1;
+            }
+            else if((y1>0&&y1<1)&&y2<0){
+                newspring.wud=-1;
+            }
+            else if(y1<0&&y2<0){
+                newspring.wud=0;
+            }
+            else if(y1>1&&y2>1){
+                newspring.wud=0;
+            }
+            node nodetemp1, nodetemp2;
+            nodetemp1.number=newspring.one;
+            //nodetemp1.sticki=sticknr;
+            nodetemp1.x=x1;
+            nodetemp1.y=y1;
+            nodetemp2.number=newspring.two;
+            //nodetemp2.sticki=sticknr;
+            nodetemp2.x=x2;
+            nodetemp2.y=y2;
+            nodes.push_back(nodetemp1);
+            nodes.push_back(nodetemp2);
+            springlist.push_back(newspring);
+        }
     }
-      else{
-	SPRING.rlen=rlenlong;
-	SPRING.k=k2;
-      }
-      SPRING.sticki=sticki;
-    
-    if((x1<1 && x1>0)&&(x2>0&&x2<1)){ //Check if crossed wlr or wud wall. 
-      SPRING.wlr=0;
-      }
-    else if((x1>0&&x1<1)&&x2>1){
-      SPRING.wlr=1;
-    }
-    else if((x1>0&&x1<1)&&x2<0){
-      SPRING.wlr=-1;
-    }
-    else if(x1<0&&x2<0){
-      SPRING.wlr=0;
-    }
-    else if(x1>1&&x2>1){
-      SPRING.wlr=0;      
-    }
-    if((y1<1 && y1>0)&&(y2>0&&y2<1)){
-      SPRING.wud=0;
-      }
-    else if((y1>0&&y1<1)&&y2>1){
-      SPRING.wud=1;
-    }
-    else if((y1>0&&y1<1)&&y2<0){
-      SPRING.wud=-1;
-    }
-    else if(y1<0&&y2<0){
-      SPRING.wud=0;
-    }
-    else if(y1>1&&y2>1){
-      SPRING.wud=0;
-    }
-    node nodetemp1, nodetemp2;
-    nodetemp1.number=SPRING.one;
-    nodetemp1.x=x1;
-    nodetemp1.y=y1;
-    nodetemp2.number=SPRING.two;
-    nodetemp2.x=x2;
-    nodetemp2.y=y2;
-    nodes.push_back(nodetemp1);
-    nodes.push_back(nodetemp2);
-    springlist.push_back(SPRING);  
-    }
-}
 std::sort(nodes.begin(),nodes.end());
-} 
 
-
-
-
-
-
-
+}
 
