@@ -229,14 +229,16 @@ for(int i=0;i<ELONSTICK.size();i++){
             y1=CURRENTSTICK.y+posonsticki[j]*sin(CURRENTSTICK.th);
             y2=CURRENTSTICK.y+posonsticki[j+1]*sin(CURRENTSTICK.th);
             
-            if(sticknr%2==0){
-                newspring.rlen=rlenshort;
-                newspring.k=k1;
-            }
-            else{
-                newspring.rlen=rlenlong;
-                newspring.k=k2;
-            }
+//             if(sticknr%2==0){
+//                 newspring.rlen=rlenshort;
+//                 newspring.k=k1;
+//             }
+//             else{
+//                 newspring.rlen=rlenlong;
+//                 newspring.k=k2;
+//             }
+            newspring.rlen=.1;
+            newspring.k=1;
 
             newspring.sticki=sticknr;
             if((x1<1 && x1>0)&&(x2>0&&x2<1)){ //Check if crossed wlr or wud wall.
@@ -271,11 +273,9 @@ for(int i=0;i<ELONSTICK.size();i++){
             }
             node nodetemp1, nodetemp2;
             nodetemp1.number=newspring.one;
-            //nodetemp1.sticki=sticknr;
             nodetemp1.x=x1;
             nodetemp1.y=y1;
             nodetemp2.number=newspring.two;
-            //nodetemp2.sticki=sticknr;
             nodetemp2.x=x2;
             nodetemp2.y=y2;
             nodes.push_back(nodetemp1);

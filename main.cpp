@@ -51,7 +51,7 @@ if(argc>1){
 }  
   
   
-int NumberMikado=50;
+int NumberMikado=150;
 double LStick=.20; //Stick Length
 double k1=100;
 double k2=1;
@@ -171,7 +171,6 @@ vector<node> nodes(0);
             cout<<endl;
         }
 
- 
 SpringsAndNodes(ELONSTICK,mikorig,springlist,
                 nodes,rlenshort,rlenlong,k1,k2); //Make the springs and Nodes. Input springlist and nodes are (empty vectors)
 
@@ -183,18 +182,6 @@ for(int i=0;i<nodes.size();i++){
     singleNodes.push_back(unique);  
   }
 }
-
-//This section ordens the nodelist from 0:#nodes and updates the springlist with it
-// for(int i=0;i<singleNodes.size()-1;i++){
-//  while(singleNodes[i+1].number-singleNodes[i].number>1){
-//      int tempnr=singleNodes[i+1].number;
-//      singleNodes[i+1].number=singleNodes[i+1].number-1;
-//      for(int j=0;j<springlist.size();j++){
-//          if(springlist[j].one==tempnr) springlist[j].one=springlist[j].one-1;
-//          if(springlist[j].two==tempnr) springlist[j].two=springlist[j].two-1;
-//      }
-// }
-// }
 
 cout<<"#############Newnewnodes############"<<endl;
 for(int i=0;i<singleNodes.size();i++){

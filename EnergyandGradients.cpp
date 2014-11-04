@@ -87,7 +87,7 @@ double Ebend(const vector<vector<int>> &springpairs,
  int num=XY.size()/2;
  
  for(int i=0;i<springpairs.size();i++){
-    int springone=springpairs[i][0];
+ int springone=springpairs[i][0];
     int springtwo=springpairs[i][1];
  
     int coordNRone=springlist[springone].one;
@@ -97,7 +97,7 @@ double Ebend(const vector<vector<int>> &springpairs,
     double x1=XY(coordNRone);
     double y1=XY(coordNRone+num);
  
-    double x21=XY(coordNRtwo)+springlist[i].wlr; //version of (x2,y2) that lies in on spring 1, so possibly outside of the box
+    double x21=XY(coordNRtwo)+springlist[springone].wlr; //version of (x2,y2) that lies in on spring 1, so possibly outside of the box
     double y21=XY(coordNRtwo+num)+springlist[springone].wud;
  
     double x23=XY(coordNRtwo);                 //version of (x2,y2) that is on spring 2, so MUST be inside the box
@@ -113,7 +113,10 @@ double Ebend(const vector<vector<int>> &springpairs,
     
     //double dotv1v2=x21*x3-x21*x23-x1*x3+x1*x23
     //            +y21*y3-y21*y23-y1*y3+y1*y23; //dot product between the two springs;
-    double lenv1v2=distance1(x1,y1,x21,y21)*distance1(x23,y23,x3,y3);
+    //double lenv1v2=distance1(x1,y1,x21,y21)*distance1(x23,y23,x3,y3);
+    
+
+    double lenv1v2=sqrt(v1.dot(v1))*sqrt(v2.dot(v2));
     double c=dotv1v2/lenv1v2;
     
     if(c<-1) c=-1;
@@ -121,41 +124,22 @@ double Ebend(const vector<vector<int>> &springpairs,
     
     double dE=(0.5*kappa/(distance1(x1,y1,x21,y21)+distance1(x23,y23,x3,y3)))*pow(acos(c),2);
     Energy=Energy+dE;
-    cout<<"c:     "<< c <<"\t"<<"  angle     "<<acos(c)<<"\t"<<endl;    
+    cout<<"c:     "<< c <<"\t"<<"  angle     "<<acos(c)<<"\t"<<springpairs[i][0]<<"-"<<springpairs[i][1]<<endl;    
+//     cout<<"coord1  "<<springlist[springpairs[i][0]].one<<endl;
+//     cout<<"coord2  "<<springlist[springpairs[i][0]].two<<endl;
+//     cout<<"coord3  "<<springlist[springpairs[i][1]].two<<endl;
+//     cout<<"x14 y14  "<<XY(14)<<"\t"<<XY(14+num)<<endl;
+//     cout<<"x13 y13  "<<XY(13)<<"\t"<<XY(13+num)<<endl;
+//     cout<<"x12 y12  "<<XY(12)<<"\t"<<XY(12+num)<<endl;
+/*
+    Vector2d u1,u2;
+    u1<<XY(14)-XY(13),XY(num+14)-XY(num+13);
+    u2<<XY(13)-XY(12),XY(num+13)-XY(num+12);
+    double tt=u1.dot(u2);
+    double nn=sqrt(u1.dot(u1))*sqrt(u2.dot(u2));
+    cout<<tt<<"   "<<nn<<"   "<<tt/nn<<endl;*/
+    
 }
-// for(int i=0;i<springpairs.size();i++){
-//     int springeen=springpairs[i][0];
-//     int springtwee=springpairs[i][1];
-//     int c1, c2, c3;
-//     c1=springlist[springeen].one;
-//     c2=springlist[springeen].two;
-//     c3=springlist[springtwee].two;
-//     double x1,x21,x23,x3;
-//     double y1,y21,y23,y3;
-//     
-//     x1=XY(c1); y1=XY(x1+num);
-//     x21=XY(c2)+springlist[springeen].wlr; y21=XY(c2+num)+springlist[springeen].wud;
-//     x23=XY(c2); y23=XY(c2+num);
-//     x3=XY(c3)+springlist[springtwee].wlr; y3=XY(c3+num)+springlist[springtwee].wud;
-//     
-//     Vector2d v1,v2;
-//     v1<<(x21-x1),(y21-y1);
-//     v2<<(x3-x23),(y3-y23);
-//     
-//     double t=v1.dot(v2);
-//     double n=sqrt(v1.dot(v1))*sqrt(v2.dot(v2));
-//     double c=t/n;
-//     
-//     
-//     cout<<"veer"<<springeen<<"\t on mik \t"<<springlist[springeen].sticki<<"\t & \t"<<springtwee<<"\t on mik \t"<<springlist[springtwee].sticki<<endl;
-//     cout<<"coord\t"<<c1<<"\t & \t"<<c2<<"\t & \t"<<c3<<endl;
-//     cout<<x1<<"  "<<x21<<"  "<<x23<<"  "<<x3<<" | "<<y1<<"  "<<y21<<"  "<<y23<<"  "<<y3<<endl;
-//     cout<<"t="<<t<<"\t n="<<n<<"\t c="<<c<<endl;
-//     cout<<"-----------------------------------------------------------"<<endl;
-//     
-//}
-
-
 
 return Energy; 
 }
