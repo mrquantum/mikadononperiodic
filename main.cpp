@@ -51,12 +51,13 @@ if(argc>1){
 }  
   
   
-int NumberMikado=150;
-double LStick=.20; //Stick Length
-double k1=100;
+int NumberMikado=50;
+double LStick=.2; //Stick Length
+double k1=1;
 double k2=1;
+double kappa=1;
 double rlenshort=.01;
-double rlenlong=.001;
+double rlenlong=.00001;
 
 vector<stick> mikado=make_sticks(NumberMikado);
 vector<stick> mikorig=mikado; //The original set of sticks
@@ -72,10 +73,6 @@ if(GhostLR2.size()!=0){
   }
 }
 std::sort(mikado.begin(),mikado.end());
-
-// for(int i=0;i<mikado.size();i++){
-//     cout<<mikado[i].nr<<"\t"<<mikado[i].x<<"\t"<<mikado[i].y<<"\t"<<mikado[i].th<<"\t"<<mikado[i].wlr<<mikado[i].wud<<endl;
-// }
 
 
 vector<connected> Connection=make_connections(mikado,LStick); //Make Connections
@@ -110,22 +107,6 @@ for(int i=0;i<Connection.size()-1;i++){
 vector<elonstick> ELONSTICK=sortELEMENTSperMIKADO(Connection);
 vector<spring> springlist(0);
 vector<node> nodes(0);
-
-        //print here the sticknrs and the coordinates on it. 
-        for(int i=0;i<ELONSTICK.size();i++){
-            vector<int> nrs=ELONSTICK[i].nr;
-            vector<double> pos=ELONSTICK[i].S;
-            cout<<"on stick "<<ELONSTICK[i].sticki<<endl;
-            for(int j=0;j<nrs.size();j++){
-                cout<<nrs[j]<<"\t";
-            }
-            cout<<endl;
-            for(int j=0;j<pos.size();j++){
-                cout<<pos[j]<<"\t";
-            }
-            cout<<endl;
-        }
-
         
  vector<int> order;
  order.push_back(0);
@@ -142,9 +123,6 @@ vector<node> nodes(0);
  }
      
  std::sort(order.begin(),order.end());
- for(int i=0;i<order.size();i++){
-     cout<<"order  "<<i<<"\t"<<order[i]<<endl;
- }
      
  for(int i=0;i<ELONSTICK.size();i++){
   for(int j=0;j<ELONSTICK[i].nr.size();j++){
@@ -153,23 +131,6 @@ vector<node> nodes(0);
       }
   }
 }
- 
-     
-     
-     
-        for(int i=0;i<ELONSTICK.size();i++){
-            vector<int> nrs=ELONSTICK[i].nr;
-            vector<double> pos=ELONSTICK[i].S;
-            cout<<"on stick "<<ELONSTICK[i].sticki<<endl;
-            for(int j=0;j<nrs.size();j++){
-                cout<<nrs[j]<<"\t";
-            }
-            cout<<endl;
-            for(int j=0;j<pos.size();j++){
-                cout<<pos[j]<<"\t";
-            }
-            cout<<endl;
-        }
 
 SpringsAndNodes(ELONSTICK,mikorig,springlist,
                 nodes,rlenshort,rlenlong,k1,k2); //Make the springs and Nodes. Input springlist and nodes are (empty vectors)
@@ -183,15 +144,7 @@ for(int i=0;i<nodes.size();i++){
   }
 }
 
-cout<<"#############Newnewnodes############"<<endl;
-for(int i=0;i<singleNodes.size();i++){
-        cout<<singleNodes[i].number<<"\t"<<singleNodes[i].x<<"\t"<<singleNodes[i].y<<endl;
-}
-cout<<"+++++++++newnewsprings+++++++"<<endl;
-for(int i=0;i<springlist.size();i++){
- cout<<springlist[i].one<<"\t"<<springlist[i].two<<"\t wlr:"<<springlist[i].wlr<<"\t wud"<<springlist[i].wud
-    <<"\t on stick:\t"<<springlist[i].sticki<<endl;   
-}
+
 
 
 // //**************MAKE HERE THE PAIR OF SPRINGS
@@ -214,7 +167,6 @@ for(int i=0;i<springlist.size()-1;i++){
     }   
 }
 
-//****************
 
 //The xy positions
  VectorXd X(singleNodes.size()),Y(singleNodes.size());
@@ -242,140 +194,114 @@ int num=XY.size()/2;
 double Energy=Energynetwork(springlist,XY,Anchor);
 double EBEND=Ebend(springpairs,springlist,XY);
 
-// int spring7=springpairs[3][0];
-// int spring8=springpairs[3][1];
-// cout<<"those are springs \t"<<spring7<<"\t and\t"<<spring8<<endl;
-// cout<<"on spring \t :"<<spring7<<"\t live coords \t"<<springlist[spring7].one<<"\t and \t"<<springlist[spring7].two<<endl;
-// cout<<"on spring \t :"<<spring8<<"\t live coords \t"<<springlist[spring8].one<<"\t and \t"<<springlist[spring8].two<<endl;
-
-// double x12,x13,x14,y12,y13,y14;
-// x12=XY(springlist[spring7].one);
-// x13=XY(springlist[spring7].two);
-// x14=XY(springlist[spring8].two);
-// y12=XY(springlist[spring7].one+num);
-// y13=XY(springlist[spring7].two+num);
-// y14=XY(springlist[spring8].two+num);
-
-// cout<<"x12 \t y12 \t"<<x12<<"\t"<<y12<<endl;
-// cout<<"x13 \t y13 \t"<<x13<<"\t"<<y13<<endl;
-// cout<<"x14 \t y14 \t"<<x14<<"\t"<<y14<<endl;
-
-// Vector2d v1,v2;
-// v1<<x13-x12,y13-y12;
-// v2<<x14-x13,y14-y13;
-
-// double t=v1.dot(v2);
-// cout<<"teller="<<t<<endl;
-// double n=sqrt(v1.dot(v1)*v2.dot(v2));
-// double co=t/n;
-// cout<<"cos th="<<co<<endl;
-// double a=acos(co);
-// cout<<"angle="<<a<<endl;
-// 
-// // 
-// //*********************************************************************************
-// 
-// //Here comes the conjugate gradient
-// VectorXd gradE(XY.size());
-// VectorXd XYn(XY.size());
-// VectorXd gradEn(gradE.size());
-// VectorXd s0(gradE.size());
-// VectorXd sn(s0.size());
-// vector<spring> newsprings(springlist.size());
-// double betan;
-// 
-// 
-// 
-// gradE=Gradient(springlist,XY,Anchor);
-// s0=-gradE;
-// 
-// 
-// ofstream XYfile("conjpoints.txt");
-// ofstream springfile("springboundaries.txt");
-// int Nit=20;
-// for(int i=0;i<Nit;i++)
-// {
-//   for(int k=0;k<springlist.size();k++){ //loop over all springs to find new values for the borders
-//     spring tempspring;
-//     tempspring.one=springlist[k].one;
-//     tempspring.two=springlist[k].two;
-//     tempspring.wlr=0;
-//     tempspring.wud=0;
-//     double x1=XY(tempspring.one); 
-//     double x2=XY(tempspring.two);
-//     double y1=XY(tempspring.one+XY.size()/2); 
-//     double y2=XY(tempspring.two+XY.size()/2);
-//     
-//     if((x1>x2)&& abs(x1-x2)>.5){
-//       tempspring.wlr=1;
-//       }
-//     else if((x2>x1)&&abs(x1-x2)>.5){
-// 	tempspring.wlr=-1;
-//       }
-//     if((y1>y2)&& abs(y1-y2)>.5){
-//       tempspring.wud=1;
-//       }
-//     else if((y2>y1)&&abs(y1-y2)>.5){
-// 	tempspring.wud=-1;
-//       }
-//     newsprings[k]=tempspring;
-//   }
-//   
-//   for(int j=0;j<newsprings.size();j++){ //write the newsprings to a file [row wlr ---------- y wud ------]
-//   springfile<<newsprings[j].wlr<<"\t"; 
-//   }
-//   for(int j=0;j<newsprings.size()-1;j++){
-//   springfile<<newsprings[j].wud<<"\t";
-//   }
-//   springfile<<newsprings[newsprings.size()].wud<<endl;
-//   
-//   for(int j=0;j<XY.size();j++) //write the XY-data to txt
-//   {
-//    XYfile<<XY(j)<<"\t";
-//   }
-//   XYfile<<endl;
-// 
-//   
-// //This is the secant method
-// double an2=0.01;
-// double an1=0;
-// double an;
-// double tol=.0001;
-// do{ 
-// an=an1-dEda(XY+an1*s0,Anchor,s0,springlist)*(an1-an2)/(dEda(XY+an1*s0,Anchor,s0,springlist)-
-//   dEda(XY+an2*s0,Anchor,s0,springlist));
-// an2=an1;
-// an1=an;
-// }while(abs(an-an1)>tol);
-// 
-// //Update variables
-// XYn=XY+an*s0;
-// gradEn=Gradient(springlist,XYn,Anchor);
-// betan=gradEn.dot(gradEn)/(gradE.dot(gradE));
-// sn=-gradEn+betan*s0;
-// s0=sn;
-// gradE=gradEn;
-// XY=XYn;
-// }
-// 
-// XYfile.close();
-// springfile.close();
-// 
-// FILE *fp = fopen("mikado.txt","w");
-//   for(int i=0;i<m.size();i++){
-//     fprintf(fp,"%d \t %1.8f \t %1.8f \t %1.8f \t %d \t %d\n",m[i].nr,m[i].x,m[i].y,m[i].th,m[i].wlr,m[i].wud);
-//   }
-//   fclose(fp);
-// FILE *fp2=fopen("nodes.txt","w");
-//  for(int i=0;i<singleNodes.size();i++){
-//  fprintf(fp2,"%d \t %1.8f \t %1.8f \n",singleNodes[i].number,X(i),Y(i));
-//  }
-//  fclose(fp2);
-FILE *fp3 = fopen("springs.txt","w");
-for(int i=0;i<springlist.size();i++){
-  fprintf(fp3,"%d \t %d \t %d \t %d \lt %1.8f \t %1.8f \t %d\n",springlist[i].one,springlist[i].two,springlist[i].wlr,springlist[i].wud,springlist[i].rlen, springlist[i].k , springlist[i].sticki);
+//*********************************************************************************
+//Here comes the conjugate gradient
+ 
+ VectorXd gradE(XY.size());
+ VectorXd XYn(XY.size());
+ VectorXd gradEn(gradE.size());
+ VectorXd s0(gradE.size());
+ VectorXd sn(s0.size());
+ vector<spring> newsprings(springlist.size());
+ double betan;
+ gradE=Gradient(springlist,XY,Anchor)+gradEbend(springpairs,springlist,XY,kappa);
+ s0=-gradE;
+ 
+ ofstream XYfile("conjpoints.txt");
+ ofstream springfile("springboundaries.txt");
+ 
+ //The loop of the conj grad method
+ 
+ int Nit=20;
+ for(int i=0;i<Nit;i++)
+ {
+//    for(int k=0;k<springlist.size();k++){ //loop over all springs to find new values for the borders
+//      spring tempspring;
+//      tempspring.one=springlist[k].one;
+//      tempspring.two=springlist[k].two;
+//      tempspring.wlr=0;
+//      tempspring.wud=0;
+//      double x1=XY(tempspring.one); 
+//      double x2=XY(tempspring.two);
+//      double y1=XY(tempspring.one+num); 
+//      double y2=XY(tempspring.two+num);
+//      
+//      if((x1>x2)&& abs(x1-x2)>.5){
+//        tempspring.wlr=1;
+//        }
+//      else if((x2>x1)&&abs(x1-x2)>.5){
+//  	tempspring.wlr=-1;
+//        }
+//      if((y1>y2)&& abs(y1-y2)>.5){
+//        tempspring.wud=1;
+//        }
+//      else if((y2>y1)&&abs(y1-y2)>.5){
+//  	tempspring.wud=-1;
+//        }
+//      newsprings[k]=tempspring;
+//    }
+//    
+//    for(int j=0;j<newsprings.size();j++){ //write the newsprings to a file [row wlr ---------- y wud ------]
+//    springfile<<newsprings[j].wlr<<"\t"; 
+//    }
+//    for(int j=0;j<newsprings.size()-1;j++){
+//    springfile<<newsprings[j].wud<<"\t";
+//    }
+//    springfile<<newsprings[newsprings.size()].wud<<endl;
+for(int j=0;j<XY.size();j++){ //write the XY-data to txt
+    XYfile<<XY(j)<<"\t";
+   }
+   XYfile<<endl;
+ 
+   
+ //This is the secant method
+ double an2=0.01;
+ double an1=0;
+ double an;
+ double tol=.0001;
+ 
+ do{ 
+ an=an1-dEda(XY+an1*s0,Anchor,s0,springlist,springpairs,kappa)*(an1-an2)/
+ (dEda(XY+an1*s0,Anchor,s0,springlist,springpairs,kappa)-dEda(XY+an2*s0,Anchor,s0,springlist,springpairs,kappa));
+ an2=an1;
+ an1=an;
+ }while(abs(an-an1)>tol);
+ 
+ //Update variables
+ XYn=XY+an*s0;
+ gradEn=Gradient(springlist,XYn,Anchor)+gradEbend(springpairs,springlist,XY,kappa);
+ betan=gradEn.dot(gradEn)/(gradE.dot(gradE));
+ sn=-gradEn+betan*s0;
+ s0=sn;
+ gradE=gradEn;
+ XY=XYn;
  }
- fclose(fp3);
+ 
+ XYfile.close();
+ springfile.close();
+ 
+FILE *fp = fopen("mikado.txt","w");
+  for(int i=0;i<mikado.size();i++){
+    fprintf(fp,"%d \t %1.8f \t %1.8f \t %1.8f \t %d \t %d\n",mikado[i].nr,mikado[i].x,mikado[i].y,
+            mikado[i].th,mikado[i].wlr,mikado[i].wud);
+  }
+  fclose(fp);
+FILE *fp2=fopen("nodes.txt","w");
+ for(int i=0;i<singleNodes.size();i++){
+ fprintf(fp2,"%d \t %1.8f \t %1.8f \n",singleNodes[i].number,X(i),Y(i));
+ }
+ fclose(fp2);
+/*FILE *fp3 = fopen("springs.txt","w");
+for(int i=0;i<springlist.size();i++){
+  fprintf(fp3,"%d \t %d \t %d \t %d %1.8f \t %1.8f \t %d\n",springlist[i].one,springlist[i].two,springlist[i].wlr,springlist[i].wud,springlist[i].rlen, springlist[i].k , springlist[i].sticki);
+ }
+fclose(fp3)*/;
+
+ FILE *fp3 = fopen("springs.txt","w");
+for(int i=0;i<springlist.size();i++){
+  fprintf(fp3,"%d \t %d \t %d \t %d\n",springlist[i].one,springlist[i].two,springlist[i].wlr,springlist[i].wud);
+ }
+fclose(fp3);
 FILE *fp4=fopen("mikado1.txt","w");
  for(int i=0;i<mikorig.size();i++){
   fprintf(fp4,"%1.8f \t %1.8f \t %1.8f\n",mikorig[i].x,mikorig[i].y,mikorig[i].th);
