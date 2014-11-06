@@ -57,7 +57,7 @@ double k1=1;
 double k2=1;
 double kappa=1;
 double rlenshort=.01;
-double rlenlong=.00001;
+double rlenlong=.01;
 
 vector<stick> mikado=make_sticks(NumberMikado);
 vector<stick> mikorig=mikado; //The original set of sticks
@@ -193,10 +193,71 @@ for(int i=0;i<springlist.size()-1;i++){
 int num=XY.size()/2;     
 double Energy=Energynetwork(springlist,XY,Anchor);
 double EBEND=Ebend(springpairs,springlist,XY);
+cout<<EBEND<<endl;
+
+
+VectorXd Geb(XY.size());
+Geb=gradEbend(springpairs,springlist,XY,1);
+cout<<"*****************"<<endl;
+
+for(int i=0;i<num;i++){
+    cout<<Geb(i)<<"  "<<Geb(i+num)<<endl;
+}
+
+
 
 //*********************************************************************************
 //Here comes the conjugate gradient
  
+// VectorXd XX(2);
+// XX<<10,2;
+// VectorXd XXn(2);
+// XXn=XX;
+// VectorXd gradR(2);
+// VectorXd gradRn(2);
+// VectorXd s0(2);
+// VectorXd sn(2);
+// double betan;
+// double stopcr;
+// gradR=GRAD_rosen(XX);
+// s0=-gradR;
+// 
+// 
+// do{
+//     XX=XXn;
+//     cout<<XX(0)<<" "<<XX(1)<<endl;
+// 
+//  //This is the secant method
+//     double an2=0.01;
+//     double an1=0;
+//     double an;
+//     double tol=.0001;
+//         do{ 
+//             an=an1-dROSENdA(XX+an1*s0,s0)*(an1-an2)/(dROSENdA(XX+an1*s0,s0)-dROSENdA(XX+an2*s0,s0));
+//             an2=an1;
+//             an1=an;
+//         }while(abs(an-an1)>tol);
+// 
+//  
+//     // Update variables
+//     XXn=XX+an*s0;
+//     gradRn=GRAD_rosen(XXn);
+//     betan=gradRn.dot(gradRn)/(gradR.dot(gradR));
+//     //betan=(gradRn-gradR).dot(gradRn)/(gradR.dot(gradR));
+//  
+//     sn=-gradRn+betan*s0;
+//     s0=sn;
+//     gradR=gradRn;
+//  
+//     double stopcr=abs(XX.dot(XX)-XXn.dot(XXn));
+//     cout<<stopcr<<endl;
+//  }while(stopcr>.1);
+
+
+
+
+
+
  VectorXd gradE(XY.size());
  VectorXd XYn(XY.size());
  VectorXd gradEn(gradE.size());
@@ -215,39 +276,39 @@ double EBEND=Ebend(springpairs,springlist,XY);
  int Nit=20;
  for(int i=0;i<Nit;i++)
  {
-//    for(int k=0;k<springlist.size();k++){ //loop over all springs to find new values for the borders
-//      spring tempspring;
-//      tempspring.one=springlist[k].one;
-//      tempspring.two=springlist[k].two;
-//      tempspring.wlr=0;
-//      tempspring.wud=0;
-//      double x1=XY(tempspring.one); 
-//      double x2=XY(tempspring.two);
-//      double y1=XY(tempspring.one+num); 
-//      double y2=XY(tempspring.two+num);
-//      
-//      if((x1>x2)&& abs(x1-x2)>.5){
-//        tempspring.wlr=1;
-//        }
-//      else if((x2>x1)&&abs(x1-x2)>.5){
-//  	tempspring.wlr=-1;
-//        }
-//      if((y1>y2)&& abs(y1-y2)>.5){
-//        tempspring.wud=1;
-//        }
-//      else if((y2>y1)&&abs(y1-y2)>.5){
-//  	tempspring.wud=-1;
-//        }
-//      newsprings[k]=tempspring;
-//    }
-//    
-//    for(int j=0;j<newsprings.size();j++){ //write the newsprings to a file [row wlr ---------- y wud ------]
-//    springfile<<newsprings[j].wlr<<"\t"; 
-//    }
-//    for(int j=0;j<newsprings.size()-1;j++){
-//    springfile<<newsprings[j].wud<<"\t";
-//    }
-//    springfile<<newsprings[newsprings.size()].wud<<endl;
+   for(int k=0;k<springlist.size();k++){ //loop over all springs to find new values for the borders
+     spring tempspring;
+     tempspring.one=springlist[k].one;
+     tempspring.two=springlist[k].two;
+     tempspring.wlr=0;
+     tempspring.wud=0;
+     double x1=XY(tempspring.one); 
+     double x2=XY(tempspring.two);
+     double y1=XY(tempspring.one+num); 
+     double y2=XY(tempspring.two+num);
+     
+     if((x1>x2)&& abs(x1-x2)>.5){
+       tempspring.wlr=1;
+       }
+     else if((x2>x1)&&abs(x1-x2)>.5){
+ 	tempspring.wlr=-1;
+       }
+     if((y1>y2)&& abs(y1-y2)>.5){
+       tempspring.wud=1;
+       }
+     else if((y2>y1)&&abs(y1-y2)>.5){
+ 	tempspring.wud=-1;
+       }
+     newsprings[k]=tempspring;
+   }
+   
+   for(int j=0;j<newsprings.size();j++){ //write the newsprings to a file [row wlr ---------- y wud ------]
+   springfile<<newsprings[j].wlr<<"\t"; 
+   }
+   for(int j=0;j<newsprings.size()-1;j++){
+   springfile<<newsprings[j].wud<<"\t";
+   }
+   springfile<<newsprings[newsprings.size()].wud<<endl;
 for(int j=0;j<XY.size();j++){ //write the XY-data to txt
     XYfile<<XY(j)<<"\t";
    }
@@ -261,18 +322,21 @@ for(int j=0;j<XY.size();j++){ //write the XY-data to txt
  double tol=.0001;
  
  do{ 
- an=an1-dEda(XY+an1*s0,Anchor,s0,springlist,springpairs,kappa)*(an1-an2)/
- (dEda(XY+an1*s0,Anchor,s0,springlist,springpairs,kappa)-dEda(XY+an2*s0,Anchor,s0,springlist,springpairs,kappa));
- an2=an1;
- an1=an;
+    an=an1-dEda(XY+an1*s0,Anchor,s0,springlist,springpairs,kappa)*(an1-an2)/
+    (dEda(XY+an1*s0,Anchor,s0,springlist,springpairs,kappa)-dEda(XY+an2*s0,Anchor,s0,springlist,springpairs,kappa));
+    an2=an1;
+    an1=an;
  }while(abs(an-an1)>tol);
  
  //Update variables
  XYn=XY+an*s0;
  gradEn=Gradient(springlist,XYn,Anchor)+gradEbend(springpairs,springlist,XY,kappa);
  betan=gradEn.dot(gradEn)/(gradE.dot(gradE));
+
+ cout<<"+++"<<gradE.dot(gradE)<<"  "<<betan<<endl;
  sn=-gradEn+betan*s0;
  s0=sn;
+ cout<<"$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$    "<<betan<<endl;
  gradE=gradEn;
  XY=XYn;
  }

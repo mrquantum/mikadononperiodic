@@ -9,6 +9,11 @@ struct anchor{
   int label; 
   double xpos,ypos;
 };
+double ROSENBROCK(const Eigen::VectorXd &XY);
+Eigen::VectorXd GRAD_rosen(const Eigen::VectorXd &XY);
+double dROSENdA(const Eigen::VectorXd &XY,const Eigen::VectorXd &s);
+
+
 
 double distance(const Eigen::VectorXd &XY,int one, int two);
 double dldxi(const Eigen::VectorXd &XY,int one, int two);

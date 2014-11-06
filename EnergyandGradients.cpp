@@ -10,6 +10,28 @@ using namespace Eigen;
 using namespace std;
 const double pi=4.0*atan(1.0);
    
+
+double ROSENBROCK(const Eigen::VectorXd &XY)
+{
+ double f=pow((1-XY(0)),2)+pow((XY(1)-XY(0)*XY(0)),2);
+ return f;
+}
+
+VectorXd GRAD_rosen(const Eigen::VectorXd &XY)
+{
+ VectorXd GRAD(2);
+ GRAD<<-2*(1-XY(0))-4*XY(0)*(XY(1)-XY(0)*XY(0)),2*(XY(1)-XY(0)*XY(0));
+ return GRAD;
+}
+
+double dROSENdA(const Eigen::VectorXd &XY,const Eigen::VectorXd &s)
+{
+ double dda=s.dot(GRAD_rosen(XY));
+ return dda;
+    
+}
+
+
 double distance(const Eigen::VectorXd &XY,int one, int two)
 {
   double l;
@@ -173,11 +195,16 @@ return gradE;
 
 VectorXd gradEbend(const vector<vector<int>> &springpairs,const vector<spring> &springlist,const VectorXd &XY,double kappa)
 {
-  VectorXd grad(XY.size());
-  VectorXd firstpart(grad.size());
-  VectorXd secondpart(grad.size());
+  VectorXd grad(XY.size()); //Total gradient
+  VectorXd firstpart(grad.size());  //(pi-acos(th))^2 *grad(1/(L1+L2))
+  VectorXd secondpart(grad.size()); //1/(L1+L2) grad(pi-acos(th))^2
+  VectorXd gradL1L2m1(grad.size()); //grad( 1/(L1L2))
+  VectorXd GRADc(grad.size()); //grad cos th in terms of v1.v2/v1v2
+  VectorXd GRADnumerator(grad.size()); //grad v1.v2
+  VectorXd GRADdenumerator(grad.size());//grad v1v2 , just the lengths
   
-  VectorXd gradL1L2m1(grad.size());
+  
+  
   //Initiate the gradient with zero's
   for(int i=0;i<grad.size();i++){
       grad(i)=0;
@@ -187,8 +214,10 @@ VectorXd gradEbend(const vector<vector<int>> &springpairs,const vector<spring> &
 
   int num=grad.size()/2;
   double numerator,denumerator;
-  double c; //c=cos(theta)
-  //add the first term of the gradient arccos(...)^2*grad(1/l12+l23)
+  double c,s; //c=cos(theta)
+ 
+ 
+ //add the first term of the gradient arccos(...)^2*grad(1/l12+l23)
   for(int i=0;i<springpairs.size();i++)
   {
     int springone=springpairs[i][0];
@@ -241,18 +270,12 @@ VectorXd gradEbend(const vector<vector<int>> &springpairs,const vector<spring> &
     
   }
   
- 
   //now the second part = 1/(l1+l2) * grad (pi-theta)^2;
-
-
   
   for(int i=0;i<springpairs.size();i++){
-    VectorXd GRADc(secondpart.size());
-  
-   VectorXd GRADnumerator(secondpart.size());
-   VectorXd GRADdenumerator(secondpart.size());
    
-   for(int j=0;j<GRADnumerator.size();j++){
+   
+   for(int j=0;j<GRADnumerator.size();j++){ //Set the new gradients to zero
        GRADnumerator(j)=0;
        GRADdenumerator(j)=0;
        GRADc(j)=0;
@@ -276,6 +299,8 @@ VectorXd gradEbend(const vector<vector<int>> &springpairs,const vector<spring> &
   
   double x3=XY(coordNRthree)+springlist[springtwo].wlr;
   double y3=XY(coordNRthree+num)+springlist[springtwo].wud;
+
+  //cout<<x1<<"  "<<y1<<"  "<<x21<<"  "<<y21<<"  "<<x23<<"  "<<y23<<"  "<<x3<<"  "<<y3<<endl;
   
   Vector2d v1,v2; 
   v1<<(x1-x21),(y1-y21);
@@ -283,17 +308,17 @@ VectorXd gradEbend(const vector<vector<int>> &springpairs,const vector<spring> &
   
    numerator=v1.dot(v2);
    denumerator=sqrt(v1.dot(v1))*sqrt(v2.dot(v2));
-   
+   //cout<<denumerator<<endl;
    //This is the argument of the arccos. Arccos(c)=arccos(cos(theta))=theta --> c=cos(theta)
    double c=numerator/denumerator;
    if(c>1) c=1;
    if(c<-1) c=-1;
    //This is the sin(theta);
-   double s=sqrt(1-c*c);
+   s=sqrt(1-c*c);
    if(s<0.0001) s=0.0001;
    
    double d12=distance1(x1,y1,x21,y21);
-   double d23=distance1(x23,y23,x3,y3);
+   double d23=distance1(x3,y3,x23,y23);
  
     //c=v1.v2/(||v1|||v2||)=numerator / denumerator
     //grad c= ( numerator grad_denumerator - denumerator grad_numerator ) / denumerator^2
@@ -323,19 +348,22 @@ VectorXd gradEbend(const vector<vector<int>> &springpairs,const vector<spring> &
     GRADdenumerator(coordNRthree)=GRADdenumerator(coordNRthree)+(d12/d23)*(x3-x23);
     GRADdenumerator(coordNRthree+num)=GRADdenumerator(coordNRthree+num)+(d12/d23)*(y3-y23);
 
-    
-    
-    
-    
-     GRADc=(denumerator*GRADnumerator-numerator*GRADdenumerator)/(denumerator*denumerator);
-//    cout<<GRADdenumerator<<endl;
-//    cout<<"**"<<endl;
-   //  cout<<"GRAD C  "<<GRADc<<endl;
-     
-     
-    secondpart=secondpart+(1/(distance1(x1,y1,x21,y21)+distance1(x3,y3,x23,y23)) ) *2*(pi-acos(c)) *(1/s) *GRADc;
+    GRADc=(denumerator*GRADnumerator-numerator*GRADdenumerator)/(denumerator*denumerator);
+    cout<<"gradc="<<GRADc.dot(GRADc)<<" \t1/SIN="<<1.0/s<<endl;
+    cout<<"x1="<<x1<<"\tx21="<<x21<<"\tx23="<<x23<<"\tx3="<<x3<<endl;
+    cout<<"y1="<<y1<<"\ty21="<<y21<<"\ty23="<<y23<<"\ty3="<<y3<<endl;
+    cout<<"gn="<<GRADnumerator.dot(GRADnumerator)<<"\tgd="<<GRADdenumerator.dot(GRADdenumerator)<<
+    "\tgradc"<<GRADc.dot(GRADc)<<endl;
+    cout<<"_---------------------"<<endl;
+
+    secondpart=secondpart+(1.0/(d12+d23))*2*(pi-acos(c))*(1.0/s)*GRADc;
   
   }
+  cout<<"PARTS "<<firstpart.dot(firstpart)<<"  "<<secondpart.dot(secondpart)<<endl;
+  if (secondpart.dot(secondpart) > 1e6) {
+      cout<<" STOP"<<endl;
+      exit(1);
+  }     
   grad=.5*kappa*(firstpart+secondpart);
   return grad; 
 }
