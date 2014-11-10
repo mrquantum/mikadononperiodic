@@ -51,12 +51,12 @@ if(argc>1){
 }  
   
   
-int NumberMikado=50;
+int NumberMikado=200;
 double LStick=.2; //Stick Length
 double k1=1;
 double k2=1;
-double kappa=1;
-double rlenshort=.01;
+double kappa=0;
+double rlenshort=.0001;
 double rlenlong=.01;
 
 vector<stick> mikado=make_sticks(NumberMikado);
@@ -196,66 +196,16 @@ double EBEND=Ebend(springpairs,springlist,XY);
 cout<<EBEND<<endl;
 
 
-VectorXd Geb(XY.size());
-Geb=gradEbend(springpairs,springlist,XY,1);
-cout<<"*****************"<<endl;
+// VectorXd Geb(XY.size());
+// Geb=gradEbend(springpairs,springlist,XY,1);
+// cout<<"*****************"<<endl;
+// 
+// for(int i=0;i<num;i++){
+//     cout<<Geb(i)<<"  "<<Geb(i+num)<<endl;
+// }
 
-for(int i=0;i<num;i++){
-    cout<<Geb(i)<<"  "<<Geb(i+num)<<endl;
-}
-
-
-
-//*********************************************************************************
 //Here comes the conjugate gradient
  
-// VectorXd XX(2);
-// XX<<10,2;
-// VectorXd XXn(2);
-// XXn=XX;
-// VectorXd gradR(2);
-// VectorXd gradRn(2);
-// VectorXd s0(2);
-// VectorXd sn(2);
-// double betan;
-// double stopcr;
-// gradR=GRAD_rosen(XX);
-// s0=-gradR;
-// 
-// 
-// do{
-//     XX=XXn;
-//     cout<<XX(0)<<" "<<XX(1)<<endl;
-// 
-//  //This is the secant method
-//     double an2=0.01;
-//     double an1=0;
-//     double an;
-//     double tol=.0001;
-//         do{ 
-//             an=an1-dROSENdA(XX+an1*s0,s0)*(an1-an2)/(dROSENdA(XX+an1*s0,s0)-dROSENdA(XX+an2*s0,s0));
-//             an2=an1;
-//             an1=an;
-//         }while(abs(an-an1)>tol);
-// 
-//  
-//     // Update variables
-//     XXn=XX+an*s0;
-//     gradRn=GRAD_rosen(XXn);
-//     betan=gradRn.dot(gradRn)/(gradR.dot(gradR));
-//     //betan=(gradRn-gradR).dot(gradRn)/(gradR.dot(gradR));
-//  
-//     sn=-gradRn+betan*s0;
-//     s0=sn;
-//     gradR=gradRn;
-//  
-//     double stopcr=abs(XX.dot(XX)-XXn.dot(XXn));
-//     cout<<stopcr<<endl;
-//  }while(stopcr>.1);
-
-
-
-
 
 
  VectorXd gradE(XY.size());
@@ -265,7 +215,7 @@ for(int i=0;i<num;i++){
  VectorXd sn(s0.size());
  vector<spring> newsprings(springlist.size());
  double betan;
- gradE=Gradient(springlist,XY,Anchor)+gradEbend(springpairs,springlist,XY,kappa);
+ gradE=Gradient(springlist,XY,Anchor);//+gradEbend(springpairs,springlist,XY,kappa);
  s0=-gradE;
  
  ofstream XYfile("conjpoints.txt");
@@ -273,7 +223,7 @@ for(int i=0;i<num;i++){
  
  //The loop of the conj grad method
  
- int Nit=20;
+ int Nit=100;
  for(int i=0;i<Nit;i++)
  {
    for(int k=0;k<springlist.size();k++){ //loop over all springs to find new values for the borders
@@ -330,13 +280,12 @@ for(int j=0;j<XY.size();j++){ //write the XY-data to txt
  
  //Update variables
  XYn=XY+an*s0;
- gradEn=Gradient(springlist,XYn,Anchor)+gradEbend(springpairs,springlist,XY,kappa);
+ gradEn=Gradient(springlist,XYn,Anchor);//+gradEbend(springpairs,springlist,XY,kappa);
  betan=gradEn.dot(gradEn)/(gradE.dot(gradE));
 
  cout<<"+++"<<gradE.dot(gradE)<<"  "<<betan<<endl;
  sn=-gradEn+betan*s0;
  s0=sn;
- cout<<"$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$    "<<betan<<endl;
  gradE=gradEn;
  XY=XYn;
  }
@@ -355,17 +304,18 @@ FILE *fp2=fopen("nodes.txt","w");
  fprintf(fp2,"%d \t %1.8f \t %1.8f \n",singleNodes[i].number,X(i),Y(i));
  }
  fclose(fp2);
-/*FILE *fp3 = fopen("springs.txt","w");
+FILE *fp3 = fopen("springs.txt","w");
 for(int i=0;i<springlist.size();i++){
-  fprintf(fp3,"%d \t %d \t %d \t %d %1.8f \t %1.8f \t %d\n",springlist[i].one,springlist[i].two,springlist[i].wlr,springlist[i].wud,springlist[i].rlen, springlist[i].k , springlist[i].sticki);
- }
-fclose(fp3)*/;
-
- FILE *fp3 = fopen("springs.txt","w");
-for(int i=0;i<springlist.size();i++){
-  fprintf(fp3,"%d \t %d \t %d \t %d\n",springlist[i].one,springlist[i].two,springlist[i].wlr,springlist[i].wud);
+  fprintf(fp3,"%d \t %d \t %d \t %d \t %1.8f \t %1.8f \t %d\n",springlist[i].one,springlist[i].two,
+          springlist[i].wlr,springlist[i].wud,springlist[i].rlen, springlist[i].k , springlist[i].sticki);
  }
 fclose(fp3);
+
+//  FILE *fp3 = fopen("springs.txt","w");
+// for(int i=0;i<springlist.size();i++){
+//   fprintf(fp3,"%d \t %d \t %d \t %d\n",springlist[i].one,springlist[i].two,springlist[i].wlr,springlist[i].wud);
+//  }
+//fclose(fp3);
 FILE *fp4=fopen("mikado1.txt","w");
  for(int i=0;i<mikorig.size();i++){
   fprintf(fp4,"%1.8f \t %1.8f \t %1.8f\n",mikorig[i].x,mikorig[i].y,mikorig[i].th);

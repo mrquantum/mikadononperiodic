@@ -373,7 +373,7 @@ double dEda(const VectorXd &XY,const vector<anchor> &Anchor,const VectorXd &s0,c
     const vector<vector<int>> &springpairs,double kappa)
 {  
     double out;
-    out=s0.dot(Gradient(springlist,XY,Anchor)+gradEbend(springpairs,springlist,XY,kappa));
+    out=s0.dot(Gradient(springlist,XY,Anchor));//+gradEbend(springpairs,springlist,XY,kappa));
     return out;  
 }
 
