@@ -100,10 +100,10 @@ double distance1(const double x1, const double y1, const double x2,const double 
 
 double Ebend(const vector<vector<int>> &springpairs,
              const vector<spring> &springlist,
-             const VectorXd &XY)  
+             const VectorXd &XY,
+            const double kappa)  
 {
  double Energy=0;
- double kappa=1;
  int num=XY.size()/2;
  
  for(int i=0;i<springpairs.size();i++){
@@ -136,7 +136,7 @@ double Ebend(const vector<vector<int>> &springpairs,
     if(c<-1) c=-1;
     if(c>1) c=1;
     
-    double dE=(0.5*kappa/(distance1(x1,y1,x21,y21)+distance1(x23,y23,x3,y3)))*pow(acos(c),2);
+    double dE=(kappa/(distance1(x1,y1,x21,y21)+distance1(x23,y23,x3,y3)))*pow(acos(c),2);
     Energy=Energy+dE;    
 }
 
@@ -228,17 +228,17 @@ VectorXd gradEbend(const vector<vector<int>> &springpairs,const vector<spring> &
    
    double x1=XY(coordNRone);
    double y1=XY(coordNRone+num);
-   
    double x21=XY(coordNRtwo)+springlist[springone].wlr;
    double y21=XY(coordNRtwo+num)+springlist[springone].wud;
-   
+
    double x23=XY(coordNRtwo);
    double y23=XY(coordNRtwo+num);
+
    
    double x3=XY(coordNRthree)+springlist[springtwo].wlr;
    double y3=XY(coordNRthree+num)+springlist[springtwo].wud;
-    
-   for(int j=0;j<gradL1L2m1.size();j++){
+   
+for(int j=0;j<gradL1L2m1.size();j++){
        gradL1L2m1(j)=0;
    }
    
@@ -263,7 +263,8 @@ VectorXd gradEbend(const vector<vector<int>> &springpairs,const vector<spring> &
    gradL1L2m1(coordNRtwo+num)=(y21-y1)/d12+(y23-y3)/d23;
    gradL1L2m1(coordNRthree)=(x3-x23)/d23;
    gradL1L2m1(coordNRthree+num)=(y3-y23)/d23;
-   gradL1L2m1=gradL1L2m1*(-1/pow((d12+d23),2));
+   
+   gradL1L2m1=gradL1L2m1*(-1/(d12+d23)*(d12+d23));
    
    
     firstpart=firstpart+pow((pi-acos(c)),2)*gradL1L2m1;
@@ -306,24 +307,20 @@ VectorXd gradEbend(const vector<vector<int>> &springpairs,const vector<spring> &
   v1<<(x1-x21),(y1-y21);
   v2<<(x3-x23),(y3-y23);
   
-   numerator=v1.dot(v2);
-   denumerator=sqrt(v1.dot(v1))*sqrt(v2.dot(v2));
-   //cout<<denumerator<<endl;
-   //This is the argument of the arccos. Arccos(c)=arccos(cos(theta))=theta --> c=cos(theta)
+   double d12=distance1(x1,y1,x21,y21);
+   double d23=distance1(x3,y3,x23,y23); 
+  
+   //numerator=v1.dot(v2);
+   numerator=(x1-x21)*(x3-x23)+(y1-y21)*(y3-y23);
+   denumerator=d12*d23;
    double c=numerator/denumerator;
    if(c>1) c=1;
    if(c<-1) c=-1;
    //This is the sin(theta);
    s=sqrt(1-c*c);
    if(s<0.0001) s=0.0001;
-   
-   double d12=distance1(x1,y1,x21,y21);
-   double d23=distance1(x3,y3,x23,y23);
- 
-    //c=v1.v2/(||v1|||v2||)=numerator / denumerator
-    //grad c= ( numerator grad_denumerator - denumerator grad_numerator ) / denumerator^2
-    //numerator = n = L1L2
-    //grad_n= L1*grad_L2 + grad_L1*L2
+   s /= s;
+
     
     
     GRADnumerator(coordNRone)=GRADnumerator(coordNRone)-x23+x3;
@@ -348,23 +345,16 @@ VectorXd gradEbend(const vector<vector<int>> &springpairs,const vector<spring> &
     GRADdenumerator(coordNRthree)=GRADdenumerator(coordNRthree)+(d12/d23)*(x3-x23);
     GRADdenumerator(coordNRthree+num)=GRADdenumerator(coordNRthree+num)+(d12/d23)*(y3-y23);
 
-    GRADc=(denumerator*GRADnumerator-numerator*GRADdenumerator)/(denumerator*denumerator);
-    cout<<"gradc="<<GRADc.dot(GRADc)<<" \t1/SIN="<<1.0/s<<endl;
-    cout<<"x1="<<x1<<"\tx21="<<x21<<"\tx23="<<x23<<"\tx3="<<x3<<endl;
-    cout<<"y1="<<y1<<"\ty21="<<y21<<"\ty23="<<y23<<"\ty3="<<y3<<endl;
-    cout<<"gn="<<GRADnumerator.dot(GRADnumerator)<<"\tgd="<<GRADdenumerator.dot(GRADdenumerator)<<
-    "\tgradc"<<GRADc.dot(GRADc)<<endl;
-    cout<<"_---------------------"<<endl;
+    GRADc=(denumerator*GRADnumerator-numerator*GRADdenumerator)/(pow(denumerator,2));
+    //cout<<GRADc.dot(GRADc)<<endl;
 
-    secondpart=secondpart+(1.0/(d12+d23))*2*(pi-acos(c))*(1.0/s)*GRADc;
+    double dacos=-1-c*c/2-3*c*c*c*c/8;
+    if(GRADc.dot(GRADc)<.1) GRADc=1/s*GRADc;
+    secondpart=secondpart+(1.0/(d12+d23))*2*(pi-acos(c))*s*GRADc;
   
   }
-  cout<<"PARTS "<<firstpart.dot(firstpart)<<"  "<<secondpart.dot(secondpart)<<endl;
-  if (secondpart.dot(secondpart) > 1e6) {
-      cout<<" STOP"<<endl;
-      exit(1);
-  }     
-  grad=.5*kappa*(firstpart+secondpart);
+
+  grad=kappa*(firstpart+secondpart);
   return grad; 
 }
 
@@ -373,7 +363,7 @@ double dEda(const VectorXd &XY,const vector<anchor> &Anchor,const VectorXd &s0,c
     const vector<vector<int>> &springpairs,double kappa)
 {  
     double out;
-    out=s0.dot(Gradient(springlist,XY,Anchor));//+gradEbend(springpairs,springlist,XY,kappa));
+    out=s0.dot((Gradient(springlist,XY,Anchor)+gradEbend(springpairs,springlist,XY,kappa)));
     return out;  
 }
 

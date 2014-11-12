@@ -27,7 +27,8 @@ Eigen::VectorXd gradL(const double x1,const double y1,const double x2, const dou
 double distance1(const double x1, const double y1, const double x2,const double y2);
 
 double Energynetwork(const std::vector<spring> &springlist, const Eigen::VectorXd &XY,const std::vector<anchor> &Anchor);
-double Ebend(const std::vector<std::vector<int>> &springpairs,const std::vector<spring> &springlist,const Eigen::VectorXd &XY);
+double Ebend(const std::vector<std::vector<int>> &springpairs,const std::vector<spring> &springlist,const Eigen::VectorXd &XY,
+    const double kappa);
 
 Eigen::VectorXd Gradient(const std::vector<spring> &springlist,const Eigen::VectorXd &XY,
 			 const std::vector<anchor> &Anchor);

@@ -18,7 +18,7 @@ using namespace Eigen;
 const double pi=4.0*atan(1.0);
 void getRandom(vector<double> &v)
 {
-  for (int i = 0; i < v.size(); ++i)
+  for (std::size_t i = 0; i < v.size(); ++i)
   {
     v[i] = randf();
     cout << v[i] << endl;
@@ -52,10 +52,11 @@ if(argc>1){
   
   
 int NumberMikado=200;
-double LStick=.2; //Stick Length
+double LStick=.4; //Stick Length
 double k1=1;
 double k2=1;
-double kappa=0;
+double kappa=0.0001;
+//double kappa=0;
 double rlenshort=.0001;
 double rlenlong=.01;
 
@@ -78,9 +79,9 @@ std::sort(mikado.begin(),mikado.end());
 vector<connected> Connection=make_connections(mikado,LStick); //Make Connections
 vector<connected> Connection2(1); //sives the double elements from the connections
  Connection2[0]=Connection[0];
- for(int i=0;i<Connection.size();i++){
+ for(std::size_t i=0;i<Connection.size();i++){
      int flag=1;
-    for(int j=0;j<Connection2.size();j++){
+    for(std::size_t j=0;j<Connection2.size();j++){
         if(Connection[i].first==Connection2[j].first && Connection[i].second==Connection2[j].second){
             flag=0; 
             break;
@@ -94,8 +95,8 @@ Connection=Connection2;
 
 //Check for pairs in the connected struct if at least a pair exists (2 points on same mikado)
 //then connection[j].recur=1; Else recur =0.
-for(int i=0;i<Connection.size()-1;i++){
-  for(int j=i+1;j<Connection.size();j++){
+for(std::size_t i=0;i<Connection.size()-1;i++){
+  for(std::size_t j=i+1;j<Connection.size();j++){
     if(Connection[i].first==Connection[j].first){
       Connection[i].recur=1;  Connection[j].recur=1;
     }
@@ -110,12 +111,12 @@ vector<node> nodes(0);
         
  vector<int> order;
  order.push_back(0);
- for(int i=0;i<ELONSTICK.size();i++){
+ for(std::size_t i=0;i<ELONSTICK.size();i++){
     vector<int> numbervec=ELONSTICK[i].nr;
     
-    for(int j=0;j<numbervec.size();j++){
+    for(std::size_t j=0;j<numbervec.size();j++){
         int flag=0;
-        for(int k=0;k<order.size();k++){
+        for(std::size_t k=0;k<order.size();k++){
             if(numbervec[j]==order[k]) flag=1;
         }
         if(flag==0) order.push_back(numbervec[j]);
@@ -124,9 +125,9 @@ vector<node> nodes(0);
      
  std::sort(order.begin(),order.end());
      
- for(int i=0;i<ELONSTICK.size();i++){
-  for(int j=0;j<ELONSTICK[i].nr.size();j++){
-      for(int k=0;k<order.size();k++){
+ for(std::size_t i=0;i<ELONSTICK.size();i++){
+  for(std::size_t j=0;j<ELONSTICK[i].nr.size();j++){
+      for(std::size_t k=0;k<order.size();k++){
             if(ELONSTICK[i].nr[j]==order[k]) ELONSTICK[i].nr[j]=k;
       }
   }
@@ -137,7 +138,7 @@ SpringsAndNodes(ELONSTICK,mikorig,springlist,
 
 //Remove all double info
 vector<node> singleNodes; 
-for(int i=0;i<nodes.size();i++){
+for(std::size_t i=0;i<nodes.size();i++){
   if(nodes[i].number!=nodes[i+1].number){
     node unique=nodes[i];   
     singleNodes.push_back(unique);  
@@ -157,7 +158,7 @@ for(int i=0;i<nodes.size();i++){
 //springs in the springslist.
 
 vector<vector<int>> springpairs(0);
-for(int i=0;i<springlist.size()-1;i++){
+for(std::size_t i=0;i<springlist.size()-1;i++){
     if(springlist[i].sticki==springlist[i+1].sticki){
         vector<int> pair(3);
         pair[0]=i;
@@ -170,11 +171,11 @@ for(int i=0;i<springlist.size()-1;i++){
 
 //The xy positions
  VectorXd X(singleNodes.size()),Y(singleNodes.size());
- for(int i=0;i<singleNodes.size();i++){
+ for(std::size_t i=0;i<singleNodes.size();i++){
  X(i)=singleNodes[i].x; 
  Y(i)=(singleNodes[i].y);
  }
- for(int i=0;i<singleNodes.size();i++){
+ for(std::size_t i=0;i<singleNodes.size();i++){
  X(i)=inbox(X(i),1.0);
  Y(i)=inbox(Y(i),1.0);
  }
@@ -192,15 +193,15 @@ for(int i=0;i<springlist.size()-1;i++){
  
 int num=XY.size()/2;     
 double Energy=Energynetwork(springlist,XY,Anchor);
-double EBEND=Ebend(springpairs,springlist,XY);
-cout<<EBEND<<endl;
+double EBEND=Ebend(springpairs,springlist,XY,kappa);
+//cout<<EBEND<<endl;
 
 
 // VectorXd Geb(XY.size());
 // Geb=gradEbend(springpairs,springlist,XY,1);
 // cout<<"*****************"<<endl;
 // 
-// for(int i=0;i<num;i++){
+// for(std::size_t i=0;i<num;i++){
 //     cout<<Geb(i)<<"  "<<Geb(i+num)<<endl;
 // }
 
@@ -215,50 +216,20 @@ cout<<EBEND<<endl;
  VectorXd sn(s0.size());
  vector<spring> newsprings(springlist.size());
  double betan;
- gradE=Gradient(springlist,XY,Anchor);//+gradEbend(springpairs,springlist,XY,kappa);
+ gradE=Gradient(springlist,XY,Anchor)+gradEbend(springpairs,springlist,XY,kappa);
  s0=-gradE;
  
  ofstream XYfile("conjpoints.txt");
- ofstream springfile("springboundaries.txt");
- 
+ ofstream EFile("Energy.txt");
  //The loop of the conj grad method
  
- int Nit=100;
+ EFile<<Energy<<"\t"<<EBEND<<endl;
+ 
+ 
+ int Nit=50;
  for(int i=0;i<Nit;i++)
  {
-   for(int k=0;k<springlist.size();k++){ //loop over all springs to find new values for the borders
-     spring tempspring;
-     tempspring.one=springlist[k].one;
-     tempspring.two=springlist[k].two;
-     tempspring.wlr=0;
-     tempspring.wud=0;
-     double x1=XY(tempspring.one); 
-     double x2=XY(tempspring.two);
-     double y1=XY(tempspring.one+num); 
-     double y2=XY(tempspring.two+num);
-     
-     if((x1>x2)&& abs(x1-x2)>.5){
-       tempspring.wlr=1;
-       }
-     else if((x2>x1)&&abs(x1-x2)>.5){
- 	tempspring.wlr=-1;
-       }
-     if((y1>y2)&& abs(y1-y2)>.5){
-       tempspring.wud=1;
-       }
-     else if((y2>y1)&&abs(y1-y2)>.5){
- 	tempspring.wud=-1;
-       }
-     newsprings[k]=tempspring;
-   }
-   
-   for(int j=0;j<newsprings.size();j++){ //write the newsprings to a file [row wlr ---------- y wud ------]
-   springfile<<newsprings[j].wlr<<"\t"; 
-   }
-   for(int j=0;j<newsprings.size()-1;j++){
-   springfile<<newsprings[j].wud<<"\t";
-   }
-   springfile<<newsprings[newsprings.size()].wud<<endl;
+
 for(int j=0;j<XY.size();j++){ //write the XY-data to txt
     XYfile<<XY(j)<<"\t";
    }
@@ -279,45 +250,54 @@ for(int j=0;j<XY.size();j++){ //write the XY-data to txt
  }while(abs(an-an1)>tol);
  
  //Update variables
- XYn=XY+an*s0;
- gradEn=Gradient(springlist,XYn,Anchor);//+gradEbend(springpairs,springlist,XY,kappa);
+ double adeptsteps;
+ adeptsteps=sqrt(1+s0.dot(s0));
+ adeptsteps=1.0/adeptsteps;
+ XYn=XY+an*adeptsteps*s0;
+ 
+ gradEn=Gradient(springlist,XYn,Anchor)+gradEbend(springpairs,springlist,XY,kappa);
  betan=gradEn.dot(gradEn)/(gradE.dot(gradE));
 
- cout<<"+++"<<gradE.dot(gradE)<<"  "<<betan<<endl;
  sn=-gradEn+betan*s0;
  s0=sn;
  gradE=gradEn;
  XY=XYn;
- }
  
+Energy=Energynetwork(springlist,XY,Anchor);
+EBEND=Ebend(springpairs,springlist,XY,kappa);    
+EFile<<Energy<<"\t"<<EBEND<<endl;
+
+}
+
+
  XYfile.close();
- springfile.close();
+ EFile.close();
  
 FILE *fp = fopen("mikado.txt","w");
-  for(int i=0;i<mikado.size();i++){
+  for(std::size_t i=0;i<mikado.size();i++){
     fprintf(fp,"%d \t %1.8f \t %1.8f \t %1.8f \t %d \t %d\n",mikado[i].nr,mikado[i].x,mikado[i].y,
             mikado[i].th,mikado[i].wlr,mikado[i].wud);
   }
   fclose(fp);
 FILE *fp2=fopen("nodes.txt","w");
- for(int i=0;i<singleNodes.size();i++){
+ for(std::size_t i=0;i<singleNodes.size();i++){
  fprintf(fp2,"%d \t %1.8f \t %1.8f \n",singleNodes[i].number,X(i),Y(i));
  }
  fclose(fp2);
 FILE *fp3 = fopen("springs.txt","w");
-for(int i=0;i<springlist.size();i++){
+for(std::size_t i=0;i<springlist.size();i++){
   fprintf(fp3,"%d \t %d \t %d \t %d \t %1.8f \t %1.8f \t %d\n",springlist[i].one,springlist[i].two,
           springlist[i].wlr,springlist[i].wud,springlist[i].rlen, springlist[i].k , springlist[i].sticki);
  }
 fclose(fp3);
 
 //  FILE *fp3 = fopen("springs.txt","w");
-// for(int i=0;i<springlist.size();i++){
+// for(std::size_t i=0;i<springlist.size();i++){
 //   fprintf(fp3,"%d \t %d \t %d \t %d\n",springlist[i].one,springlist[i].two,springlist[i].wlr,springlist[i].wud);
 //  }
 //fclose(fp3);
 FILE *fp4=fopen("mikado1.txt","w");
- for(int i=0;i<mikorig.size();i++){
+ for(std::size_t i=0;i<mikorig.size();i++){
   fprintf(fp4,"%1.8f \t %1.8f \t %1.8f\n",mikorig[i].x,mikorig[i].y,mikorig[i].th);
  }
  fclose(fp4);
