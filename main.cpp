@@ -51,12 +51,12 @@ if(argc>1){
 }  
   
   
-int NumberMikado=200;
-double LStick=.4; //Stick Length
+int NumberMikado=300;
+double LStick=.3; //Stick Length
 double k1=1;
 double k2=1;
+//double kappa=0.000001;
 double kappa=0.0001;
-//double kappa=0;
 double rlenshort=.0001;
 double rlenlong=.01;
 
@@ -64,23 +64,24 @@ vector<stick> mikado=make_sticks(NumberMikado);
 vector<stick> mikorig=mikado; //The original set of sticks
 //Find the lr wall intercepts and add a ghost to the mikado's
 vector<stick> GhostLR = make_ghost_lr(mikado, LStick, mikado.size()); 
-    mikado.insert(mikado.end(),GhostLR.begin(),GhostLR.end()); //add the newly found sticks to the existing sticks 
+mikado.insert(mikado.end(),GhostLR.begin(),GhostLR.end()); //add the newly found sticks to the existing sticks 
 vector<stick> GhostUD=make_ghost_ud(mikado,LStick,mikado.size()); 
+
 if(GhostUD.size()!=0){
-vector<stick> GhostLR2=make_ghost_lr(GhostUD,LStick,GhostUD.size());
+    vector<stick> GhostLR2=make_ghost_lr(GhostUD,LStick,GhostUD.size());
     mikado.insert(mikado.end(),GhostUD.begin(),GhostUD.end());
-if(GhostLR2.size()!=0){
-    mikado.insert(mikado.end(),GhostLR2.begin(),GhostLR2.end());
-  }
+    if(GhostLR2.size()!=0){
+        mikado.insert(mikado.end(),GhostLR2.begin(),GhostLR2.end());
+    }
 }
 std::sort(mikado.begin(),mikado.end());
 
 
 vector<connected> Connection=make_connections(mikado,LStick); //Make Connections
 vector<connected> Connection2(1); //sives the double elements from the connections
- Connection2[0]=Connection[0];
- for(std::size_t i=0;i<Connection.size();i++){
-     int flag=1;
+Connection2[0]=Connection[0];
+for(std::size_t i=0;i<Connection.size();i++){
+    int flag=1;
     for(std::size_t j=0;j<Connection2.size();j++){
         if(Connection[i].first==Connection2[j].first && Connection[i].second==Connection2[j].second){
             flag=0; 
@@ -113,7 +114,6 @@ vector<node> nodes(0);
  order.push_back(0);
  for(std::size_t i=0;i<ELONSTICK.size();i++){
     vector<int> numbervec=ELONSTICK[i].nr;
-    
     for(std::size_t j=0;j<numbervec.size();j++){
         int flag=0;
         for(std::size_t k=0;k<order.size();k++){
@@ -133,8 +133,8 @@ vector<node> nodes(0);
   }
 }
 
-SpringsAndNodes(ELONSTICK,mikorig,springlist,
-                nodes,rlenshort,rlenlong,k1,k2); //Make the springs and Nodes. Input springlist and nodes are (empty vectors)
+//Make the springs and Nodes. Input springlist and nodes are (empty vectors)
+SpringsAndNodes(ELONSTICK,mikorig,springlist,nodes,rlenshort,rlenlong,k1,k2); 
 
 //Remove all double info
 vector<node> singleNodes; 
@@ -147,15 +147,15 @@ for(std::size_t i=0;i<nodes.size();i++){
 
 
 
-
-// //**************MAKE HERE THE PAIR OF SPRINGS
-
-//springpairs is an vector, coding a triplet in each row: 
-//springpairs[i][1]= ith triplet first spring
-//springpairs[i][2] ith triplet second spring. 
-//springpairs[i][3] ith triplet mikado nr.
-//the labels for the springs are the indexnumbers of coding the
-//springs in the springslist.
+/*
+**************MAKE HERE THE PAIR OF SPRINGS
+springpairs is an vector, coding a triplet in each row: 
+springpairs[i][1]= ith triplet first spring
+springpairs[i][2] ith triplet second spring. 
+springpairs[i][3] ith triplet mikado nr.
+the labels for the springs are the indexnumbers of coding the
+springs in the springslist.
+*/
 
 vector<vector<int>> springpairs(0);
 for(std::size_t i=0;i<springlist.size()-1;i++){
@@ -194,21 +194,8 @@ for(std::size_t i=0;i<springlist.size()-1;i++){
 int num=XY.size()/2;     
 double Energy=Energynetwork(springlist,XY,Anchor);
 double EBEND=Ebend(springpairs,springlist,XY,kappa);
-//cout<<EBEND<<endl;
-
-
-// VectorXd Geb(XY.size());
-// Geb=gradEbend(springpairs,springlist,XY,1);
-// cout<<"*****************"<<endl;
-// 
-// for(std::size_t i=0;i<num;i++){
-//     cout<<Geb(i)<<"  "<<Geb(i+num)<<endl;
-// }
 
 //Here comes the conjugate gradient
- 
-
-
  VectorXd gradE(XY.size());
  VectorXd XYn(XY.size());
  VectorXd gradEn(gradE.size());
@@ -221,11 +208,9 @@ double EBEND=Ebend(springpairs,springlist,XY,kappa);
  
  ofstream XYfile("conjpoints.txt");
  ofstream EFile("Energy.txt");
- //The loop of the conj grad method
- 
  EFile<<Energy<<"\t"<<EBEND<<endl;
  
- 
+  //The loop of the conj grad method
  int Nit=50;
  for(int i=0;i<Nit;i++)
  {
@@ -237,41 +222,50 @@ for(int j=0;j<XY.size();j++){ //write the XY-data to txt
  
    
  //This is the secant method
- double an2=0.01;
- double an1=0;
+ double an2=0.0;
+ double an1=0.00001;
  double an;
- double tol=.0001;
+ double tol=.0000001;
+ int q=0; 
+ double dEda2,dEda1;
  
+dEda2=dEda(XY+an2*s0,Anchor,s0,springlist,springpairs,kappa);
+
  do{ 
-    an=an1-dEda(XY+an1*s0,Anchor,s0,springlist,springpairs,kappa)*(an1-an2)/
-    (dEda(XY+an1*s0,Anchor,s0,springlist,springpairs,kappa)-dEda(XY+an2*s0,Anchor,s0,springlist,springpairs,kappa));
+    dEda1=dEda(XY+an1*s0,Anchor,s0,springlist,springpairs,kappa);
+    an=an1-dEda1*(an1-an2)/(dEda1-dEda2);
     an2=an1;
     an1=an;
- }while(abs(an-an1)>tol);
- 
+    dEda2=dEda1;   
+    q++;
+ }while(q<10 && abs(an2-an1)>tol);
+ cout<<i<<"\t"<<q<<endl;
  //Update variables
  double adeptsteps;
- adeptsteps=sqrt(1+s0.dot(s0));
+ adeptsteps=sqrt(1+sqrt(s0.dot(s0)));
  adeptsteps=1.0/adeptsteps;
+ //adeptsteps=1.0;
  XYn=XY+an*adeptsteps*s0;
- 
  gradEn=Gradient(springlist,XYn,Anchor)+gradEbend(springpairs,springlist,XY,kappa);
  betan=gradEn.dot(gradEn)/(gradE.dot(gradE));
-
- sn=-gradEn+betan*s0;
+ 
+ if(i%10==0){ 
+     sn=-gradEn;}
+ else{
+    sn=-gradEn+betan*s0;
+ }
  s0=sn;
  gradE=gradEn;
  XY=XYn;
- 
 Energy=Energynetwork(springlist,XY,Anchor);
 EBEND=Ebend(springpairs,springlist,XY,kappa);    
 EFile<<Energy<<"\t"<<EBEND<<endl;
 
 }
 
-
  XYfile.close();
  EFile.close();
+ 
  
 FILE *fp = fopen("mikado.txt","w");
   for(std::size_t i=0;i<mikado.size();i++){
@@ -291,11 +285,6 @@ for(std::size_t i=0;i<springlist.size();i++){
  }
 fclose(fp3);
 
-//  FILE *fp3 = fopen("springs.txt","w");
-// for(std::size_t i=0;i<springlist.size();i++){
-//   fprintf(fp3,"%d \t %d \t %d \t %d\n",springlist[i].one,springlist[i].two,springlist[i].wlr,springlist[i].wud);
-//  }
-//fclose(fp3);
 FILE *fp4=fopen("mikado1.txt","w");
  for(std::size_t i=0;i<mikorig.size();i++){
   fprintf(fp4,"%1.8f \t %1.8f \t %1.8f\n",mikorig[i].x,mikorig[i].y,mikorig[i].th);
