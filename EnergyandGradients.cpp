@@ -349,7 +349,7 @@ for(int j=0;j<gradL1L2m1.size();j++){
     //cout<<GRADc.dot(GRADc)<<endl;
 
     double dacos=-1-c*c/2-3*c*c*c*c/8;
-    if(GRADc.dot(GRADc)<.1) GRADc=1/s*GRADc;
+    //if(GRADc.dot(GRADc)<.1) GRADc=1/s*GRADc;
     secondpart=secondpart+(1.0/(d12+d23))*2*(pi-acos(c))*s*GRADc;
   
   }

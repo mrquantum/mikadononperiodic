@@ -56,7 +56,7 @@ double LStick=.3; //Stick Length
 double k1=1;
 double k2=1;
 //double kappa=0.000001;
-double kappa=0.0001;
+double kappa=0.00001;
 double rlenshort=.0001;
 double rlenlong=.01;
 
@@ -223,9 +223,9 @@ for(int j=0;j<XY.size();j++){ //write the XY-data to txt
    
  //This is the secant method
  double an2=0.0;
- double an1=0.00001;
+ double an1=0.000000001;
  double an;
- double tol=.0000001;
+ double tol=0.0000000001;
  int q=0; 
  double dEda2,dEda1;
  
@@ -238,25 +238,28 @@ dEda2=dEda(XY+an2*s0,Anchor,s0,springlist,springpairs,kappa);
     an1=an;
     dEda2=dEda1;   
     q++;
- }while(q<10 && abs(an2-an1)>tol);
+ }while(q<50 && abs(an2-an1)>tol);
  cout<<i<<"\t"<<q<<endl;
  //Update variables
  double adeptsteps;
- adeptsteps=sqrt(1+sqrt(s0.dot(s0)));
- adeptsteps=1.0/adeptsteps;
- //adeptsteps=1.0;
+ //adeptsteps=sqrt(1+s0.dot(s0));
+ //adeptsteps=1.0/adeptsteps;
+ adeptsteps=1.0;
  XYn=XY+an*adeptsteps*s0;
- gradEn=Gradient(springlist,XYn,Anchor)+gradEbend(springpairs,springlist,XY,kappa);
- betan=gradEn.dot(gradEn)/(gradE.dot(gradE));
+ gradEn=Gradient(springlist,XYn,Anchor)+gradEbend(springpairs,springlist,XYn,kappa);
+ //betan=gradEn.dot(gradEn)/(gradE.dot(gradE));
+ betan=(gradEn-gradE).dot(gradEn)/gradE.dot(gradE);
  
+ 
+ //Rest the gradient
  if(i%10==0){ 
      sn=-gradEn;}
  else{
     sn=-gradEn+betan*s0;
  }
- s0=sn;
- gradE=gradEn;
- XY=XYn;
+s0=sn;
+gradE=gradEn;
+XY=XYn;
 Energy=Energynetwork(springlist,XY,Anchor);
 EBEND=Ebend(springpairs,springlist,XY,kappa);    
 EFile<<Energy<<"\t"<<EBEND<<endl;
