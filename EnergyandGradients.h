@@ -9,10 +9,12 @@ struct anchor{
   int label; 
   double xpos,ypos;
 };
+
+int SIGN(double a,double b);
+int sgn(double x);
 double ROSENBROCK(const Eigen::VectorXd &XY);
 Eigen::VectorXd GRAD_rosen(const Eigen::VectorXd &XY);
 double dROSENdA(const Eigen::VectorXd &XY,const Eigen::VectorXd &s);
-
 
 
 double distance(const Eigen::VectorXd &XY,int one, int two);
@@ -22,21 +24,74 @@ Eigen::VectorXd gradL(const double x1,const double y1,const double x2, const dou
                const int springnr, const std::vector<spring> &springlist,const int num);
 
 
-
-
 double distance1(const double x1, const double y1, const double x2,const double y2);
 
-double Energynetwork(const std::vector<spring> &springlist, const Eigen::VectorXd &XY,const std::vector<anchor> &Anchor);
-double Ebend(const std::vector<std::vector<int>> &springpairs,const std::vector<spring> &springlist,const Eigen::VectorXd &XY,
-    const double kappa);
+double Energynetwork(const std::vector<spring> &springlist, 
+                     const Eigen::VectorXd &XY);
 
-Eigen::VectorXd Gradient(const std::vector<spring> &springlist,const Eigen::VectorXd &XY,
-			 const std::vector<anchor> &Anchor);
-Eigen::VectorXd gradEbend(const std::vector<std::vector<int>> &springpairs,const std::vector<spring> &springlist,
+double Ebend(const std::vector<std::vector<int>> &springpairs,
+             const std::vector<spring> &springlist,
+             const Eigen::VectorXd &XY,
+             const double kappa);
+
+Eigen::VectorXd Gradient(const std::vector<spring> &springlist,
+                         const Eigen::VectorXd &XY);
+
+Eigen::VectorXd gradEbend(const std::vector<std::vector<int>> &springpairs,
+                          const std::vector<spring> &springlist,
                           const Eigen::VectorXd &XY,double kappa);
 
-double dEda(const Eigen::VectorXd &XY,const std::vector<anchor> &Anchor,const Eigen::VectorXd &s0,
-            const std::vector<spring> &springlist,const std::vector<std::vector<int>> &springpairs,double kappa);//,const std::vector<triplet> &tripl,const int BendOn); 
+double dEda(const Eigen::VectorXd &XY,
+            const Eigen::VectorXd &s0,
+            const std::vector<spring> &springlist,
+            const std::vector<std::vector<int>> &springpairs,
+            double kappa);//,const std::vector<triplet> &tripl,const int BendOn); 
+
+double quad(double x);
+
+void doBracketfind(double &a1,double &a2,
+                   const Eigen::VectorXd &XY,
+                   const Eigen::VectorXd &s0,
+                   const std::vector<spring> &springlist,
+                   const std::vector<std::vector<int>> &springpairs, 
+                   double kappa);
+
+void doBisection(double a1,double a2,double &root,
+                 const Eigen::VectorXd &XY,
+                 const Eigen::VectorXd &s0,
+                 const std::vector<spring> &springlist,
+                 const std::vector<std::vector<int>> &springpairs, 
+                 double kappa);
+
+
+// void doBisection2(double a1,double a2,double &root,
+//                  const Eigen::VectorXd &XY,
+//                  const Eigen::VectorXd &s0,
+//                  const std::vector<spring> &springlist,
+//                  const std::vector<std::vector<int>> &springpairs, 
+//                  double kappa);
+
+
+
+
+
+void doFalsePosition(double &xl,double &xh,double &root,
+                 const Eigen::VectorXd &XY,
+                 const Eigen::VectorXd &s0,
+                 const std::vector<spring> &springlist,
+                 const std::vector<std::vector<int>> &springpairs, 
+                 double kappa);
+
+
+void doSecant(   double &root,
+                 const Eigen::VectorXd &XY,
+                 const Eigen::VectorXd &s0,
+                 const std::vector<spring> &springlist,
+                 const std::vector<std::vector<int>> &springpairs, 
+                 double kappa);
+
+
+void doBrent(double x1, double x2,double tol,double &root);
 
 
 #endif // MAKEMIKADONETWORK_H

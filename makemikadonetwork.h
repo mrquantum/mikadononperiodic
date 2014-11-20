@@ -39,13 +39,16 @@ std::vector<stick> make_ghost_lr( const std::vector<stick> &m, double LStick, in
 std::vector<stick> make_ghost_ud(const std::vector<stick> &m, double LStick, int NumberMikado);
 std::vector<connected> make_connections(const std::vector<stick> &m, double LStick);
 std::vector<elonstick> sortELEMENTSperMIKADO(std::vector<connected> &Connection);
-void SpringsAndNodes(const std::vector<elonstick> &ELONSTICK,
+void makeSpringsAndNodes(const std::vector<elonstick> &ELONSTICK,
 		     const std::vector<stick> &mikorig, std::vector<spring> &springlist, std::vector<node> &nodes,
 		     double rlenshort,double rlenlong,double k1, double k2);
 bool operator<(const node& first,const node& second);
-bool operator<(const elonstick& first, const elonstick& second);
+bool operator<(const elonstick &first, const elonstick &second);
+bool operator<(const stick &first, const stick &second);
 
+void makeSticks(std::vector<stick> &mikado,std::vector<stick> &mikorig,const int NumberMikado,const double LStick);
 
+double inbox(double x,double boxsize);
 
 
 #endif // MAKEMIKADONETWORK_H

@@ -5,6 +5,7 @@
 #include <eigen3/Eigen/LU>
 #include <vector>
 #include <iostream>
+
 using namespace Eigen;
 using namespace std;
 const double pi=4.0*atan(1.0);
@@ -26,6 +27,16 @@ bool operator<(const elonstick& first, const elonstick& second){
       return true;
     }
 }
+
+bool operator<(const stick &first, const stick &second)
+{
+  if(first.nr>=second.nr){
+    return false;}
+    else{ return true;
+    }
+   }
+
+
 
 //Here we make the initial mikadonetwork
 std::vector<stick> make_sticks(int N)
@@ -208,7 +219,7 @@ return ELONSTICK;
 
 
 //With the points per stick, we can now make nodes and springs.
-void SpringsAndNodes(const vector<elonstick> &ELONSTICK,const vector<stick> &mikorig, vector<spring> &springlist,
+void makeSpringsAndNodes(const vector<elonstick> &ELONSTICK,const vector<stick> &mikorig, vector<spring> &springlist,
 vector<node> &nodes,
 double rlenshort, double rlenlong,double k1,double k2)
 {
@@ -286,4 +297,44 @@ for(int i=0;i<ELONSTICK.size();i++){
 std::sort(nodes.begin(),nodes.end());
 
 }
+
+double inbox(double x,double boxsize){
+  if(x<0){
+    x=x+boxsize;
+  }
+  if(x>boxsize){
+  x=x-boxsize;
+  }
+return x;
+}
+
+
+
+
+
+
+void makeSticks(vector<stick> &mikado,vector<stick> &mikorig,const int NumberMikado,const double LStick)
+{
+mikado=make_sticks(NumberMikado);
+mikorig=mikado; //The original set of sticks
+//Find the lr wall intercepts and add a ghost to the mikado's
+vector<stick> GhostLR = make_ghost_lr(mikado, LStick, mikado.size()); 
+mikado.insert(mikado.end(),GhostLR.begin(),GhostLR.end()); //add the newly found sticks to the existing sticks 
+vector<stick> GhostUD=make_ghost_ud(mikado,LStick,mikado.size()); 
+
+if(GhostUD.size()!=0){
+    vector<stick> GhostLR2=make_ghost_lr(GhostUD,LStick,GhostUD.size());
+    mikado.insert(mikado.end(),GhostUD.begin(),GhostUD.end());
+    if(GhostLR2.size()!=0){
+        mikado.insert(mikado.end(),GhostLR2.begin(),GhostLR2.end());
+    }
+}
+std::sort(mikado.begin(),mikado.end());
+}
+    
+    
+    
+    
+    
+    
 

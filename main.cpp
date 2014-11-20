@@ -24,23 +24,6 @@ void getRandom(vector<double> &v)
     cout << v[i] << endl;
   }
 }
-
-bool operator<(const stick& first, const stick& second){
-  if(first.nr>=second.nr){
-    return false;}
-    else{ return true;
-    }
-   }
-double inbox(double x,double boxsize){
-  if(x<0){
-    x=x+boxsize;
-  }
-  if(x>boxsize){
-  x=x-boxsize;
-  }
-return x;
-}
-
   
 int main (int argc,char **argv)
 {
@@ -50,31 +33,21 @@ if(argc>1){
   my_random::set_seed(SEED);
 }  
   
-  
-int NumberMikado=300;
-double LStick=.3; //Stick Length
-double k1=1;
-double k2=1;
-//double kappa=0.000001;
-double kappa=0.00001;
+//System parameters  
+int Nit=150;  
+double tolE=.001;
+int NumberMikado=200;
+double LStick=.4; //Stick Length
+double k1=.05;
+double k2=.1;
+double kappa=0.000006;
 double rlenshort=.0001;
 double rlenlong=.01;
 
-vector<stick> mikado=make_sticks(NumberMikado);
-vector<stick> mikorig=mikado; //The original set of sticks
-//Find the lr wall intercepts and add a ghost to the mikado's
-vector<stick> GhostLR = make_ghost_lr(mikado, LStick, mikado.size()); 
-mikado.insert(mikado.end(),GhostLR.begin(),GhostLR.end()); //add the newly found sticks to the existing sticks 
-vector<stick> GhostUD=make_ghost_ud(mikado,LStick,mikado.size()); 
+vector<stick> mikado;
+vector<stick> mikorig;
+makeSticks(mikado,mikorig,NumberMikado,LStick);
 
-if(GhostUD.size()!=0){
-    vector<stick> GhostLR2=make_ghost_lr(GhostUD,LStick,GhostUD.size());
-    mikado.insert(mikado.end(),GhostUD.begin(),GhostUD.end());
-    if(GhostLR2.size()!=0){
-        mikado.insert(mikado.end(),GhostLR2.begin(),GhostLR2.end());
-    }
-}
-std::sort(mikado.begin(),mikado.end());
 
 
 vector<connected> Connection=make_connections(mikado,LStick); //Make Connections
@@ -134,7 +107,7 @@ vector<node> nodes(0);
 }
 
 //Make the springs and Nodes. Input springlist and nodes are (empty vectors)
-SpringsAndNodes(ELONSTICK,mikorig,springlist,nodes,rlenshort,rlenlong,k1,k2); 
+makeSpringsAndNodes(ELONSTICK,mikorig,springlist,nodes,rlenshort,rlenlong,k1,k2); 
 
 //Remove all double info
 vector<node> singleNodes; 
@@ -146,17 +119,13 @@ for(std::size_t i=0;i<nodes.size();i++){
 }
 
 
-
-/*
-**************MAKE HERE THE PAIR OF SPRINGS
-springpairs is an vector, coding a triplet in each row: 
-springpairs[i][1]= ith triplet first spring
-springpairs[i][2] ith triplet second spring. 
-springpairs[i][3] ith triplet mikado nr.
-the labels for the springs are the indexnumbers of coding the
-springs in the springslist.
-*/
-
+//**************MAKE HERE THE PAIR OF SPRINGS
+//springpairs is an vector, coding a triplet in each row: 
+//springpairs[i][1]= ith triplet first spring
+//springpairs[i][2] ith triplet second spring. 
+//springpairs[i][3] ith triplet mikado nr.
+//the labels for the springs are the indexnumbers of coding the
+//springs in the springslist.
 vector<vector<int>> springpairs(0);
 for(std::size_t i=0;i<springlist.size()-1;i++){
     if(springlist[i].sticki==springlist[i+1].sticki){
@@ -172,102 +141,95 @@ for(std::size_t i=0;i<springlist.size()-1;i++){
 //The xy positions
  VectorXd X(singleNodes.size()),Y(singleNodes.size());
  for(std::size_t i=0;i<singleNodes.size();i++){
- X(i)=singleNodes[i].x; 
- Y(i)=(singleNodes[i].y);
+    X(i)=singleNodes[i].x; 
+    Y(i)=singleNodes[i].y;
  }
  for(std::size_t i=0;i<singleNodes.size();i++){
- X(i)=inbox(X(i),1.0);
- Y(i)=inbox(Y(i),1.0);
+    X(i)=inbox(X(i),1.0);
+    Y(i)=inbox(Y(i),1.0);
  }
- 
- vector<anchor> Anchor;
- anchor Angtemp;
- Angtemp.label=0;
- Angtemp.xpos=.5;
- Angtemp.ypos=.5;
- Anchor.push_back(Angtemp);
- 
+  
  VectorXd XY(2*X.size());
- XY<<X,
-     Y;
+ XY<<X,Y;
+ 
  
 int num=XY.size()/2;     
-double Energy=Energynetwork(springlist,XY,Anchor);
+double Energy=Energynetwork(springlist,XY);
 double EBEND=Ebend(springpairs,springlist,XY,kappa);
 
+
 //Here comes the conjugate gradient
- VectorXd gradE(XY.size());
- VectorXd XYn(XY.size());
- VectorXd gradEn(gradE.size());
- VectorXd s0(gradE.size());
- VectorXd sn(s0.size());
- vector<spring> newsprings(springlist.size());
- double betan;
- gradE=Gradient(springlist,XY,Anchor)+gradEbend(springpairs,springlist,XY,kappa);
- s0=-gradE;
+    VectorXd gradE(XY.size());
+    VectorXd XYn(XY.size());
+    VectorXd gradEn(gradE.size());
+    VectorXd s0(gradE.size());
+    VectorXd sn(s0.size());
+    VectorXd dXY(XY.size());
+    double maxdispl=.01;
+    double betan;
+    gradE=Gradient(springlist,XY)+
+          gradEbend(springpairs,springlist,XY,kappa);
+    s0=-gradE;
  
- ofstream XYfile("conjpoints.txt");
- ofstream EFile("Energy.txt");
- EFile<<Energy<<"\t"<<EBEND<<endl;
  
-  //The loop of the conj grad method
- int Nit=50;
- for(int i=0;i<Nit;i++)
- {
+    ofstream XYfile("conjpoints.txt");
+    ofstream EFile("Energy.txt");
+    EFile<<Energy<<"\t"<<EBEND<<endl;
+ 
+    //The loop of the conj grad method
+    int conjsteps=0;
+    do{
+        conjsteps++;
 
-for(int j=0;j<XY.size();j++){ //write the XY-data to txt
-    XYfile<<XY(j)<<"\t";
-   }
-   XYfile<<endl;
+        for(int j=0;j<XY.size();j++){ //write the XY-data to txt
+            XYfile<<XY(j)<<"\t";
+        }
+        XYfile<<endl;
  
-   
- //This is the secant method
- double an2=0.0;
- double an1=0.000000001;
- double an;
- double tol=0.0000000001;
- int q=0; 
- double dEda2,dEda1;
+        double a1,a2,root;
+        a1=0;
+        a2=.1;
+        //doBracketfind(a1,a2,XY,s0,springlist,springpairs,kappa);
+        //cout<<"The bracket:  "<<a1<<"  "<<a2<<endl;
+        //doBisection(a1,a2,root,XY,s0,springlist,springpairs,kappa);
+        //doFalsePosition(a1,a2,root,XY,s0,springlist,springpairs,kappa);
+        doSecant(root,XY,s0,springlist,springpairs,kappa);
+        cout<<conjsteps<<"\t"<<root<<endl;
+        double an=root;  
+  
+        //Update variables
+        double adeptsteps;
+        //adeptsteps=sqrt(1+sqrt(s0.dot(s0)));
+        //adeptsteps=1.0/adeptsteps;
+        adeptsteps=1.0;
+        
+        dXY=an*adeptsteps*s0;
+        for(int q=0;q<dXY.size();q++){
+            if(dXY(q)>maxdispl) dXY(q)=maxdispl*sgn(dXY(q));
+        }
+        XYn=XY+dXY;
+        //XYn=XY+an*adeptsteps*s0;
+        gradEn=Gradient(springlist,XYn)+gradEbend(springpairs,springlist,XYn,kappa);
+        //betan=gradEn.dot(gradEn)/(gradE.dot(gradE));
+        betan=(gradEn-gradE).dot(gradEn)/gradE.dot(gradE);
  
-dEda2=dEda(XY+an2*s0,Anchor,s0,springlist,springpairs,kappa);
+ 
+        if(conjsteps%10==0){ 
+            sn=-gradEn;}
+        else{
+            sn=-gradEn+betan*s0;
+        }
+        s0=sn;
+        gradE=gradEn;
+        XY=XYn;
+        Energy=Energynetwork(springlist,XY);
+        EBEND=Ebend(springpairs,springlist,XY,kappa);    
+        EFile<<Energy<<"\t"<<EBEND<<endl;
 
- do{ 
-    dEda1=dEda(XY+an1*s0,Anchor,s0,springlist,springpairs,kappa);
-    an=an1-dEda1*(an1-an2)/(dEda1-dEda2);
-    an2=an1;
-    an1=an;
-    dEda2=dEda1;   
-    q++;
- }while(q<50 && abs(an2-an1)>tol);
- cout<<i<<"\t"<<q<<endl;
- //Update variables
- double adeptsteps;
- //adeptsteps=sqrt(1+s0.dot(s0));
- //adeptsteps=1.0/adeptsteps;
- adeptsteps=1.0;
- XYn=XY+an*adeptsteps*s0;
- gradEn=Gradient(springlist,XYn,Anchor)+gradEbend(springpairs,springlist,XYn,kappa);
- //betan=gradEn.dot(gradEn)/(gradE.dot(gradE));
- betan=(gradEn-gradE).dot(gradEn)/gradE.dot(gradE);
- 
- 
- //Rest the gradient
- if(i%10==0){ 
-     sn=-gradEn;}
- else{
-    sn=-gradEn+betan*s0;
- }
-s0=sn;
-gradE=gradEn;
-XY=XYn;
-Energy=Energynetwork(springlist,XY,Anchor);
-EBEND=Ebend(springpairs,springlist,XY,kappa);    
-EFile<<Energy<<"\t"<<EBEND<<endl;
+    }while(conjsteps<Nit && sqrt(gradE.dot(gradE))>tolE);
 
-}
-
- XYfile.close();
- EFile.close();
+    XYfile.close();
+    EFile.close();
  
  
 FILE *fp = fopen("mikado.txt","w");

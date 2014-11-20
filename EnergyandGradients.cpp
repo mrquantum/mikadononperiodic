@@ -10,6 +10,23 @@ using namespace Eigen;
 using namespace std;
 const double pi=4.0*atan(1.0);
    
+int SIGN(double a,double b)
+{
+    double c=a*b;
+    if(c>=0) {
+        return 1;
+    } else{
+        return -1;    
+    }
+}
+
+int sgn(double x)
+{
+    if(x>=0) {
+        return 1;
+    } else{
+        return -1;}  
+}
 
 double ROSENBROCK(const Eigen::VectorXd &XY)
 {
@@ -73,7 +90,7 @@ VectorXd gradL(const double x1,const double y1,const double x2, const double y2,
 return grad;
 }  
     
-double Energynetwork(const vector<spring> &springlist, const VectorXd &XY,const vector<anchor> &Anchor)
+double Energynetwork(const vector<spring> &springlist, const VectorXd &XY)
 {
   VectorXd X(XY.size()/2);
   VectorXd Y(XY.size()/2);
@@ -85,9 +102,7 @@ double Energynetwork(const vector<spring> &springlist, const VectorXd &XY,const 
       0.5*springlist[i].k*pow(sqrt(pow(X(springlist[i].one)-(X(springlist[i].two)+springlist[i].wlr),2)
       +pow(Y(springlist[i].one)-(Y(springlist[i].two)+springlist[i].wud),2))-springlist[i].rlen,2);
     }
-//  for(int j=0;j<Anchor.size();j++){
-//   Energy=Energy+0.5*k*pow(sqrt(pow(X(Anchor[j].label)-Anchor[j].xpos,2)+pow(Y(Anchor[j].label)-Anchor[j].ypos,2))-L,2);
-//  }
+
   return Energy;  
 }
 
@@ -144,7 +159,7 @@ return Energy;
 }
 
 
-VectorXd Gradient(const vector<spring> &springlist,const VectorXd &XY,const vector<anchor> &Anchor)
+VectorXd Gradient(const vector<spring> &springlist,const VectorXd &XY)
 {
   VectorXd gradE(XY.size());
   for(int i=0;i<gradE.size();i++){
@@ -348,7 +363,7 @@ for(int j=0;j<gradL1L2m1.size();j++){
     GRADc=(denumerator*GRADnumerator-numerator*GRADdenumerator)/(pow(denumerator,2));
     //cout<<GRADc.dot(GRADc)<<endl;
 
-    double dacos=-1-c*c/2-3*c*c*c*c/8;
+    //double dacos=-1-c*c/2-3*c*c*c*c/8;
     //if(GRADc.dot(GRADc)<.1) GRADc=1/s*GRADc;
     secondpart=secondpart+(1.0/(d12+d23))*2*(pi-acos(c))*s*GRADc;
   
@@ -359,11 +374,265 @@ for(int j=0;j<gradL1L2m1.size();j++){
 }
 
 
-double dEda(const VectorXd &XY,const vector<anchor> &Anchor,const VectorXd &s0,const vector<spring> &springlist,
+double dEda(const VectorXd &XY,const VectorXd &s0,const vector<spring> &springlist,
     const vector<vector<int>> &springpairs,double kappa)
 {  
     double out;
-    out=s0.dot((Gradient(springlist,XY,Anchor)+gradEbend(springpairs,springlist,XY,kappa)));
+    out=s0.dot((Gradient(springlist,XY)+gradEbend(springpairs,springlist,XY,kappa)));
     return out;  
 }
+
+double quad(double x)
+{
+ double out=x*x-2*x-1;   
+ return out;
+}    
+    
+
+void doBracketfind(double &a1,double &a2,
+                   const VectorXd &XY,
+                   const VectorXd &s0, 
+                   const vector<spring> &springlist,
+                   const vector<vector<int>> &springpairs, 
+                   double kappa)
+//This function finds the inteval on which a mathematical function passes through zero.
+//that is [x1,x2] where f(x1)*f(x2)<0.0;
+{
+ int maxit=50;   
+ double f1,f2,FACTOR;
+ f1=dEda(XY+a1*s0,s0,springlist,springpairs,kappa);
+ f2=dEda(XY+a2*s0,s0,springlist,springpairs,kappa);
+
+ FACTOR=1.6;
+  
+ if(a1==a2){ //We need two different points
+    cout<<"Bad initial range in zbrac"<<endl;
+  }
+ 
+  for(int j=0;j<maxit;j++){ //Make a bracket.
+    if(f1*f2<0.0) break;
+    
+    if(abs(f1)<abs(f2)){
+        a1=a1+FACTOR*(a1-a2);
+        f1=dEda(XY+a1*s0,s0,springlist,springpairs,kappa);
+    }
+    else{
+        a2=a2+FACTOR*(a2-a1);
+        f2=dEda(XY+a2*s0,s0,springlist,springpairs,kappa);
+    }
+ //cout<<f1<<"  "<<f2<<endl;
+  }  
+}
+    
+    
+    
+    
+void doBisection(double a1,double a2,double &root,
+    const VectorXd &XY,
+    const VectorXd &s0, 
+    const vector<spring> &springlist,
+    const vector<vector<int>> &springpairs, 
+    double kappa)
+{
+ double f1,f2,fc,c;
+ int q=0;
+ do{
+ c=0.5*(a1+a2);
+ f1=dEda(XY+a1*s0,s0,springlist,springpairs,kappa);
+ f2=dEda(XY+a2*s0,s0,springlist,springpairs,kappa);
+ fc=dEda(XY+c*s0,s0,springlist,springpairs,kappa);
+ 
+ if(f1*fc>0.0) a1=c;
+ else a2=c;
+ q++;
+ // cout<<a1<<"  "<<a2<<"  "<<fc<<endl;   
+}while(abs(fc)>.000001 && q<50);
+ root=c;
+}
+
+// void doBisection2(double x1,double x2,double &root,
+//     const VectorXd &XY,
+//     const VectorXd &s0, 
+//     const vector<spring> &springlist,
+//     const vector<vector<int>> &springpairs, 
+//     double kappa)
+// {
+//     double xacc=.00000001;
+//     double dx,f,fmid,xmid,rtb;
+//     
+//     f=dEda(XY+x1*s0,s0,springlist,springpairs,kappa);
+//     fmid=dEda(XY+x2*s0,s0,springlist,springpairs,kappa);
+//     
+//     rtb=f<0.0 ? (dx=x2-x1,x1) : (dx=x1,x2,x2);
+//     for(int j=0;j<50;j++){
+//         fmid=quad(xmid=rtb+(dx*=0.5));
+//         if (fmid<=0.0) rtb=xmid;
+//         if (abs(dx)<xacc||fmid==0) root=rtb;
+//         
+//     } 
+// }
+
+
+
+
+
+
+void doFalsePosition(double &a1,double &a2,double &root,
+                    const VectorXd &XY,
+                    const VectorXd &s0, 
+                    const vector<spring> &springlist,
+                    const vector<vector<int>> &springpairs, 
+                    double kappa)
+{
+ double fl,fh,xl,xh,swap,dx,del,f;   
+ double xacc=.00001;
+ 
+ int Maxit=50;
+ fl=dEda(XY+a1*s0,s0,springlist,springpairs,kappa);
+ fh=dEda(XY+a2*s0,s0,springlist,springpairs,kappa);
+
+ 
+ if(fl<0.0){  //xl =xlow and xh=xhigh --> f(xl)<f(xh);
+     xl=a1; 
+     xh=a2;
+ }
+ else{
+     xl=a2;
+     xh=a1;
+     swap=fl;
+     fl=fh;
+     fh=swap;
+}
+dx=xh-xl;
+for(int i=0;i<Maxit;i++){
+    root=xl+dx*fl/(fl-fh); //This is a secant step
+    f=dEda(XY+root*s0,s0,springlist,springpairs,kappa);
+    if(f<0.0){
+     del=xl-root;
+     xl=root;
+     fl=f;
+    }
+    else{
+        del=xh-root;
+        xh=root;
+        fh=f;
+    }
+    dx=xh-xl;
+    if(abs(del)<xacc || f==0.0) break;
+}
+}
+
+void doSecant(double &root,
+              const VectorXd &XY,
+              const VectorXd &s0, 
+              const vector<spring> &springlist,
+              const vector<vector<int>> &springpairs, 
+              double kappa)
+{
+ double an2=0.0;
+ double an1=0.0001;
+ double an;
+ double tol=0.0000001;
+ int q=0; 
+ double dEda2,dEda1;
+ 
+dEda2=dEda(XY+an2*s0,s0,springlist,springpairs,kappa);
+
+ do{ 
+    dEda1=dEda(XY+an1*s0,s0,springlist,springpairs,kappa);
+    an=an1-dEda1*(an1-an2)/(dEda1-dEda2);
+    an2=an1;
+    an1=an;
+    dEda2=dEda1;   
+    q++;
+ }while(q<50 && abs(an2-an1)>tol);   
+ root=an;   
+}
+
+
+void doBrent(double x1, double x2,double tol,double &root)
+{
+int iter;
+int ITMAX=100;
+double EPS=3e-8;
+double a=x1;
+double b=x2;
+double c=x2;
+double d,e,min1,min2;
+double fa=quad(a);
+double fb=quad(b);
+double fc,p,q,r,s,tol1,xm;
+
+fc=fb;
+
+for(iter=1;iter<ITMAX;iter++) {
+    if( (fb>0.0 && fc >0.0) ||(fb<0.0 && fc <0.0)){
+        c=a;
+        fc=fa;
+        d=b-a;
+        e=d;
+    }
+    if(abs(fc)<abs(fb)) {
+        a=b;
+        b=c;
+        c=a;
+        fa=fb;
+        fb=fc;
+        fc=fa;
+    }
+    tol1=2.0*EPS*abs(b)+0.5*tol;
+    xm=0.5*(c-b);
+    if(abs(xm)<=tol1 ||fb == 0.0) {
+        root=b;
+        break;
+    }
+    if(abs(e)>=tol1 && abs(fa)>abs(fb))  {
+        s=fb/fa;
+        if(a==c){
+            p=2.0*xm*s;
+            q=1.0-s;
+        } else {
+            q=fa/fc;
+            r=fb/fc;
+            p=s* (2.0*xm*q*(q-r)-(b-a)*(r-1.0));
+            q=(q-1.0)*(r-1.0)*(s-1.0);
+        }
+        if(p>0.0) q=-q;
+        p=abs(p);
+        min1=3.0*xm*q-abs(tol1*q);
+        min2=abs(e*q);
+        if(2.0*p<(min1<min2 ? min1:min2)){
+            e=d;
+            d=p/q;
+        } else{
+            d=xm;
+            e=d;
+        }
+    } else{
+        d=xm;
+        e=d;
+    }
+    a=b;
+    fa=fb;
+    if(abs(d)>tol1){
+        b+=d;
+    } else{
+        b+=SIGN(tol1,xm);
+        fb=quad(b);
+        
+    }
+//root=0.0;   
+}
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+}
+
 
