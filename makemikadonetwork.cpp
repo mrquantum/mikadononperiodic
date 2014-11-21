@@ -122,8 +122,8 @@ vector<stick> make_ghost_ud(const vector<stick> &m, double LStick, int NumberMik
 }
 
 //Checks whether the mikado's are connected
-vector<connected> make_connections(const vector<stick> &m, double LStick){
-  vector<connected> Connection;
+void make_connections(vector<connected> &Connection,const vector<stick> &m, double LStick)
+{
   Matrix2d A; //The matrix to solve with
   Vector2d b,st; // A*st=b
   int nr=0;
@@ -131,37 +131,37 @@ vector<connected> make_connections(const vector<stick> &m, double LStick){
   for (int i=0;i<m.size()-1;i++){
     for (int j=i+1;j<m.size();j++){
       if(m[i].th!=m[j].th || m[i].nr!=m[j].nr){
-        A<<-cos(m[i].th),cos(m[j].th),-sin(m[i].th),sin(m[j].th);
-        b<<m[i].x-m[j].x,m[i].y-m[j].y;
-        st=A.lu().solve(b);
-        if ((st(0)>0 && st(0)<LStick)&&(st(1)>0 && st(1)<LStick)){
-          connected xtrarow, xtrarow2;
-          xtrarow.first=m[i].nr;	//[stick i stick j sij sji] 
-          xtrarow.second=m[j].nr;
-          xtrarow.s1=st(0);
-          xtrarow.s2=st(1);
-	  xtrarow.nrCon=nr;
-	  xtrarow.recur=0;
-	  xtrarow2.first=m[j].nr;	//[stick j sticki sji sij]
-	  xtrarow2.second=m[i].nr;
-	  xtrarow2.s1=st(1);
-	  xtrarow2.s2=st(0);
-	  xtrarow2.nrCon=nr;
-	  xtrarow2.recur=0;
-          Connection.push_back(xtrarow);
-	  Connection.push_back(xtrarow2);
-	  nr++;
+            A<<-cos(m[i].th),cos(m[j].th),-sin(m[i].th),sin(m[j].th);
+            b<<m[i].x-m[j].x,m[i].y-m[j].y;
+            st=A.lu().solve(b);
+            if ((st(0)>0 && st(0)<LStick)&&(st(1)>0 && st(1)<LStick)){
+                connected xtrarow, xtrarow2;
+                xtrarow.first=m[i].nr;	//[stick i stick j sij sji] 
+                xtrarow.second=m[j].nr;
+                xtrarow.s1=st(0);
+                xtrarow.s2=st(1);
+                xtrarow.nrCon=nr;
+                xtrarow.recur=0;
+                
+                xtrarow2.first=m[j].nr;	//[stick j sticki sji sij]
+                xtrarow2.second=m[i].nr;
+                xtrarow2.s1=st(1);
+                xtrarow2.s2=st(0);
+                xtrarow2.nrCon=nr;
+                xtrarow2.recur=0;
+                Connection.push_back(xtrarow);
+                Connection.push_back(xtrarow2);
+            nr++;
+            }
         }
-      }
     }
   }
-  return Connection;
 }
 
 //Calculate per mikado how many and where other mikado's cross
-vector<elonstick> sortELEMENTSperMIKADO(vector<connected> &Connection)
+void sortELEMENTSperMIKADO(vector<elonstick> &ELONSTICK,vector<connected> &Connection)
 {
-vector<elonstick> ELONSTICK;
+//vector<elonstick> ELONSTICK;
 for(int i=0;i<Connection.size()-1;i++){
     if(Connection[i].recur==1){
         elonstick extrarow;
@@ -185,7 +185,7 @@ for(int i=0;i<Connection.size()-1;i++){
         }
 ELONSTICK.push_back(extrarow);
    }
- }
+ } 
 // now sort extrarow on descending order per stick;
 for(int j=0; j<ELONSTICK.size();j++){
     vector<double> distances=ELONSTICK[j].S;
@@ -214,8 +214,43 @@ for(int j=0; j<ELONSTICK.size();j++){
 	ELONSTICK[j].nr=numbers;
     }
 std::sort(ELONSTICK.begin(),ELONSTICK.end());
-return ELONSTICK;
+//return ELONSTICK;
 }
+
+
+void orderElonstick(vector<int> &order,vector<elonstick> &ELONSTICK)
+{
+order.push_back(0);
+    for(std::size_t i=0;i<ELONSTICK.size();i++){
+        vector<int> numbervec=ELONSTICK[i].nr;
+        for(std::size_t j=0;j<numbervec.size();j++){
+            int flag=0;
+            for(std::size_t k=0;k<order.size();k++){
+                if(numbervec[j]==order[k]) flag=1;
+            }
+            if(flag==0) order.push_back(numbervec[j]);
+    }
+ }
+     
+ std::sort(order.begin(),order.end());
+     
+ for(std::size_t i=0;i<ELONSTICK.size();i++){
+  for(std::size_t j=0;j<ELONSTICK[i].nr.size();j++){
+      for(std::size_t k=0;k<order.size();k++){
+            if(ELONSTICK[i].nr[j]==order[k]) ELONSTICK[i].nr[j]=k;
+      }
+  }
+}
+
+
+}
+
+
+
+
+
+
+
 
 
 //With the points per stick, we can now make nodes and springs.
@@ -308,6 +343,25 @@ double inbox(double x,double boxsize){
 return x;
 }
 
+void makeSpringpairs(vector<vector<int>> &springpairs,const vector<spring> &springlist)
+{
+//springpairs is an vector, coding a triplet in each row: 
+//springpairs[i][1]= ith triplet first spring
+//springpairs[i][2] ith triplet second spring. 
+//springpairs[i][3] ith triplet mikado nr.
+//the labels for the springs are the indexnumbers of coding the
+//springs in the springslist.    
+for(std::size_t i=0;i<springlist.size()-1;i++){
+    if(springlist[i].sticki==springlist[i+1].sticki){
+        vector<int> pair(3);
+        pair[0]=i;
+        pair[1]=i+1;
+        pair[2]=springlist[i].sticki;
+        springpairs.push_back(pair);
+    }   
+}
+}
+
 
 
 
@@ -315,24 +369,56 @@ return x;
 
 void makeSticks(vector<stick> &mikado,vector<stick> &mikorig,const int NumberMikado,const double LStick)
 {
-mikado=make_sticks(NumberMikado);
-mikorig=mikado; //The original set of sticks
-//Find the lr wall intercepts and add a ghost to the mikado's
-vector<stick> GhostLR = make_ghost_lr(mikado, LStick, mikado.size()); 
-mikado.insert(mikado.end(),GhostLR.begin(),GhostLR.end()); //add the newly found sticks to the existing sticks 
-vector<stick> GhostUD=make_ghost_ud(mikado,LStick,mikado.size()); 
+    mikado=make_sticks(NumberMikado);
+    mikorig=mikado; //The original set of sticks
+    //Find the lr wall intercepts and add a ghost to the mikado's
+    vector<stick> GhostLR = make_ghost_lr(mikado, LStick, mikado.size()); 
+    mikado.insert(mikado.end(),GhostLR.begin(),GhostLR.end()); //add the newly found sticks to the existing sticks 
+    vector<stick> GhostUD=make_ghost_ud(mikado,LStick,mikado.size()); 
 
-if(GhostUD.size()!=0){
-    vector<stick> GhostLR2=make_ghost_lr(GhostUD,LStick,GhostUD.size());
-    mikado.insert(mikado.end(),GhostUD.begin(),GhostUD.end());
-    if(GhostLR2.size()!=0){
-        mikado.insert(mikado.end(),GhostLR2.begin(),GhostLR2.end());
+    if(GhostUD.size()!=0){
+        vector<stick> GhostLR2=make_ghost_lr(GhostUD,LStick,GhostUD.size());
+        mikado.insert(mikado.end(),GhostUD.begin(),GhostUD.end());
+        if(GhostLR2.size()!=0){
+            mikado.insert(mikado.end(),GhostLR2.begin(),GhostLR2.end());
+        }
+    }
+    std::sort(mikado.begin(),mikado.end());
+}
+    
+
+void makeConnections(vector<connected> &Connection,
+                     const vector<stick> &mikado,
+                     const double LStick)
+{
+make_connections(Connection,mikado,LStick); //Make Connections
+vector<connected> Connection2(1); //sives the double elements from the connections
+Connection2[0]=Connection[0];
+for(std::size_t i=0;i<Connection.size();i++){
+    int flag=1;
+    for(std::size_t j=0;j<Connection2.size();j++){
+        if(Connection[i].first==Connection2[j].first && Connection[i].second==Connection2[j].second){
+            flag=0; 
+            break;
+        }
+    }
+    if(flag==1){
+      Connection2.push_back(Connection[i]);
+    } 
+}
+Connection=Connection2;
+
+//Check for pairs in the connected struct if at least a pair exists (2 points on same mikado)
+//then connection[j].recur=1; Else recur =0.
+for(std::size_t i=0;i<Connection.size()-1;i++){
+    for(std::size_t j=i+1;j<Connection.size();j++){
+        if(Connection[i].first==Connection[j].first){
+            Connection[i].recur=1;  Connection[j].recur=1;
+        }
     }
 }
-std::sort(mikado.begin(),mikado.end());
+       
 }
-    
-    
     
     
     

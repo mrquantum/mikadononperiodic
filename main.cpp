@@ -14,8 +14,8 @@
 
 using namespace std;
 using namespace Eigen;
-
 const double pi=4.0*atan(1.0);
+
 void getRandom(vector<double> &v)
 {
   for (std::size_t i = 0; i < v.size(); ++i)
@@ -34,9 +34,9 @@ if(argc>1){
 }  
   
 //System parameters  
-int Nit=150;  
+int Nit=300;  
 double tolE=.001;
-int NumberMikado=200;
+int NumberMikado=100;
 double LStick=.4; //Stick Length
 double k1=.05;
 double k2=.1;
@@ -47,66 +47,18 @@ double rlenlong=.01;
 vector<stick> mikado;
 vector<stick> mikorig;
 makeSticks(mikado,mikorig,NumberMikado,LStick);
-
-
-
-vector<connected> Connection=make_connections(mikado,LStick); //Make Connections
-vector<connected> Connection2(1); //sives the double elements from the connections
-Connection2[0]=Connection[0];
-for(std::size_t i=0;i<Connection.size();i++){
-    int flag=1;
-    for(std::size_t j=0;j<Connection2.size();j++){
-        if(Connection[i].first==Connection2[j].first && Connection[i].second==Connection2[j].second){
-            flag=0; 
-            break;
-        }
-    }
-    if(flag==1){
-      Connection2.push_back(Connection[i]);
-    } 
-}
-Connection=Connection2;
-
-//Check for pairs in the connected struct if at least a pair exists (2 points on same mikado)
-//then connection[j].recur=1; Else recur =0.
-for(std::size_t i=0;i<Connection.size()-1;i++){
-  for(std::size_t j=i+1;j<Connection.size();j++){
-    if(Connection[i].first==Connection[j].first){
-      Connection[i].recur=1;  Connection[j].recur=1;
-    }
-   }
- }
-
+vector<connected> Connection;
+makeConnections(Connection,mikado,LStick);
 //Here we create the nodes, and the springs from the conncection structure that has already
 //been made above. 
-vector<elonstick> ELONSTICK=sortELEMENTSperMIKADO(Connection);
-vector<spring> springlist(0);
-vector<node> nodes(0);
-        
- vector<int> order;
- order.push_back(0);
- for(std::size_t i=0;i<ELONSTICK.size();i++){
-    vector<int> numbervec=ELONSTICK[i].nr;
-    for(std::size_t j=0;j<numbervec.size();j++){
-        int flag=0;
-        for(std::size_t k=0;k<order.size();k++){
-            if(numbervec[j]==order[k]) flag=1;
-        }
-        if(flag==0) order.push_back(numbervec[j]);
-    }
- }
-     
- std::sort(order.begin(),order.end());
-     
- for(std::size_t i=0;i<ELONSTICK.size();i++){
-  for(std::size_t j=0;j<ELONSTICK[i].nr.size();j++){
-      for(std::size_t k=0;k<order.size();k++){
-            if(ELONSTICK[i].nr[j]==order[k]) ELONSTICK[i].nr[j]=k;
-      }
-  }
-}
+vector<elonstick> ELONSTICK;
+sortELEMENTSperMIKADO(ELONSTICK,Connection);
+vector<int> order;
+orderElonstick(order,ELONSTICK); 
 
 //Make the springs and Nodes. Input springlist and nodes are (empty vectors)
+vector<spring> springlist(0);
+vector<node> nodes(0);
 makeSpringsAndNodes(ELONSTICK,mikorig,springlist,nodes,rlenshort,rlenlong,k1,k2); 
 
 //Remove all double info
@@ -118,24 +70,9 @@ for(std::size_t i=0;i<nodes.size();i++){
   }
 }
 
-
 //**************MAKE HERE THE PAIR OF SPRINGS
-//springpairs is an vector, coding a triplet in each row: 
-//springpairs[i][1]= ith triplet first spring
-//springpairs[i][2] ith triplet second spring. 
-//springpairs[i][3] ith triplet mikado nr.
-//the labels for the springs are the indexnumbers of coding the
-//springs in the springslist.
 vector<vector<int>> springpairs(0);
-for(std::size_t i=0;i<springlist.size()-1;i++){
-    if(springlist[i].sticki==springlist[i+1].sticki){
-        vector<int> pair(3);
-        pair[0]=i;
-        pair[1]=i+1;
-        pair[2]=springlist[i].sticki;
-        springpairs.push_back(pair);
-    }   
-}
+makeSpringpairs(springpairs,springlist);
 
 
 //The xy positions
@@ -153,7 +90,6 @@ for(std::size_t i=0;i<springlist.size()-1;i++){
  XY<<X,Y;
  
  
-int num=XY.size()/2;     
 double Energy=Energynetwork(springlist,XY);
 double EBEND=Ebend(springpairs,springlist,XY,kappa);
 
@@ -171,6 +107,12 @@ double EBEND=Ebend(springpairs,springlist,XY,kappa);
           gradEbend(springpairs,springlist,XY,kappa);
     s0=-gradE;
  
+ vector<double> alpha;   
+ vector<double> dEa;
+ 
+
+ 
+    
  
     ofstream XYfile("conjpoints.txt");
     ofstream EFile("Energy.txt");
@@ -187,13 +129,14 @@ double EBEND=Ebend(springpairs,springlist,XY,kappa);
         XYfile<<endl;
  
         double a1,a2,root;
-        a1=0;
-        a2=.1;
-        //doBracketfind(a1,a2,XY,s0,springlist,springpairs,kappa);
+        //a1=-0.000000000000000001;
+        a1=0.00;
+        a2=.00000000001;
+        doBracketfind(a1,a2,XY,s0,springlist,springpairs,kappa);
         //cout<<"The bracket:  "<<a1<<"  "<<a2<<endl;
         //doBisection(a1,a2,root,XY,s0,springlist,springpairs,kappa);
-        //doFalsePosition(a1,a2,root,XY,s0,springlist,springpairs,kappa);
-        doSecant(root,XY,s0,springlist,springpairs,kappa);
+        doFalsePosition(a1,a2,root,XY,s0,springlist,springpairs,kappa);
+        //doSecant(root,XY,s0,springlist,springpairs,kappa);
         cout<<conjsteps<<"\t"<<root<<endl;
         double an=root;  
   
@@ -204,14 +147,18 @@ double EBEND=Ebend(springpairs,springlist,XY,kappa);
         adeptsteps=1.0;
         
         dXY=an*adeptsteps*s0;
-        for(int q=0;q<dXY.size();q++){
-            if(dXY(q)>maxdispl) dXY(q)=maxdispl*sgn(dXY(q));
-        }
+//         for(int q=0;q<dXY.size();q++){
+//             if(dXY(q)>maxdispl) {
+//                 dXY(q)=maxdispl*sgn(dXY(q));
+//                 cout<<"Max stepsize"<<endl;
+//             }
+//                 
+//         }
         XYn=XY+dXY;
         //XYn=XY+an*adeptsteps*s0;
         gradEn=Gradient(springlist,XYn)+gradEbend(springpairs,springlist,XYn,kappa);
-        //betan=gradEn.dot(gradEn)/(gradE.dot(gradE));
-        betan=(gradEn-gradE).dot(gradEn)/gradE.dot(gradE);
+        betan=gradEn.dot(gradEn)/(gradE.dot(gradE));
+        //betan=(gradEn-gradE).dot(gradEn)/gradE.dot(gradE);
  
  
         if(conjsteps%10==0){ 
@@ -226,6 +173,23 @@ double EBEND=Ebend(springpairs,springlist,XY,kappa);
         EBEND=Ebend(springpairs,springlist,XY,kappa);    
         EFile<<Energy<<"\t"<<EBEND<<endl;
 
+        //make a file for the conjsteps x=... energy landscape alpha    dEda(X+as0,....)
+        if(conjsteps==133){
+            ofstream dEdA("dedafile.txt");
+            for(int i=0;i<800;i++){
+                double a=-4+0.01*i;
+                alpha.push_back(a);
+                dEa.push_back( dEda(XY+a*s0,s0,springlist,springpairs,kappa));
+            }
+            for(int i=0;i<alpha.size();i++){
+                dEdA<<alpha[i]<<"\t"<<dEa[i]<<endl;   
+            }   
+        
+        }
+        
+        
+        
+        
     }while(conjsteps<Nit && sqrt(gradE.dot(gradE))>tolE);
 
     XYfile.close();

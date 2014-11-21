@@ -403,10 +403,10 @@ void doBracketfind(double &a1,double &a2,
  f1=dEda(XY+a1*s0,s0,springlist,springpairs,kappa);
  f2=dEda(XY+a2*s0,s0,springlist,springpairs,kappa);
 
- FACTOR=1.6;
+ FACTOR=1.1;
   
  if(a1==a2){ //We need two different points
-    cout<<"Bad initial range in zbrac"<<endl;
+    cout<<"Bad initial range in bracketfinder"<<endl;
   }
  
   for(int j=0;j<maxit;j++){ //Make a bracket.
@@ -419,8 +419,11 @@ void doBracketfind(double &a1,double &a2,
     else{
         a2=a2+FACTOR*(a2-a1);
         f2=dEda(XY+a2*s0,s0,springlist,springpairs,kappa);
+    if(j==49){
+        cout<<"not found"<<endl;
     }
- //cout<<f1<<"  "<<f2<<endl;
+        
+    }
   }  
 }
     
@@ -445,36 +448,9 @@ void doBisection(double a1,double a2,double &root,
  if(f1*fc>0.0) a1=c;
  else a2=c;
  q++;
- // cout<<a1<<"  "<<a2<<"  "<<fc<<endl;   
 }while(abs(fc)>.000001 && q<50);
  root=c;
 }
-
-// void doBisection2(double x1,double x2,double &root,
-//     const VectorXd &XY,
-//     const VectorXd &s0, 
-//     const vector<spring> &springlist,
-//     const vector<vector<int>> &springpairs, 
-//     double kappa)
-// {
-//     double xacc=.00000001;
-//     double dx,f,fmid,xmid,rtb;
-//     
-//     f=dEda(XY+x1*s0,s0,springlist,springpairs,kappa);
-//     fmid=dEda(XY+x2*s0,s0,springlist,springpairs,kappa);
-//     
-//     rtb=f<0.0 ? (dx=x2-x1,x1) : (dx=x1,x2,x2);
-//     for(int j=0;j<50;j++){
-//         fmid=quad(xmid=rtb+(dx*=0.5));
-//         if (fmid<=0.0) rtb=xmid;
-//         if (abs(dx)<xacc||fmid==0) root=rtb;
-//         
-//     } 
-// }
-
-
-
-
 
 
 void doFalsePosition(double &a1,double &a2,double &root,
@@ -485,9 +461,9 @@ void doFalsePosition(double &a1,double &a2,double &root,
                     double kappa)
 {
  double fl,fh,xl,xh,swap,dx,del,f;   
- double xacc=.00001;
+ double xacc=.0000000000001;
  
- int Maxit=50;
+ int Maxit=100;
  fl=dEda(XY+a1*s0,s0,springlist,springpairs,kappa);
  fh=dEda(XY+a2*s0,s0,springlist,springpairs,kappa);
 
@@ -530,7 +506,7 @@ void doSecant(double &root,
               double kappa)
 {
  double an2=0.0;
- double an1=0.0001;
+ double an1=0.0000001;
  double an;
  double tol=0.0000001;
  int q=0; 
