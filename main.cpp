@@ -40,7 +40,7 @@ int NumberMikado=100;
 double LStick=.4; //Stick Length
 double k1=.05;
 double k2=.1;
-double kappa=0.000006;
+double kappa=0.000008;
 double rlenshort=.0001;
 double rlenlong=.01;
 
@@ -161,7 +161,7 @@ double EBEND=Ebend(springpairs,springlist,XY,kappa);
         //betan=(gradEn-gradE).dot(gradEn)/gradE.dot(gradE);
  
  
-        if(conjsteps%10==0){ 
+        if(conjsteps%300==0){ 
             sn=-gradEn;}
         else{
             sn=-gradEn+betan*s0;
