@@ -505,7 +505,7 @@ void doSecant(double &root,
               const vector<vector<int>> &springpairs, 
               double kappa)
 {
- double an2=0.0;
+ double an2=-0.00000001;
  double an1=0.0000001;
  double an;
  double tol=0.0000001;
@@ -526,89 +526,46 @@ dEda2=dEda(XY+an2*s0,s0,springlist,springpairs,kappa);
 }
 
 
-void doBrent(double x1, double x2,double tol,double &root)
+
+    
+void doConjStep(VectorXd &XY,
+                VectorXd &s0,
+                VectorXd &gradE,
+                vector<spring> &springlist,
+                vector<vector<int>> &springpairs,
+                double &root,
+                double kappa)
 {
-int iter;
-int ITMAX=100;
-double EPS=3e-8;
-double a=x1;
-double b=x2;
-double c=x2;
-double d,e,min1,min2;
-double fa=quad(a);
-double fb=quad(b);
-double fc,p,q,r,s,tol1,xm;
-
-fc=fb;
-
-for(iter=1;iter<ITMAX;iter++) {
-    if( (fb>0.0 && fc >0.0) ||(fb<0.0 && fc <0.0)){
-        c=a;
-        fc=fa;
-        d=b-a;
-        e=d;
-    }
-    if(abs(fc)<abs(fb)) {
-        a=b;
-        b=c;
-        c=a;
-        fa=fb;
-        fb=fc;
-        fc=fa;
-    }
-    tol1=2.0*EPS*abs(b)+0.5*tol;
-    xm=0.5*(c-b);
-    if(abs(xm)<=tol1 ||fb == 0.0) {
-        root=b;
-        break;
-    }
-    if(abs(e)>=tol1 && abs(fa)>abs(fb))  {
-        s=fb/fa;
-        if(a==c){
-            p=2.0*xm*s;
-            q=1.0-s;
-        } else {
-            q=fa/fc;
-            r=fb/fc;
-            p=s* (2.0*xm*q*(q-r)-(b-a)*(r-1.0));
-            q=(q-1.0)*(r-1.0)*(s-1.0);
-        }
-        if(p>0.0) q=-q;
-        p=abs(p);
-        min1=3.0*xm*q-abs(tol1*q);
-        min2=abs(e*q);
-        if(2.0*p<(min1<min2 ? min1:min2)){
-            e=d;
-            d=p/q;
-        } else{
-            d=xm;
-            e=d;
-        }
-    } else{
-        d=xm;
-        e=d;
-    }
-    a=b;
-    fa=fb;
-    if(abs(d)>tol1){
-        b+=d;
-    } else{
-        b+=SIGN(tol1,xm);
-        fb=quad(b);
-        
-    }
-//root=0.0;   
-}
+    doSecant(root,XY,s0,springlist,springpairs,kappa); //Do Linesearch;
+    double an=root;
+    XY=XY+an*s0; //Update positions
     
-    
-    
-    
-    
-    
-    
-    
-    
+    VectorXd gradEn(gradE.size());
+    gradEn=Gradient(springlist,XY)+gradEbend(springpairs,springlist,XY,kappa);
+    //double betan=gradEn.dot(gradEn)/(gradE.dot(gradE));
+    double betan=(gradEn-gradE).dot(gradEn)/(gradE.dot(gradE));
+    if(betan<0) betan=0;   
+       
+    s0=-gradEn+betan*s0;    
+    gradE=gradEn;
     
 }
+
+void doSteepestDescent(VectorXd &XY,
+                VectorXd &s0,
+                VectorXd &gradE,
+                vector<spring> &springlist,
+                vector<vector<int>> &springpairs,
+                double &root,
+                double kappa)
+{
+    doSecant(root,XY,s0,springlist,springpairs,kappa);
+    double an=root;
+    XY=XY+an*s0;
+    s0=-Gradient(springlist,XY)-gradEbend(springpairs,springlist,XY,kappa);
+    gradE=-s0;   
+       
+}
+
 
 

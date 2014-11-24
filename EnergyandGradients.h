@@ -39,7 +39,8 @@ Eigen::VectorXd Gradient(const std::vector<spring> &springlist,
 
 Eigen::VectorXd gradEbend(const std::vector<std::vector<int>> &springpairs,
                           const std::vector<spring> &springlist,
-                          const Eigen::VectorXd &XY,double kappa);
+                          const Eigen::VectorXd &XY,
+                          double kappa);
 
 double dEda(const Eigen::VectorXd &XY,
             const Eigen::VectorXd &s0,
@@ -64,17 +65,6 @@ void doBisection(double a1,double a2,double &root,
                  double kappa);
 
 
-// void doBisection2(double a1,double a2,double &root,
-//                  const Eigen::VectorXd &XY,
-//                  const Eigen::VectorXd &s0,
-//                  const std::vector<spring> &springlist,
-//                  const std::vector<std::vector<int>> &springpairs, 
-//                  double kappa);
-
-
-
-
-
 void doFalsePosition(double &xl,double &xh,double &root,
                  const Eigen::VectorXd &XY,
                  const Eigen::VectorXd &s0,
@@ -91,7 +81,26 @@ void doSecant(   double &root,
                  double kappa);
 
 
-void doBrent(double x1, double x2,double tol,double &root);
+void doConjStep(Eigen::VectorXd &XY,
+                Eigen::VectorXd &s0,
+                Eigen::VectorXd &gradE,
+                std::vector<spring> &springlist,
+                std::vector<std::vector<int>> &springpairs,
+                double &root,
+                double kappa);
+
+void doSteepestDescent(Eigen::VectorXd &XY,
+                Eigen::VectorXd &s0,
+                Eigen::VectorXd &gradE,
+                std::vector<spring> &springlist,
+                std::vector<std::vector<int>> &springpairs,
+                double &root,
+                double kappa);
+
+
+
+
+
 
 
 #endif // MAKEMIKADONETWORK_H
