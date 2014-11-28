@@ -175,6 +175,17 @@ for(int i=0;i<springlist.size();i++){
     int one=springlist[i].one;
     int two=springlist[i].two;
     int num=XY.size()/2;
+    double x1,x2,y1,y2;
+    x1=X(one);
+    x2=X(two)+springlist[i].wlr;
+    y1=Y(one);
+    y2=Y(two)+springlist[i].wud;
+    
+//     gradE(one)=gradE(one)+
+//         springlist[i].k*
+//         (sqrt(
+//             pow((x1-x2),2)+pow(y1-y2,2)-springlist[i].rlen)*
+//             (x1-x2)/sqrt(pow(x1-x2,2)+pow(y1-y2,2)) );
  
     gradE(one)=gradE(one)+
         springlist[i].k*(sqrt(pow(X(one)-(X(two)+springlist[i].wlr),2)
@@ -182,7 +193,7 @@ for(int i=0;i<springlist.size();i++){
         (X(one)-(X(two)+springlist[i].wlr))/
         sqrt(pow(X(one)-(X(two)+springlist[i].wlr),2)
         +pow(Y(one)-(Y(two)+springlist[i].wud),2));
- 
+    
     gradE(two)=gradE(two)-
         springlist[i].k*(sqrt(pow(X(one)-(X(two)+springlist[i].wlr),2)
         +pow(Y(one)-(Y(two)+springlist[i].wud),2))-springlist[i].rlen)*
@@ -389,7 +400,7 @@ double quad(double x)
 }    
     
 
-void doBracketfind(double &a1,double &a2,
+int doBracketfind(double &a1,double &a2,
                    const VectorXd &XY,
                    const VectorXd &s0, 
                    const vector<spring> &springlist,
@@ -401,6 +412,9 @@ void doBracketfind(double &a1,double &a2,
  int maxit=50;   
  double f1,f2,FACTOR;
  f1=dEda(XY+a1*s0,s0,springlist,springpairs,kappa);
+ 
+ if(f1>0) return 0;
+ 
  f2=dEda(XY+a2*s0,s0,springlist,springpairs,kappa);
 
  FACTOR=1.1;
@@ -410,21 +424,25 @@ void doBracketfind(double &a1,double &a2,
   }
  
   for(int j=0;j<maxit;j++){ //Make a bracket.
-    if(f1*f2<0.0) break;
+      if(f1*f2<0.0) break; 
     
-    if(abs(f1)<abs(f2)){
-        a1=a1+FACTOR*(a1-a2);
-        f1=dEda(XY+a1*s0,s0,springlist,springpairs,kappa);
-    }
-    else{
+//     if(abs(f1)<abs(f2)){
+//         a1=a1+FACTOR*(a1-a2);
+//         f1=dEda(XY+a1*s0,s0,springlist,springpairs,kappa);
+//     }
+//     else{
         a2=a2+FACTOR*(a2-a1);
         f2=dEda(XY+a2*s0,s0,springlist,springpairs,kappa);
     if(j==49){
-        cout<<"not found"<<endl;
-    }
+        cout<<"not found"<<endl; 
+        return 0;
+//     }
         
     }
   }  
+
+   if(f1>f2) cout<<"EXTERMINATE  "<<dEda(XY,s0,springlist,springpairs,kappa)<<endl;
+   return 1;
 }
     
     
@@ -527,6 +545,7 @@ dEda2=dEda(XY+an2*s0,s0,springlist,springpairs,kappa);
 
 
 
+
     
 void doConjStep(VectorXd &XY,
                 VectorXd &s0,
@@ -534,18 +553,34 @@ void doConjStep(VectorXd &XY,
                 vector<spring> &springlist,
                 vector<vector<int>> &springpairs,
                 double &root,
-                double kappa)
+                double kappa,
+                int conjsteps)
 {
-    doSecant(root,XY,s0,springlist,springpairs,kappa); //Do Linesearch;
+  
+//double a1=-.000001;
+    double a1=0.0;
+    double a2=.000000001;
+    double betan;
+    VectorXd gradEn(gradE.size());
+
+    if(doBracketfind(a1,a2,XY,s0,springlist,springpairs,kappa)){
+    cout<<a1<<"\t"<<a2<<"\t"<<dEda(XY+a1*s0,s0,springlist,springpairs,kappa)<<"\t"<<dEda(XY+a2*s0,s0,springlist,springpairs,kappa)<< endl;   
+    doFalsePosition(a1,a2,root,XY,s0,springlist,springpairs,kappa);
+    //doSecant(root,XY,s0,springlist,springpairs,kappa); //Do Linesearch;
     double an=root;
     XY=XY+an*s0; //Update positions
     
-    VectorXd gradEn(gradE.size());
     gradEn=Gradient(springlist,XY)+gradEbend(springpairs,springlist,XY,kappa);
     //double betan=gradEn.dot(gradEn)/(gradE.dot(gradE));
-    double betan=(gradEn-gradE).dot(gradEn)/(gradE.dot(gradE));
-    if(betan<0) betan=0;   
-       
+    betan=(gradEn-gradE).dot(gradEn)/(gradE.dot(gradE));
+    } else{
+        betan=0;
+        cout<<"Bracket failed, Reset CG"<<endl;
+    }
+    if(betan<0.0000) betan=0;   
+    //if(conjsteps%5 ==0) betan=0;
+    
+    cout<<betan<<endl;
     s0=-gradEn+betan*s0;    
     gradE=gradEn;
     
@@ -557,15 +592,35 @@ void doSteepestDescent(VectorXd &XY,
                 vector<spring> &springlist,
                 vector<vector<int>> &springpairs,
                 double &root,
-                double kappa)
+                double kappa
+                //VectorXd &b
+                      )
 {
     doSecant(root,XY,s0,springlist,springpairs,kappa);
     double an=root;
     XY=XY+an*s0;
+//    s0=-gradE;
     s0=-Gradient(springlist,XY)-gradEbend(springpairs,springlist,XY,kappa);
     gradE=-s0;   
        
 }
+
+VectorXd Hessianapprox(const VectorXd &XY,const VectorXd &XYm1,const VectorXd &g0,const VectorXd &g0m1)
+{
+    VectorXd H(XY.size());
+    VectorXd dXY(XY.size());
+    VectorXd dg(g0.size());
+        for(int i=0;i<XY.size();i++){
+            dXY(i)=XY(i)-XYm1(i);
+            dg(i)=g0(i)-g0m1(i);
+            double hi=dg(i)/dXY(i);
+            H(i)=hi > 0 ? hi : 1;
+         }
+    
+return H; 
+   
+}
+
 
 
 

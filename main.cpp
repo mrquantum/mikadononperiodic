@@ -32,17 +32,15 @@ if(argc>1){
   int SEED=stoi(argv[1]);
   my_random::set_seed(SEED);
 }  
-  
+//my_random::set_seed(0);
 //System parameters  
-int Nit=300;  
+int Nit=500;  
 double tolE=.001;
 int NumberMikado=100;
 double LStick=.4; //Stick Length
 double k1=.05;
 double k2=.1;
-//double kappa=0.000002;
-double kappa=.000009;
-//double kappa=.001;
+double kappa=.000007;
 double rlenshort=.0001;
 double rlenlong=.01;
 
@@ -102,31 +100,37 @@ double ETOT=ESTRETCH+EBEND;
     VectorXd XYcopy(XY.size());
     VectorXd gradEn(gradE.size());
     VectorXd s0(gradE.size());
-    VectorXd sn(s0.size());
-    VectorXd s0copy(s0.size());
-    VectorXd gradEcopy(s0.size());
-    
-    VectorXd dXY(XY.size());
-    double maxdispl=.01;
     double betan;
-    gradE=Gradient(springlist,XY)+
-          gradEbend(springpairs,springlist,XY,kappa);
+    double Estr, Eben, Etot, lenGrad;
+
+    gradE=Gradient(springlist,XY)+gradEbend(springpairs,springlist,XY,kappa);
     s0=-gradE; 
-    
-    double Estr, Eben, Etot;
- 
+     
     ofstream XYfile("conjpoints.txt");
     ofstream EFile("Energy.txt");
-    EFile<<ESTRETCH<<"\t"<<EBEND<<"\t"<<ETOT<<endl;
+    ofstream dEdafile("dEda.txt");
+    ofstream Rootalpha("rootalpha.txt");
+
+    vector<double> alpha(200);
+    for(int i=0;i<200;i++){
+        alpha[i]=-.1+0.001*i;
+        dEdafile<<alpha[i]<<"\t";    
+    }
+    dEdafile<<endl;
+    
+    EFile<<ESTRETCH<<"\t"<<EBEND<<"\t"<<ETOT<<"\t"<<0<<endl;
  
     //The loop of the conj grad method
     int conjsteps=0;
-    double root;
+    double root1;
     double ETOT0;
     ESTRETCH=Energynetwork(springlist,XY);
     EBEND=Ebend(springpairs,springlist,XY,kappa);
     ETOT0=ESTRETCH+EBEND;
     
+    
+    
+ 
     //loop of the cg-method
     do{
        for(int j=0;j<XY.size();j++){ //write the XY-data to txt
@@ -135,44 +139,29 @@ double ETOT=ESTRETCH+EBEND;
       
       conjsteps++;
       cout<<conjsteps<<endl;
+    //doSteepestDescent(XY,s0,gradE,springlist,springpairs,root,kappa);
+    
+      for(int k=0;k<200;k++){
+      dEdafile<<dEda(XY+alpha[k]*s0,s0,springlist,springpairs,kappa)<<"\t";  
+    }
+    dEdafile<<endl;
       
-      XYcopy=XY;
-      s0copy=s0;
-      gradEcopy=gradE;
-   
-     doSteepestDescent(XY,s0,gradE,springlist,springpairs,root,kappa);
-         
-
+      
+      doConjStep(XY,s0,gradE,springlist,springpairs,root1,kappa,conjsteps);         
+      Rootalpha<<root1<<"\t";
+      
       
       ESTRETCH=Energynetwork(springlist,XY);
       EBEND=Ebend(springpairs,springlist,XY,kappa);    
-      ETOT=ESTRETCH+EBEND;            
-      
-//       if(ETOT>ETOT0){
-//         doSteepestDescent(XYcopy,s0copy,gradEcopy,springlist,springpairs,root,kappa);
-//         ESTRETCH=Energynetwork(springlist,XYcopy);
-//         EBEND=Ebend(springpairs,springlist,XYcopy,kappa);
-//         ETOT=ESTRETCH+EBEND;
-//         XY=XYcopy;
-//         s0=s0copy;
-//         gradE=gradEcopy;
-//        }
-//        ETOT0=ETOT;
-            
-      
-         
-       
-        EFile<<ESTRETCH<<"\t"<<EBEND<<"\t"<<ETOT<<endl;
-
-                
-    }while(conjsteps<Nit && sqrt(gradE.dot(gradE))>tolE);
-
+      ETOT=ESTRETCH+EBEND;    
+      lenGrad=sqrt(gradE.dot(gradE));
+    EFile<<ESTRETCH<<"\t"<<EBEND<<"\t"<<ETOT<<"\t"<<lenGrad<<endl; //Write the Energy to a txt-file.
+    }while(conjsteps<Nit && lenGrad>tolE);
 
     XYfile.close();
     EFile.close();
- 
- 
-    
+    dEdafile.close();
+    Rootalpha.close();
     
 FILE *fp = fopen("mikado.txt","w");
   for(std::size_t i=0;i<mikado.size();i++){

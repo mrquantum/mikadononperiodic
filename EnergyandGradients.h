@@ -50,7 +50,7 @@ double dEda(const Eigen::VectorXd &XY,
 
 double quad(double x);
 
-void doBracketfind(double &a1,double &a2,
+int doBracketfind(double &a1,double &a2,
                    const Eigen::VectorXd &XY,
                    const Eigen::VectorXd &s0,
                    const std::vector<spring> &springlist,
@@ -87,7 +87,8 @@ void doConjStep(Eigen::VectorXd &XY,
                 std::vector<spring> &springlist,
                 std::vector<std::vector<int>> &springpairs,
                 double &root,
-                double kappa);
+                double kappa,
+                int conjstep);
 
 void doSteepestDescent(Eigen::VectorXd &XY,
                 Eigen::VectorXd &s0,
@@ -96,6 +97,12 @@ void doSteepestDescent(Eigen::VectorXd &XY,
                 std::vector<std::vector<int>> &springpairs,
                 double &root,
                 double kappa);
+                //Eigen::VectorXd &b);
+
+Eigen::VectorXd Hessianapprox(const Eigen::VectorXd &XY,
+                              const Eigen::VectorXd &XYm1,
+                              const Eigen::VectorXd &g0,
+                              const Eigen::VectorXd &g0m1);
 
 
 
