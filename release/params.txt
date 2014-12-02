@@ -1,0 +1,10 @@
+<rlenshort=.0001>
+<rlenlong=0.01>
+<kappa=.000001>
+<k1=.05>
+<k2=.1>
+<Lstick=.4>
+<NumberMikado=100>
+<Nit=100>
+<tolE=.001>
+<END>
