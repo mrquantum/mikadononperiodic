@@ -6,6 +6,8 @@
 #include "minimizers.h"
 #include <eigen3/Eigen/Core>
 #include <eigen3/Eigen/LU>
+#include <eigen3/Eigen/Sparse>
+
 #include <fstream>
 #include <iomanip>
 #include <algorithm>
@@ -39,8 +41,7 @@ int get_next_script_tag(FILE *in, char *buf)
 
         return 1;
 } 
- 
-   
+    
 int init(param &Mikadoparameters ,const char *FILENAME)
 {
     FILE *paramfile;
@@ -133,10 +134,8 @@ ofstream nodefile("nodes.txt");
 ofstream springfile("springs.txt");
 ofstream XYfile("conjpoints.txt");
 ofstream EFile("Energy.txt");
-ofstream dEdafile("dEda.txt");
-ofstream Rootalpha("rootalpha.txt");
-
-
+//ofstream dEdafile("dEda.txt");
+//ofstream Rootalpha("rootalpha.txt");
 
 
 makeSticks(mikado,mikorig,NumberMikado,LStick);
@@ -158,7 +157,6 @@ makeSpringsAndNodes(ELONSTICK,mikorig,springlist,nodes,rlenshort,rlenlong,k1,k2)
     
 //write sticks to springs.txt
 for(int i=0;i<springlist.size();i++){
-    cout<<"(*&(&*(&  "<<springlist[i].rlen<<endl;
     springfile<<springlist[i].one<<"\t"
               <<springlist[i].two<<"\t"
               <<springlist[i].wlr<<"\t"
@@ -166,7 +164,7 @@ for(int i=0;i<springlist.size();i++){
               <<springlist[i].rlen<<"\t"
               <<springlist[i].k<<"\t"
               <<springlist[i].sticki<<endl;
-}       springfile.close();
+}               springfile.close();
 
 
 
@@ -217,9 +215,7 @@ ETOT=ESTRETCH+EBEND;
     //Here comes the conjugate gradient
 
 gradE=Gradient(springlist,XY)+gradEbend(springpairs,springlist,XY,kappa);
-s0=-gradE; 
-     
-
+s0=-gradE;  
 
 //     for(int i=0;i<99;i++){
 //         alpha[i]=-1+.02*i;
@@ -246,10 +242,10 @@ do{
     cout<<conjsteps<<endl;
     //doSteepestDescent(XY,s0,gradE,springlist,springpairs,root,kappa);
     
-    //for(int k=0;k<99;k++){
-    //dEdafile<<dEda(XY+alpha[k]*s0,s0,springlist,springpairs,kappa)<<"\t";  
-    //}
-    //dEdafile<<endl;
+//     for(int k=0;k<99;k++){
+//     dEdafile<<dEda(XY+alpha[k]*s0,s0,springlist,springpairs,kappa)<<"\t";  
+//     }
+//     dEdafile<<endl;
       
     doConjStep(XY,s0,gradE,springlist,springpairs,root1,kappa,conjsteps);         
     //Rootalpha<<root1<<"\t";
@@ -264,16 +260,25 @@ do{
 
 XYfile.close();
 EFile.close();
-dEdafile.close();
-Rootalpha.close();
+//dEdafile.close();
+//Rootalpha.close();
+
+//double alpha;.1;
+//double delta=tan(alpha);
+
+SparseMatrix<double> test(10,10);
+for(int i=0;i<10;i++){
+        test.coeffRef(i,i)=1;
+        if(i<5) test.coeffRef(i,i+5)=2;
+}
+
+for(int i=0;i<10;i++){
+    for(int j=0;j<10;j++){
+    cout<<test.coeff(i,j);
+}
+cout<<endl;
     
-
-
-// FILE *fp4=fopen("mikado1.txt","w");
-//  for(std::size_t i=0;i<mikorig.size();i++){
-//   fprintf(fp4,"%1.8f \t %1.8f \t %1.8f\n",mikorig[i].x,mikorig[i].y,mikorig[i].th);
-//  }
-//  fclose(fp4);
+}
 
 return 0;
  }
