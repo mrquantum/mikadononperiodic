@@ -14,17 +14,21 @@ int doBracketfind(double &a1,double &a2,
                    const VectorXd &s0, 
                    const vector<spring> &springlist,
                    const vector<vector<int>> &springpairs, 
-                   double kappa)
+                   double kappa,
+                   const double g11,
+                   const double g12,
+                   const double g22)
+                 
 //This function finds the inteval on which a mathematical function passes through zero.
 //that is [x1,x2] where f(x1)*f(x2)<0.0;
 {
  int maxit=50;   
  double f1,f2,FACTOR;
- f1=dEda(XY+a1*s0,s0,springlist,springpairs,kappa);
+ f1=dEda(XY+a1*s0,s0,springlist,springpairs,kappa,g11,g12,g22);
  
  if(f1>0) return 0;
  
- f2=dEda(XY+a2*s0,s0,springlist,springpairs,kappa);
+ f2=dEda(XY+a2*s0,s0,springlist,springpairs,kappa,g11,g12,g22);
 
  FACTOR=1.1;
   
@@ -41,7 +45,7 @@ int doBracketfind(double &a1,double &a2,
 //     }
 //     else{
         a2=a2+FACTOR*(a2-a1);
-        f2=dEda(XY+a2*s0,s0,springlist,springpairs,kappa);
+        f2=dEda(XY+a2*s0,s0,springlist,springpairs,kappa,g11,g12,g22);
     if(j==49){
         cout<<"not found"<<endl; 
         return 0;
@@ -50,7 +54,7 @@ int doBracketfind(double &a1,double &a2,
     }
   }  
 
-   if(f1>f2) cout<<"EXTERMINATE  "<<dEda(XY,s0,springlist,springpairs,kappa)<<endl;
+   if(f1>f2) cout<<"EXTERMINATE  "<<dEda(XY,s0,springlist,springpairs,kappa,g11,g12,g22)<<endl;
    return 1;
 }
     
@@ -62,15 +66,19 @@ void doBisection(double a1,double a2,double &root,
     const VectorXd &s0, 
     const vector<spring> &springlist,
     const vector<vector<int>> &springpairs, 
-    double kappa)
+    double kappa,
+    const double g11,
+    const double g12,
+    const double g22
+    )
 {
  double f1,f2,fc,c;
  int q=0;
  do{
  c=0.5*(a1+a2);
- f1=dEda(XY+a1*s0,s0,springlist,springpairs,kappa);
- f2=dEda(XY+a2*s0,s0,springlist,springpairs,kappa);
- fc=dEda(XY+c*s0,s0,springlist,springpairs,kappa);
+ f1=dEda(XY+a1*s0,s0,springlist,springpairs,kappa,g11,g12,g22);
+ f2=dEda(XY+a2*s0,s0,springlist,springpairs,kappa,g11,g12,g22);
+ fc=dEda(XY+c*s0,s0,springlist,springpairs,kappa,g11,g12,g22);
  
  if(f1*fc>0.0) a1=c;
  else a2=c;
@@ -85,14 +93,17 @@ void doFalsePosition(double &a1,double &a2,double &root,
                     const VectorXd &s0, 
                     const vector<spring> &springlist,
                     const vector<vector<int>> &springpairs, 
-                    double kappa)
+                    double kappa,
+                    const double g11,
+                    const double g12,
+                    const double g22)
 {
  double fl,fh,xl,xh,swap,dx,del,f;   
  double xacc=.0000000000001;
  
  int Maxit=100;
- fl=dEda(XY+a1*s0,s0,springlist,springpairs,kappa);
- fh=dEda(XY+a2*s0,s0,springlist,springpairs,kappa);
+ fl=dEda(XY+a1*s0,s0,springlist,springpairs,kappa,g11,g12,g22);
+ fh=dEda(XY+a2*s0,s0,springlist,springpairs,kappa,g11,g12,g22);
 
  
  if(fl<0.0){  //xl =xlow and xh=xhigh --> f(xl)<f(xh);
@@ -109,7 +120,7 @@ void doFalsePosition(double &a1,double &a2,double &root,
 dx=xh-xl;
 for(int i=0;i<Maxit;i++){
     root=xl+dx*fl/(fl-fh); //This is a secant step
-    f=dEda(XY+root*s0,s0,springlist,springpairs,kappa);
+    f=dEda(XY+root*s0,s0,springlist,springpairs,kappa,g11,g12,g22);
     if(f<0.0){
      del=xl-root;
      xl=root;
@@ -130,7 +141,10 @@ void doSecant(double &root,
               const VectorXd &s0, 
               const vector<spring> &springlist,
               const vector<vector<int>> &springpairs, 
-              double kappa)
+              double kappa,
+              const double g11,
+              const double g12,
+              const double g22)
 {
  double an2=-0.00000001;
  double an1=0.0000001;
@@ -139,10 +153,10 @@ void doSecant(double &root,
  int q=0; 
  double dEda2,dEda1;
  
-dEda2=dEda(XY+an2*s0,s0,springlist,springpairs,kappa);
+dEda2=dEda(XY+an2*s0,s0,springlist,springpairs,kappa,g11,g12,g22);
 
  do{ 
-    dEda1=dEda(XY+an1*s0,s0,springlist,springpairs,kappa);
+    dEda1=dEda(XY+an1*s0,s0,springlist,springpairs,kappa,g11,g12,g22);
     an=an1-dEda1*(an1-an2)/(dEda1-dEda2);
     an2=an1;
     an1=an;
@@ -159,7 +173,10 @@ void doConjStep(VectorXd &XY,
                 vector<vector<int>> &springpairs,
                 double &root,
                 double kappa,
-                int conjsteps)
+                int conjsteps,
+                const double g11,
+                const double g12,
+                const double g22)
 {
   
 //double a1=-.000001;
@@ -172,14 +189,16 @@ void doConjStep(VectorXd &XY,
     
 
     //Did find breacket
-    if(doBracketfind(a1,a2,XY,s0,springlist,springpairs,kappa)){
-    cout<<a1<<"\t"<<a2<<"\t"<<dEda(XY+a1*s0,s0,springlist,springpairs,kappa)<<"\t"<<dEda(XY+a2*s0,s0,springlist,springpairs,kappa)<< endl;   
-    doFalsePosition(a1,a2,root,XY,s0,springlist,springpairs,kappa);
-    //doSecant(root,XY,s0,springlist,springpairs,kappa); //Do Linesearch;
+    if(doBracketfind(a1,a2,XY,s0,springlist,springpairs,kappa,g11,g12,g22)){
+    cout<<a1<<"\t"<<a2<<"\t"<<dEda(XY+a1*s0,s0,springlist,springpairs,kappa,g11,g12,g22)<<"\t"<<
+    dEda(XY+a2*s0,s0,springlist,springpairs,kappa,g11,g12,g22)<< endl;   
+    
+    doFalsePosition(a1,a2,root,XY,s0,springlist,springpairs,kappa,g11,g12,g22);
+    //doSecant(root,XY,s0,springlist,springpairs,kappa,g11,g12,g22); //Do Linesearch;
     double an=root;
     XY=XY+an*s0; //Update positions
     
-    gradEn=Gradient(springlist,XY)+gradEbend(springpairs,springlist,XY,kappa);
+    gradEn=Gradient(springlist,XY,g11,g12,g22);//+gradEbend(springpairs,springlist,XY,kappa);
     //double betan=gradEn.dot(gradEn)/(gradE.dot(gradE));
     betan=(gradEn-gradE).dot(gradEn)/(gradE.dot(gradE));
     
@@ -205,15 +224,19 @@ void doSteepestDescent(VectorXd &XY,
                 vector<spring> &springlist,
                 vector<vector<int>> &springpairs,
                 double &root,
-                double kappa
+                double kappa,
+                const double g11,
+                const double g12,
+                const double g22
                 //VectorXd &b
                       )
 {
-    doSecant(root,XY,s0,springlist,springpairs,kappa);
+    doSecant(root,XY,s0,springlist,springpairs,kappa,g11,g12,g22);
     double an=root;
     XY=XY+an*s0;
 //    s0=-gradE;
-    s0=-Gradient(springlist,XY)-gradEbend(springpairs,springlist,XY,kappa);
+    s0=-Gradient(springlist,XY,g11,g12,g22);
+    //-gradEbend(springpairs,springlist,XY,kappa);
     gradE=-s0;   
        
 }

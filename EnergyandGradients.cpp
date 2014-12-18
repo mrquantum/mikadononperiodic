@@ -90,17 +90,28 @@ VectorXd gradL(const double x1,const double y1,const double x2, const double y2,
 return grad;
 }  
     
-double Energynetwork(const vector<spring> &springlist, const VectorXd &XY)
+double Energynetwork(const vector<spring> &springlist, const VectorXd &XY,
+                     const double g11, const double g12, const double g22)
 {
-  VectorXd X(XY.size()/2);
-  VectorXd Y(XY.size()/2);
-  X=XY.head(XY.size()/2);
-  Y=XY.tail(XY.size()/2);
+
   double Energy=0;
+  int num=XY.size()/2;
+  double k,L;
+  double x1,x2,y1,y2;
+  int one,two;
     for(int i=0;i<springlist.size();i++){
+        k=springlist[i].k;
+        L=springlist[i].rlen;
+        x1=XY(springlist[i].one);
+        x2=XY(springlist[i].two)+springlist[i].wlr;
+        y1=XY(springlist[i].one+num);
+        y2=XY(springlist[i].two+num)+springlist[i].wud;
+        
       Energy=Energy+
-      0.5*springlist[i].k*pow(sqrt(pow(X(springlist[i].one)-(X(springlist[i].two)+springlist[i].wlr),2)
-      +pow(Y(springlist[i].one)-(Y(springlist[i].two)+springlist[i].wud),2))-springlist[i].rlen,2);
+      0.5*k*pow(sqrt(
+          g11*(x1-x2)*(x1-x2)+
+          g22*(y1-y2)*(y1-y2)+
+          2*g12*(x1-x2)*(y1-y2))-L,2);
     }
 
   return Energy;  
@@ -159,7 +170,11 @@ return Energy;
 }
 
 
-VectorXd Gradient(const vector<spring> &springlist,const VectorXd &XY)
+VectorXd Gradient(const vector<spring> &springlist,
+                  const VectorXd &XY,
+                  const double g11,
+                  const double g12,
+                  const double g22)
 {
   VectorXd gradE(XY.size());
   for(int i=0;i<gradE.size();i++){
@@ -180,6 +195,8 @@ for(int i=0;i<springlist.size();i++){
     x2=X(two)+springlist[i].wlr;
     y1=Y(one);
     y2=Y(two)+springlist[i].wud;
+    double k=springlist[i].k;
+    double L=springlist[i].rlen;
     
 //     gradE(one)=gradE(one)+
 //         springlist[i].k*
@@ -188,32 +205,78 @@ for(int i=0;i<springlist.size();i++){
 //             (x1-x2)/sqrt(pow(x1-x2,2)+pow(y1-y2,2)) );
  
     gradE(one)=gradE(one)+
-        springlist[i].k*(sqrt(pow(X(one)-(X(two)+springlist[i].wlr),2)
-        +pow(Y(one)-(Y(two)+springlist[i].wud),2))-springlist[i].rlen)*
-        (X(one)-(X(two)+springlist[i].wlr))/
-        sqrt(pow(X(one)-(X(two)+springlist[i].wlr),2)
-        +pow(Y(one)-(Y(two)+springlist[i].wud),2));
-    
-    gradE(two)=gradE(two)-
-        springlist[i].k*(sqrt(pow(X(one)-(X(two)+springlist[i].wlr),2)
-        +pow(Y(one)-(Y(two)+springlist[i].wud),2))-springlist[i].rlen)*
-        (X(one)-(X(two)+springlist[i].wlr))/
-        sqrt(pow(X(one)-(X(two)+springlist[i].wlr),2)
-        +pow(Y(one)-(Y(two)+springlist[i].wud),2));
-
+    k*(sqrt(
+        g11*(x1-x2)*(x1-x2)+
+        g12*(x1-x2)*(y1-y2)+
+        g22*(y1-y2)*(y1-y2))-L)/
+        sqrt(
+        g11*(x1-x2)*(x1-x2)+
+        g12*(x1-x2)*(y1-y2)+
+        g22*(y1-y2)*(y1-y2))*
+        (g11*(x1-x2)+g12*(y1-y2));
+        
+    gradE(two)=gradE(two)+
+      k*(sqrt(
+        g11*(x1-x2)*(x1-x2)+
+        g12*(x1-x2)*(y1-y2)+
+        g22*(y1-y2)*(y1-y2))-L)/
+        sqrt(
+        g11*(x1-x2)*(x1-x2)+
+        g12*(x1-x2)*(y1-y2)+
+        g22*(y1-y2)*(y1-y2))*
+        (g11*(x2-x1)+g12*(y2-y2));
+        
+        
     gradE(one+num)=gradE(one+num)+
-        springlist[i].k*(sqrt(pow(X(one)-(X(two)+springlist[i].wlr),2)
-        +pow(Y(one)-(Y(two)+springlist[i].wud),2))-springlist[i].rlen)*
-        (Y(one)-(Y(two)+springlist[i].wud))/
-        sqrt(pow(X(one)-(X(two)+springlist[i].wlr),2)
-        +pow(Y(one)-(Y(two)+springlist[i].wud),2));
- 
-    gradE(two+num)=gradE(two+num)-
-        springlist[i].k*(sqrt(pow(X(one)-(X(two)+springlist[i].wlr),2)
-        +pow(Y(one)-(Y(two)+springlist[i].wud),2))-springlist[i].rlen)*
-        (Y(one)-(Y(two)+springlist[i].wud))/
-        sqrt(pow(X(one)-(X(two)+springlist[i].wlr),2)
-        +pow(Y(one)-(Y(two)+springlist[i].wud),2));
+        k*(sqrt(
+        g11*(x1-x2)*(x1-x2)+
+        g12*(x1-x2)*(y1-y2)+
+        g22*(y1-y2)*(y1-y2))-L)/
+        sqrt(
+        g11*(x1-x2)*(x1-x2)+
+        g12*(x1-x2)*(y1-y2)+
+        g22*(y1-y2)*(y1-y2))*
+        (g22*(y1-y2)+g12*(x1-x2));
+        
+        
+    gradE(two+num)=gradE(two+num)+
+        k*(sqrt(
+        g11*(x1-x2)*(x1-x2)+
+        g12*(x1-x2)*(y1-y2)+
+        g22*(y1-y2)*(y1-y2))-L)/
+        sqrt(
+        g11*(x1-x2)*(x1-x2)+
+        g12*(x1-x2)*(y1-y2)+
+        g22*(y1-y2)*(y1-y2))*
+        (g22*(y2-y1)+g12*(x2-x1));
+        
+//     gradE(one)=gradE(one)+
+//         springlist[i].k*(sqrt(pow(X(one)-(X(two)+springlist[i].wlr),2)
+//         +pow(Y(one)-(Y(two)+springlist[i].wud),2))-springlist[i].rlen)*
+//         (X(one)-(X(two)+springlist[i].wlr))/
+//         sqrt(pow(X(one)-(X(two)+springlist[i].wlr),2)
+//         +pow(Y(one)-(Y(two)+springlist[i].wud),2));
+//     
+//     gradE(two)=gradE(two)-
+//         springlist[i].k*(sqrt(pow(X(one)-(X(two)+springlist[i].wlr),2)
+//         +pow(Y(one)-(Y(two)+springlist[i].wud),2))-springlist[i].rlen)*
+//         (X(one)-(X(two)+springlist[i].wlr))/
+//         sqrt(pow(X(one)-(X(two)+springlist[i].wlr),2)
+//         +pow(Y(one)-(Y(two)+springlist[i].wud),2));
+
+//     gradE(one+num)=gradE(one+num)+
+//         springlist[i].k*(sqrt(pow(X(one)-(X(two)+springlist[i].wlr),2)
+//         +pow(Y(one)-(Y(two)+springlist[i].wud),2))-springlist[i].rlen)*
+//         (Y(one)-(Y(two)+springlist[i].wud))/
+//         sqrt(pow(X(one)-(X(two)+springlist[i].wlr),2)
+//         +pow(Y(one)-(Y(two)+springlist[i].wud),2));
+//  
+//     gradE(two+num)=gradE(two+num)-
+//         springlist[i].k*(sqrt(pow(X(one)-(X(two)+springlist[i].wlr),2)
+//         +pow(Y(one)-(Y(two)+springlist[i].wud),2))-springlist[i].rlen)*
+//         (Y(one)-(Y(two)+springlist[i].wud))/
+//         sqrt(pow(X(one)-(X(two)+springlist[i].wlr),2)
+//         +pow(Y(one)-(Y(two)+springlist[i].wud),2));
 }
 return gradE;  
 }  
@@ -386,10 +449,13 @@ for(int j=0;j<gradL1L2m1.size();j++){
 
 
 double dEda(const VectorXd &XY,const VectorXd &s0,const vector<spring> &springlist,
-    const vector<vector<int>> &springpairs,double kappa)
+    const vector<vector<int>> &springpairs,double kappa,
+    const double g11,
+    const double g12,
+    const double g22)
 {  
     double out;
-    out=s0.dot((Gradient(springlist,XY)+gradEbend(springpairs,springlist,XY,kappa)));
+    out=s0.dot(Gradient(springlist,XY,g11,g12,g22));//+gradEbend(springpairs,springlist,XY,kappa)));
     return out;  
 }
 

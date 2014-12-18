@@ -27,7 +27,10 @@ Eigen::VectorXd gradL(const double x1,const double y1,const double x2, const dou
 double distance1(const double x1, const double y1, const double x2,const double y2);
 
 double Energynetwork(const std::vector<spring> &springlist, 
-                     const Eigen::VectorXd &XY);
+                     const Eigen::VectorXd &XY,
+                     const double g11,
+                     const double g12,
+                     const double g22);
 
 double Ebend(const std::vector<std::vector<int>> &springpairs,
              const std::vector<spring> &springlist,
@@ -35,7 +38,10 @@ double Ebend(const std::vector<std::vector<int>> &springpairs,
              const double kappa);
 
 Eigen::VectorXd Gradient(const std::vector<spring> &springlist,
-                         const Eigen::VectorXd &XY);
+                        const Eigen::VectorXd &XY,
+                        const double g11,
+                        const double g12,
+                        const double g22);
 
 Eigen::VectorXd gradEbend(const std::vector<std::vector<int>> &springpairs,
                           const std::vector<spring> &springlist,
@@ -46,7 +52,10 @@ double dEda(const Eigen::VectorXd &XY,
             const Eigen::VectorXd &s0,
             const std::vector<spring> &springlist,
             const std::vector<std::vector<int>> &springpairs,
-            double kappa); //,const std::vector<triplet> &tripl,const int BendOn); 
+            double kappa,
+            const double g11,
+            const double g12,
+            const double g22); //,const std::vector<triplet> &tripl,const int BendOn); 
 
 double quad(double x);
 

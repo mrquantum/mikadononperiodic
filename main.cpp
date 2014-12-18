@@ -84,9 +84,6 @@ for(;;) {
  return 0;   
 }
  
- 
- 
- 
 int main (int argc,char **argv)
 {
   
@@ -96,8 +93,6 @@ if(argc>1){
 }  
 //my_random::set_seed(0);
 //System parameters  
-
-
 
 param Mikadoparameters;
 //char parameterfile = "params.txt";
@@ -127,19 +122,19 @@ double kappa=Mikadoparameters.kappa;
 double rlenshort=Mikadoparameters.rlenshort;
 double rlenlong=Mikadoparameters.rlenlong;
 
-
-
 ofstream mikadofile("mikado.txt"); 
 ofstream nodefile("nodes.txt");
 ofstream springfile("springs.txt");
 ofstream XYfile("conjpoints.txt");
 ofstream EFile("Energy.txt");
+ofstream shearcoordinates("shearcoordinates.txt");
+ofstream shearenergy("shearenergy.txt");
 //ofstream dEdafile("dEda.txt");
 //ofstream Rootalpha("rootalpha.txt");
 
+cout<<"This is the slanted version"<<endl;
 
 makeSticks(mikado,mikorig,NumberMikado,LStick);
-
     //write sticks to mikado.txt
 for(int i=0;i<mikado.size();i++){
     mikadofile<<mikado[i].nr<<"\t"<<mikado[i].x<<"\t"<<mikado[i].y<<"\t"<<mikado[i].th<<"\t"<<mikado[i].wlr<<
@@ -165,9 +160,6 @@ for(int i=0;i<springlist.size();i++){
               <<springlist[i].k<<"\t"
               <<springlist[i].sticki<<endl;
 }               springfile.close();
-
-
-
 
      //Remove all double info
 for(std::size_t i=0;i<nodes.size();i++){
@@ -204,84 +196,84 @@ for(int i=0;i<singleNodes.size();i++){
      X(i)=inbox(X(i),1.0);
      Y(i)=inbox(Y(i),1.0);
   }
-   
- XY<<X,Y;
- 
- 
-ESTRETCH=Energynetwork(springlist,XY);
+
+XY<<X,Y;
+
+double deltaAngle=.05;
+double angle=0.0; 
+
+for(int k=0;k<10;k++){
+    
+double g11=1;
+double g12=tan(angle);
+double g21=g12;
+double g22=1+tan(angle)*tan(angle);
+
+ESTRETCH=Energynetwork(springlist,XY,g11,g12,g22);
 EBEND=Ebend(springpairs,springlist,XY,kappa);
-ETOT=ESTRETCH+EBEND;
+ETOT=ESTRETCH;//+EBEND;
 
     //Here comes the conjugate gradient
-
-gradE=Gradient(springlist,XY)+gradEbend(springpairs,springlist,XY,kappa);
+gradE=Gradient(springlist,XY,g11,g12,g22);//+gradEbend(springpairs,springlist,XY,kappa);
 s0=-gradE;  
 
-//     for(int i=0;i<99;i++){
-//         alpha[i]=-1+.02*i;
-//         dEdafile<<alpha[i]<<"\t";    
-//     }
-//     dEdafile<<endl;
-    
+//for(int i=0;i<99;i++){
+//alpha[i]=-1+.02*i;
+//dEdafile<<alpha[i]<<"\t";    
+//}
+//dEdafile<<endl;
 EFile<<ESTRETCH<<"\t"<<EBEND<<"\t"<<ETOT<<"\t"<<0<<endl;
- 
-    //The loop of the conj grad method
 int conjsteps=0;
 double root1;
-ESTRETCH=Energynetwork(springlist,XY);
+ESTRETCH=Energynetwork(springlist,XY,g11,g12,g22);
 EBEND=Ebend(springpairs,springlist,XY,kappa);  
-    
  
     //loop of the cg-method
 do{
     for(int j=0;j<XY.size();j++){ //write the XY-data to txt
         XYfile<<XY(j)<<"\t";
     } XYfile<<endl;
-      
+
     conjsteps++;
     cout<<conjsteps<<endl;
     //doSteepestDescent(XY,s0,gradE,springlist,springpairs,root,kappa);
-    
-//     for(int k=0;k<99;k++){
-//     dEdafile<<dEda(XY+alpha[k]*s0,s0,springlist,springpairs,kappa)<<"\t";  
-//     }
-//     dEdafile<<endl;
-      
-    doConjStep(XY,s0,gradE,springlist,springpairs,root1,kappa,conjsteps);         
+
+//for(int k=0;k<99;k++){
+//dEdafile<<dEda(XY+alpha[k]*s0,s0,springlist,springpairs,kappa,g11,g12,g22)<<"\t";  
+//}
+//dEdafile<<endl;
+
+    doConjStep(XY,s0,gradE,springlist,springpairs,root1,kappa,conjsteps,g11,g12,g22);         
     //Rootalpha<<root1<<"\t";
-      
-    ESTRETCH=Energynetwork(springlist,XY);
+    ESTRETCH=Energynetwork(springlist,XY,g11,g12,g22);
     EBEND=Ebend(springpairs,springlist,XY,kappa);    
     ETOT=ESTRETCH+EBEND;    
     lenGrad=sqrt(gradE.dot(gradE));
     EFile<<ESTRETCH<<"\t"<<EBEND<<"\t"<<ETOT<<"\t"<<lenGrad<<endl; //Write the Energy to a txt-file.
-    
 }while(conjsteps<Nit && lenGrad>tolE);
+
+for(int ii=0;ii<XY.size();ii++){
+    shearcoordinates<<XY(ii)<<"\t";
+}       
+
+shearenergy<<ETOT<<"\t"<<angle<<endl;
+angle=angle+deltaAngle;
+shearcoordinates<<endl;
+}
+
+
+
 
 XYfile.close();
 EFile.close();
+shearcoordinates.close();
+shearenergy.close();
 //dEdafile.close();
 //Rootalpha.close();
 
-//double alpha;.1;
-//double delta=tan(alpha);
-
-SparseMatrix<double> test(10,10);
-for(int i=0;i<10;i++){
-        test.coeffRef(i,i)=1;
-        if(i<5) test.coeffRef(i,i+5)=2;
-}
-
-for(int i=0;i<10;i++){
-    for(int j=0;j<10;j++){
-    cout<<test.coeff(i,j);
-}
-cout<<endl;
-    
-}
 
 return 0;
- }
+}
 
  
  
