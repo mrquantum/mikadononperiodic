@@ -2,32 +2,41 @@ close all; clear all; clc;
 set(0,'DefaultFigurePosition',[800 100 560 420]);%left bottom width heigth
 
 %Path to different text-files
-path1='/home/mathijs/projects/Mikado/release/mikado1.txt';
-path2='/home/mathijs/projects/Mikado/release/nodes.txt';
-path3='/home/mathijs/projects/Mikado/release/springs.txt';
-path4='/home/mathijs/projects/Mikado/release/conjpoints.txt';
-path5='/home/mathijs/projects/Mikado/release/springboundaries.txt';
-path6='/home/mathijs/projects/Mikado/release/Energy.txt';
-path7='/home/mathijs/projects/Mikado/release/dEda.txt';
-path8='/home/mathijs/projects/Mikado/release/rootalpha.txt';
+path1='/home/mathijs/projects/MikadoSlanted/release/mikado.txt';
+path2='/home/mathijs/projects/MikadoSlanted/release/nodes.txt';
+path3='/home/mathijs/projects/MikadoSlanted/release/springs.txt';
+path4='/home/mathijs/projects/MikadoSlanted/release/conjpoints.txt';
+path5='/home/mathijs/projects/MikadoSlanted/release/springboundaries.txt';
+path6='/home/mathijs/projects/MikadoSlanted/release/Energy.txt';
+path7='/home/mathijs/projects/MikadoSlanted/release/dEda.txt';
+path8='/home/mathijs/projects/MikadoSlanted/release/rootalpha.txt';
+path9='/home/mathijs/projects/MikadoSlanted/release/shearcoordinates.txt';
+path10='/home/mathijs/projects/MikadoSlanted/release/shearenergy.txt';
 
 Mikadodata=importdata(path1);
+
 Nodedata=importdata(path2);
 Nodes(:,1)=Nodedata(:,2);
 Nodes(:,2)=Nodedata(:,3);
-
 
 springs=importdata(path3);
 springs(:,1)=springs(:,1)+1;
 springs(:,2)=springs(:,2)+1;
 longsp=max(springs(:,5));
 shortsp=min(springs(:,5));
-
 XY=importdata(path4);
 XY=XY';
-anker=[1 .5 .5];
 
 Energy=importdata(path6);
+shearedpos=importdata(path9)';
+shearenergy=importdata(path10);
+
+
+%%Energy as function of shearingangle
+figure
+plot(shearenergy(:,2),shearenergy(:,1));
+xlabel('\phi','FontSize',18)
+ylabel('Energy','FontSize',18)
 
 Estrech=Energy(:,1);
 Ebend=Energy(:,2);
@@ -35,75 +44,74 @@ Etot=Energy(:,3);
 lenGrad=Energy(:,4);
 conjsteps=1:numel(Ebend);
 
-%make plot of the function dEda(a);
 
-%%This section imports and plots the s0.grad(E(x0+alpha s0)) as function
-%%of alpha to test the line seach method.
-% 
-% dEda=importdata(path7)';
-% roots=importdata(path8);
-% alpha=dEda(:,1);
-% dEda1=dEda(:,6);
-% 
-% figure
-% for i=2:100
-% scatter(roots(i-1),0);
-% hold on
-% plot(alpha,dEda(:,i))
-% hold on
-% plot([-1 1],[0 0])
-% plot([0 0],[-1 1])
-% axis([-.5 .5 -.1 .1])
-% grid on
-% hold off
-% pause(.5)
-% end
-% figure
-
-
-% scatter(alpha,dEda1,10,'fill')
-% hold on
-% plot([-1 1],[0 0],'k');
-% plot([0 0],[-.1 .1],'k');
-% axis([-.2 .2 -.1 .1])
-% xlabel('\alpha','FontSize',18)
-%  ylabel('dEda','FontSize',18)
-%  title(strcat('Conjstep ',int2str(cstep)),'FontSize',18)
-% grid on;
-
-
-%%Here the energy is plotted as a function of the conjugate steps
+%Here the energy is plotted as a function of the conjugate steps
 figure
-
-semilogy(conjsteps,Estrech,'r')
+semilogy(conjsteps(1:150),Estrech(151:300),'r','LineWidth',2)
 hold on
-semilogy(conjsteps,Ebend,'k');
+semilogy(conjsteps(1:150),Ebend(151:300),'k','LineWidth',2);
 hold on
-semilogy(conjsteps,Etot,'m')
+semilogy(conjsteps(1:150),Etot(151:300),'b','LineWidth',2)
 hold on;
-semilogy(conjsteps,.1*lenGrad)
-legend('Stetching Energy','Bending Energy','Total Energy','Length gradient')
-axis([0 numel(Energy(:,3))+10 1e-6 1])
+%semilogy(conjsteps,.1*lenGrad,'LineWidth',2)
+legend('Stetching Energy','Bending Energy','Total Energy')%,'Length gradient')
+%axis([0 numel(Energy(:,3))+10 1e-3 .1])
+grid on
+xlabel('Conjugate steps','FontSize',18)
+ylabel('Energy','FontSize',18)
 
-%%Print the end energy and the min energy (the y should be the same)
-Energy_end=Energy(end,3)
-Energy_min=min(Energy(:,3))
 
-
-%%Here the network is plotted (Nodes and springs)
-i=length(XY(1,:));
-XXYY=XY(:,i);
-X=XY(1:numel(XY(:,i))/2,i);
-Y=XY(numel(XY(:,i))/2+1:end,i);
-
+%Here the network is plotted (Nodes and springs)
+%phis=0:.05:0.45;
+phis=0:0.01:0.24;
+phis2=.24:-.01:-.24;
+phis=horzcat(phis,phis2)
 figure
-axis([-.01 1.01 -.01 1.01])
-scatter(mod(X,1),mod(Y,1),10,'s','fill','r')
+i=65;
+XXYY=shearedpos(:,i);
+
+%%Now We plot everything in normal coordinates.
+phi=phis(i);
+
+e1y=0;
+e2x=tan(phi);
+e2y=1;
+e1x=1;
+plotsprings4(springs,XXYY,phi)
 hold on
-plotsprings(springs,anker,XXYY)
-plotbox(1,1)
+plot([0 e1x],[0 e1y],'LineWidth',2); plot([0,e2x],[0,e2y],'LineWidth',2)
+plot([1 1+e2x],[0,e2y],'LineWidth',2);plot([tan(phi) 1+tan(phi)],[1 1],'LineWidth',2)
+plot([-1 2],[0,0]);plot([-1,2],[-1,-1]);
+plot([-1,2],[1,1])
+plot([0,0],[-1,2])
+plot([1,1],[-1,2])
+axis([-1 2 -1 2])
+grid on
+
+
+
 axis equal;
 hold on;
 title(int2str(i),'Fontsize',18)
 xlabel('x','Fontsize',25)
 ylabel('y','Fontsize',25)
+title(strcat('\phi=',num2str(phi)),'FontSize',18)
+
+
+
+
+
+% Frame(i)=getframe(gcf)
+% clf
+% end
+% movie2avi(Frame,'shearing.avi','fps',1)
+
+
+% th=anglecount(springs,XXYY,phi);
+% figure
+% hist(th,25)
+% title(strcat('For tilted under \phi=',num2str(phi)),'FontSize',18)
+% xlabel('\theta','FontSize',18)
+% ylabel('Count','FontSize',18)
+
+
