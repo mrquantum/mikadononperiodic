@@ -127,11 +127,15 @@ double distance1(const double x1, const double y1, const double x2,const double 
 double Ebend(const vector<vector<int>> &springpairs,
              const vector<spring> &springlist,
              const VectorXd &XY,
-            const double kappa)  
+             const double g11,
+             const double g12,
+             const double g22,
+             const double kappa)  
 {
  double Energy=0;
  int num=XY.size()/2;
- 
+ double l1,l2,costh;
+ double x1,y1,x21,y21,x23,y23,x3,y3;
  for(int i=0;i<springpairs.size();i++){
  int springone=springpairs[i][0];
     int springtwo=springpairs[i][1];
@@ -140,30 +144,25 @@ double Ebend(const vector<vector<int>> &springpairs,
     int coordNRtwo=springlist[springone].two;
     int coordNRthree=springlist[springtwo].two;
  
-    double x1=XY(coordNRone);
-    double y1=XY(coordNRone+num);
+    x1=XY(coordNRone);
+    y1=XY(coordNRone+num);
  
-    double x21=XY(coordNRtwo)+springlist[springone].wlr; //version of (x2,y2) that lies in on spring 1, so possibly outside of the box
-    double y21=XY(coordNRtwo+num)+springlist[springone].wud;
+    x21=XY(coordNRtwo)+springlist[springone].wlr; //version of (x2,y2) that lies in on spring 1, so possibly outside of the box
+    y21=XY(coordNRtwo+num)+springlist[springone].wud;
  
-    double x23=XY(coordNRtwo);                 //version of (x2,y2) that is on spring 2, so MUST be inside the box
-    double y23=XY(coordNRtwo+num);
+    x23=XY(coordNRtwo);                 //version of (x2,y2) that is on spring 2, so MUST be inside the box
+    y23=XY(coordNRtwo+num);
  
-    double x3=XY(coordNRthree)+springlist[springtwo].wlr;
-    double y3=XY(coordNRthree+num)+springlist[springtwo].wud;
+    x3=XY(coordNRthree)+springlist[springtwo].wlr;
+    y3=XY(coordNRthree+num)+springlist[springtwo].wud;
 
-    Vector2d v1,v2;
-    v1<<(x21-x1),(y21-y1);
-    v2<<(x3-x23),(y3-y23);
-    double dotv1v2=v1.dot(v2);
-    double lenv1v2=sqrt(v1.dot(v1))*sqrt(v2.dot(v2));
-    double c=dotv1v2/lenv1v2;
+    l1=Dist(x1,y1,x21,y21,g11,g12,g22);
+    l2=Dist(x23,y23,x3,y3,g11,g12,g22);
+    costh=(g11*(x21-x1)*(x3-x23)+g12*(x21-x1)*(y3-y23)+g12*(y21-y1)*(x3-x23)+g22*(y21-y1)*(y3-y23))/(l1*l2);
+    if(costh>1.0) costh=1.0;
+    if(costh<-1.0) costh=-1.0;
     
-    if(c<-1) c=-1;
-    if(c>1) c=1;
-    
-    double dE=(kappa/(distance1(x1,y1,x21,y21)+distance1(x23,y23,x3,y3)))*pow(acos(c),2);
-    Energy=Energy+dE;    
+    Energy=Energy+kappa*pow(pi-acos(costh),2)/(l1+l2);
 }
 
 return Energy; 
@@ -249,37 +248,134 @@ for(int i=0;i<springlist.size();i++){
         g12*(x1-x2)*(y1-y2)+
         g22*(y1-y2)*(y1-y2))*
         (g22*(y2-y1)+g12*(x2-x1));
-        
-//     gradE(one)=gradE(one)+
-//         springlist[i].k*(sqrt(pow(X(one)-(X(two)+springlist[i].wlr),2)
-//         +pow(Y(one)-(Y(two)+springlist[i].wud),2))-springlist[i].rlen)*
-//         (X(one)-(X(two)+springlist[i].wlr))/
-//         sqrt(pow(X(one)-(X(two)+springlist[i].wlr),2)
-//         +pow(Y(one)-(Y(two)+springlist[i].wud),2));
-//     
-//     gradE(two)=gradE(two)-
-//         springlist[i].k*(sqrt(pow(X(one)-(X(two)+springlist[i].wlr),2)
-//         +pow(Y(one)-(Y(two)+springlist[i].wud),2))-springlist[i].rlen)*
-//         (X(one)-(X(two)+springlist[i].wlr))/
-//         sqrt(pow(X(one)-(X(two)+springlist[i].wlr),2)
-//         +pow(Y(one)-(Y(two)+springlist[i].wud),2));
-
-//     gradE(one+num)=gradE(one+num)+
-//         springlist[i].k*(sqrt(pow(X(one)-(X(two)+springlist[i].wlr),2)
-//         +pow(Y(one)-(Y(two)+springlist[i].wud),2))-springlist[i].rlen)*
-//         (Y(one)-(Y(two)+springlist[i].wud))/
-//         sqrt(pow(X(one)-(X(two)+springlist[i].wlr),2)
-//         +pow(Y(one)-(Y(two)+springlist[i].wud),2));
-//  
-//     gradE(two+num)=gradE(two+num)-
-//         springlist[i].k*(sqrt(pow(X(one)-(X(two)+springlist[i].wlr),2)
-//         +pow(Y(one)-(Y(two)+springlist[i].wud),2))-springlist[i].rlen)*
-//         (Y(one)-(Y(two)+springlist[i].wud))/
-//         sqrt(pow(X(one)-(X(two)+springlist[i].wlr),2)
-//         +pow(Y(one)-(Y(two)+springlist[i].wud),2));
 }
 return gradE;  
-}  
+}
+
+double Dist(double x1,double y1,double x2,double y2,double g11,double g12,double g22)
+{
+ double d;
+ d=g11*(x2-x1)*(x2-x1)+2*g12*(x2-x1)*(y2-y1)+g22*(y2-y1)*(y2-y1);
+ d=sqrt(d);
+ return d;   
+    
+}
+
+VectorXd gradEbendn(const vector<vector<int>> &springpairs, const vector<spring> &springlist, const VectorXd &XY,
+                    double g11,double g12, double g22, double kappa)
+{
+    VectorXd grad(XY.size()); //Total gradient
+    VectorXd gradL1(XY.size());
+    VectorXd gradL2(XY.size());
+    VectorXd gradC(XY.size()), gradNum(XY.size()), gradDenom(XY.size());
+    VectorXd firstpart(XY.size()),secondpart(XY.size());
+    
+    
+    int num=XY.size()/2;
+    int springone,springtwo;
+    int coordNRone, coordNRtwo, coordNRthree;
+    double x1,y1,x21,y21,x23,y23,x3,y3;
+    double l1,l2;
+    double costh, sinth;
+    double numerator, denominator;
+    
+    for(int i=0;i<grad.size();i++){
+        grad(i)=0;
+        firstpart(i)=0;
+        secondpart(i)=0;
+        
+    }
+    
+    //Loop over all springpairs (=angles) to find the bending energy.
+    for(int i=0;i<springpairs.size();i++){
+        
+        //Make sure gradL are zeros
+        for(int j=0;j<gradL1.size();j++){
+            gradL1(j)=0;
+            gradL2(j)=0;
+            gradNum(j)=0;
+            gradDenom(j)=0;
+        }
+        
+        springone=springpairs[i][0];
+        springtwo=springpairs[i][1];
+        coordNRone=springlist[springone].one;
+        coordNRtwo=springlist[springone].two;
+        coordNRthree=springlist[springtwo].two;
+        x1=XY(coordNRone);
+        y1=XY(coordNRone+num);
+        
+        x21=XY(coordNRtwo)+springlist[springone].wlr;
+        y21=XY(coordNRtwo+num)+springlist[springone].wud;
+        
+        x23=XY(coordNRtwo);
+        y23=XY(coordNRtwo+num);
+        
+        x3=XY(coordNRthree)+springlist[springtwo].wlr;
+        y3=XY(coordNRthree)+springlist[springtwo].wud;
+        
+        l1=Dist(x1,y1,x21,y21,g11,g12,g22);
+        l2=Dist(x23,y23,x3,y3,g11,g12,g22);
+        
+        gradL1(coordNRone)=g11*(x1-x21)+g12*(y1-y21);
+        gradL1(coordNRone+num)=g12*(x1-x21)+g22*(y1-y21);
+        gradL1(coordNRtwo)=g11*(x21-x1)+g12*(y21-y1);
+        gradL1(coordNRtwo+num)=g12*(x21-x1)+g22*(y21-y1);
+        gradL1=gradL1/l1;
+        
+        gradL2(coordNRtwo)=g11*(x23-x3)+g12*(y23-y3);
+        gradL2(coordNRtwo+num)=g12*(x23-x3)+g22*(y23-y3);
+        gradL2(coordNRthree)=g11*(x3-x23)+g12*(y3-y23);
+        gradL2(coordNRthree+num)=g12*(x3-x23)+g22*(y3-y23);
+        gradL2=gradL2/l2;
+        
+        //the cos of the angle with the metric tensor
+        costh=(g11*(x21-x1)*(x3-x23)+g12*(x21-x1)*(y3-y23)+g12*(y21-y1)*(x3-x23)+g22*(y21-y1)*(y3-y23))/(l1*l2);
+        
+        if(costh>1) costh=1;
+        if(costh<-1) costh=-1;
+        
+        sinth=sqrt(1-costh*costh);
+        if(sinth<0.0001) sinth=0.0001;
+        sinth=1/sinth;
+
+        firstpart=firstpart-pow(pi-acos(costh),2)*((gradL1+gradL2)/((l1+l2)*(l1+l2)));
+        
+        
+        numerator=g11*(x21-x1)*(x3-x21)+
+            g12*(x21-x1)*(y3-y23)+
+            g12*(y21-y1)*(x3-x23)+
+            g22*(y21-y1)*(y3-y23);
+        denominator=l1*l2;
+        
+        
+        //Calculate the gradient of costh=num/denom;
+        gradNum(coordNRone)=g11*(x23-x3)+g12*(y23-y3);
+        gradNum(coordNRone+num)=g12*(x23-x3)+g22*(y23-y3);
+        gradNum(coordNRtwo)=g11*(x3-x23)+g11*(x1-x21)+g12*(y3-y23)+g12*(y1-y21);
+        gradNum(coordNRtwo+num)=g12*(x1-x21)+g12*(x3-x23)+g22*(y3-y23)+g22*(y1-y21);
+        gradNum(coordNRthree)=g11*(x21-x1)+g12*(y21-y1);
+        gradNum(coordNRthree+num)=g12*(x21-x1)+g22*(y21-y1);
+        gradDenom=l1*gradL2+l2*gradL1;
+        gradC=(denominator*gradNum-numerator*gradDenom)/(denominator*denominator);
+        
+        secondpart=secondpart+2*(pi-acos(costh))*sinth*gradC/(l1+l2);        
+    }
+    grad=kappa*(secondpart+firstpart);
+    return grad;
+    
+}
+
+
+
+
+
+
+
+
+
+
+
 
 
 VectorXd gradEbend(const vector<vector<int>> &springpairs,const vector<spring> &springlist,const VectorXd &XY,double kappa)
@@ -322,7 +418,6 @@ VectorXd gradEbend(const vector<vector<int>> &springpairs,const vector<spring> &
 
    double x23=XY(coordNRtwo);
    double y23=XY(coordNRtwo+num);
-
    
    double x3=XY(coordNRthree)+springlist[springtwo].wlr;
    double y3=XY(coordNRthree+num)+springlist[springtwo].wud;
@@ -455,7 +550,7 @@ double dEda(const VectorXd &XY,const VectorXd &s0,const vector<spring> &springli
     const double g22)
 {  
     double out;
-    out=s0.dot(Gradient(springlist,XY,g11,g12,g22));//+gradEbend(springpairs,springlist,XY,kappa)));
+    out=s0.dot(Gradient(springlist,XY,g11,g12,g22)+gradEbendn(springpairs,springlist,XY,g11,g12,g22,kappa));
     return out;  
 }
 

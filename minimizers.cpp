@@ -57,10 +57,8 @@ int doBracketfind(double &a1,double &a2,
    if(f1>f2) cout<<"EXTERMINATE  "<<dEda(XY,s0,springlist,springpairs,kappa,g11,g12,g22)<<endl;
    return 1;
 }
-    
-    
-    
-    
+
+
 void doBisection(double a1,double a2,double &root,
     const VectorXd &XY,
     const VectorXd &s0, 
@@ -188,17 +186,14 @@ void doConjStep(VectorXd &XY,
     
     
 
-    //Did find breacket
+    //Did find bracket
     if(doBracketfind(a1,a2,XY,s0,springlist,springpairs,kappa,g11,g12,g22)){
-    cout<<a1<<"\t"<<a2<<"\t"<<dEda(XY+a1*s0,s0,springlist,springpairs,kappa,g11,g12,g22)<<"\t"<<
-    dEda(XY+a2*s0,s0,springlist,springpairs,kappa,g11,g12,g22)<< endl;   
-    
     doFalsePosition(a1,a2,root,XY,s0,springlist,springpairs,kappa,g11,g12,g22);
     //doSecant(root,XY,s0,springlist,springpairs,kappa,g11,g12,g22); //Do Linesearch;
+    
     double an=root;
     XY=XY+an*s0; //Update positions
-    
-    gradEn=Gradient(springlist,XY,g11,g12,g22);//+gradEbend(springpairs,springlist,XY,kappa);
+    gradEn=Gradient(springlist,XY,g11,g12,g22)+gradEbendn(springpairs,springlist,XY,g11,g12,g22,kappa);
     //double betan=gradEn.dot(gradEn)/(gradE.dot(gradE));
     betan=(gradEn-gradE).dot(gradEn)/(gradE.dot(gradE));
     
@@ -207,11 +202,11 @@ void doConjStep(VectorXd &XY,
         betan=0;
         cout<<"Bracket failed, Reset CG"<<endl;
     }
-    if(betan<0.0000) betan=0;   //beta is max(beta,0)
+    if(betan<0.0000||betan>25) betan=0;   //beta is max(beta,0)
     if(conjsteps%100 ==0) betan=0;
-    if(abs(gradEn.dot(gradE))>.3*gradE.dot(gradE)) betan=0; 
+    if(abs(gradEn.dot(gradE))>.5*gradE.dot(gradE)) betan=0; 
     //if(-2*gradE.dot(gradE)>gradE.dot(s0) && gradE.dot(s0) >-.2*gradE.dot(gradE)) betan=0;
-    cout<<"**  "<<betan<<endl;
+    cout<<"** Beta "<<betan<<endl;
     
     sn=-gradEn+betan*s0;    
     gradE=gradEn;
@@ -238,7 +233,6 @@ void doSteepestDescent(VectorXd &XY,
     s0=-Gradient(springlist,XY,g11,g12,g22);
     //-gradEbend(springpairs,springlist,XY,kappa);
     gradE=-s0;   
-       
 }
 
 VectorXd Hessianapprox(const VectorXd &XY,const VectorXd &XYm1,const VectorXd &g0,const VectorXd &g0m1)

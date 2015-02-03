@@ -1,10 +1,10 @@
 <rlenshort=.0001>
 <rlenlong=0.01>
-<kappa=.000000800>
+<kappa=.0000008>
 <k1=.05>
 <k2=.1>
-<Lstick=.2>
+<Lstick=.4>
 <NumberMikado=100>
-<Nit=100>
+<Nit=150>
 <tolE=.001>
 <END>

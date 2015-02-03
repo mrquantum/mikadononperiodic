@@ -168,97 +168,94 @@ for(std::size_t i=0;i<nodes.size();i++){
      singleNodes.push_back(unique);  
    }
 }
-     //**************MAKE HERE THE PAIR OF SPRINGS
-makeSpringpairs(springpairs,springlist);
-for(int i=0;i<singleNodes.size();i++){
-}
+//**************MAKE HERE THE PAIR OF SPRINGS
+    makeSpringpairs(springpairs,springlist);
+        for(int i=0;i<singleNodes.size();i++){
+        }
 
-VectorXd X(singleNodes.size()),Y(singleNodes.size());
-VectorXd XY(2*X.size());
-VectorXd gradE(XY.size());
-VectorXd XYn(XY.size());
-VectorXd XYcopy(XY.size());
-VectorXd gradEn(gradE.size());
-VectorXd s0(gradE.size());
-
-
-for(int i=0;i<singleNodes.size();i++){
-    nodefile<<singleNodes[i].number<<"\t"<<singleNodes[i].x<<"\t"<<singleNodes[i].y<<endl;
-} nodefile.close();
+    VectorXd X(singleNodes.size()),Y(singleNodes.size());
+    VectorXd XY(2*X.size());
+    VectorXd gradE(XY.size());
+    VectorXd XYn(XY.size());
+    VectorXd XYcopy(XY.size());
+    VectorXd gradEn(gradE.size());
+    VectorXd s0(gradE.size());
 
 
-     //The xy positions
-  for(std::size_t i=0;i<singleNodes.size();i++){
-     X(i)=singleNodes[i].x; 
-     Y(i)=singleNodes[i].y;
-  }
-  for(std::size_t i=0;i<singleNodes.size();i++){
-     X(i)=inbox(X(i),1.0);
-     Y(i)=inbox(Y(i),1.0);
-  }
+    for(int i=0;i<singleNodes.size();i++){
+        nodefile<<singleNodes[i].number<<"\t"<<singleNodes[i].x<<"\t"<<singleNodes[i].y<<endl;
+    } nodefile.close();
 
-XY<<X,Y;
 
-double deltaAngle=.05;
-double angle=0.0; 
+//The xy positions
+    for(std::size_t i=0;i<singleNodes.size();i++){
+        X(i)=singleNodes[i].x; 
+        Y(i)=singleNodes[i].y;
+    }
+    for(std::size_t i=0;i<singleNodes.size();i++){
+        X(i)=inbox(X(i),1.0);
+        Y(i)=inbox(Y(i),1.0);
+    }
 
-for(int k=0;k<10;k++){
-    
-double g11=1;
-double g12=tan(angle);
-double g21=g12;
-double g22=1+tan(angle)*tan(angle);
+    XY<<X,Y;
 
-ESTRETCH=Energynetwork(springlist,XY,g11,g12,g22);
-EBEND=Ebend(springpairs,springlist,XY,kappa);
-ETOT=ESTRETCH;//+EBEND;
+//Shearproperties
+    double deltaAngle=.01;
+    double angle=0; 
+//This is the shearingloop
+    for(int k=0;k<175;k++){ 
+        double g11=1;
+        double g12=tan(angle);
+        double g21=g12;
+        double g22=1+tan(angle)*tan(angle);
 
-    //Here comes the conjugate gradient
-gradE=Gradient(springlist,XY,g11,g12,g22);//+gradEbend(springpairs,springlist,XY,kappa);
-s0=-gradE;  
 
-//for(int i=0;i<99;i++){
-//alpha[i]=-1+.02*i;
-//dEdafile<<alpha[i]<<"\t";    
-//}
-//dEdafile<<endl;
-EFile<<ESTRETCH<<"\t"<<EBEND<<"\t"<<ETOT<<"\t"<<0<<endl;
-int conjsteps=0;
-double root1;
-ESTRETCH=Energynetwork(springlist,XY,g11,g12,g22);
-EBEND=Ebend(springpairs,springlist,XY,kappa);  
+        ESTRETCH=Energynetwork(springlist,XY,g11,g12,g22);
+        EBEND=Ebend(springpairs,springlist,XY,g11,g12,g22,kappa);
+        ETOT=ESTRETCH+EBEND;
+
+
+//Here comes the conjugate gradient
+        gradE=Gradient(springlist,XY,g11,g12,g22)+gradEbendn(springpairs,springlist,XY,g11,g12,g22,kappa);
+        s0=-gradE;  
+
+        EFile<<ESTRETCH<<"\t"<<EBEND<<"\t"<<ETOT<<"\t"<<0<<endl;
+        int conjsteps=0;
+        double root1=0;
+        ESTRETCH=Energynetwork(springlist,XY,g11,g12,g22);
+        EBEND=Ebend(springpairs,springlist,XY,g11,g12,g22,kappa);
  
-    //loop of the cg-method
-do{
-    for(int j=0;j<XY.size();j++){ //write the XY-data to txt
+//loop of the cg-method
+    do{
+        for(int j=0;j<XY.size();j++){ //write the XY-data to txt
         XYfile<<XY(j)<<"\t";
-    } XYfile<<endl;
+        } XYfile<<endl;
 
-    conjsteps++;
-    cout<<conjsteps<<endl;
-    //doSteepestDescent(XY,s0,gradE,springlist,springpairs,root,kappa);
+        conjsteps++;
+        cout<<conjsteps<<endl;
+        //doSteepestDescent(XY,s0,gradE,springlist,springpairs,root,kappa);
+        doConjStep(XY,s0,gradE,springlist,springpairs,root1,kappa,conjsteps,g11,g12,g22);         
+        //Rootalpha<<root1<<"\t";
+        ESTRETCH=Energynetwork(springlist,XY,g11,g12,g22);
+        EBEND=Ebend(springpairs,springlist,XY,g11,g12,g22,kappa);    
+        ETOT=ESTRETCH+EBEND;    
+        lenGrad=sqrt(gradE.dot(gradE));
+    //Write the Energy to a txt-file.
+        EFile<<ESTRETCH<<"\t"<<EBEND<<"\t"<<ETOT<<"\t"<<lenGrad<<endl; 
+    }while(conjsteps<Nit && lenGrad>tolE);
 
-//for(int k=0;k<99;k++){
-//dEdafile<<dEda(XY+alpha[k]*s0,s0,springlist,springpairs,kappa,g11,g12,g22)<<"\t";  
-//}
-//dEdafile<<endl;
+    for(int ii=0;ii<XY.size();ii++){
+        shearcoordinates<<XY(ii)<<"\t";
+    }
 
-    doConjStep(XY,s0,gradE,springlist,springpairs,root1,kappa,conjsteps,g11,g12,g22);         
-    //Rootalpha<<root1<<"\t";
-    ESTRETCH=Energynetwork(springlist,XY,g11,g12,g22);
-    EBEND=Ebend(springpairs,springlist,XY,kappa);    
-    ETOT=ESTRETCH+EBEND;    
-    lenGrad=sqrt(gradE.dot(gradE));
-    EFile<<ESTRETCH<<"\t"<<EBEND<<"\t"<<ETOT<<"\t"<<lenGrad<<endl; //Write the Energy to a txt-file.
-}while(conjsteps<Nit && lenGrad>tolE);
-
-for(int ii=0;ii<XY.size();ii++){
-    shearcoordinates<<XY(ii)<<"\t";
-}       
-
-shearenergy<<ETOT<<"\t"<<angle<<endl;
-angle=angle+deltaAngle;
-shearcoordinates<<endl;
+    shearenergy<<angle<<"\t"<<ETOT<<endl;
+    if(k<25||(k>=75&&k<125)){
+    angle=angle+deltaAngle;
+    }
+    if((k>=25&&k<75)||k>=125){
+        angle=angle-deltaAngle;
+    }
+    shearcoordinates<<endl;
 }
 
 

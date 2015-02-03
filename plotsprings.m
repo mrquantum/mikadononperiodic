@@ -1,4 +1,4 @@
-function []=plotsprings(spring,anker,coords)
+function []=plotsprings(spring,coords)
 s=spring;
 %s(:,5)=ones(numel(s(1,:),1));
 x=coords(1:length(coords)/2); y=coords(1+length(coords)/2:end);
