@@ -5,11 +5,8 @@
 #include <eigen3/Eigen/Core>
 #include <eigen3/Eigen/LU>
 
-
-
-
-
-int doBracketfind(double &a1,double &a2,
+int doBracketfind(double &a1,
+                  double &a2,
                    const Eigen::VectorXd &XY,
                    const Eigen::VectorXd &s0,
                    const std::vector<spring> &springlist,
@@ -56,35 +53,13 @@ void doSecant(   double &root,
 void doConjStep(Eigen::VectorXd &XY,
                 Eigen::VectorXd &s0,
                 Eigen::VectorXd &gradE,
-                std::vector<spring> &springlist,
-                std::vector<std::vector<int>> &springpairs,
-                double &root,
+                const std::vector<spring> &springlist,
+                const std::vector<std::vector<int>> &springpairs,
                 double kappa,
                 int conjstep,
-                const double g11,
-                const double g12,
-                const double g22);
-
-void doSteepestDescent(Eigen::VectorXd &XY,
-                Eigen::VectorXd &s0,
-                Eigen::VectorXd &gradE,
-                std::vector<spring> &springlist,
-                std::vector<std::vector<int>> &springpairs,
-                double &root,
-                double kappa,
-                const double g11,
-                const double g12,
-                const double g22);
-                //Eigen::VectorXd &b);
-
-Eigen::VectorXd Hessianapprox(const Eigen::VectorXd &XY,
-                              const Eigen::VectorXd &XYm1,
-                              const Eigen::VectorXd &g0,
-                              const Eigen::VectorXd &g0m1);
-
-
-
-
+                double g11,
+                double g12,
+                double g22);
 
 
 

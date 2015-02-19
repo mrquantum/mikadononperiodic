@@ -30,7 +30,7 @@ int doBracketfind(double &a1,double &a2,
  
  f2=dEda(XY+a2*s0,s0,springlist,springpairs,kappa,g11,g12,g22);
 
- FACTOR=1.1;
+ FACTOR=1.6;
   
  if(a1==a2){ //We need two different points
     cout<<"Bad initial range in bracketfinder"<<endl;
@@ -96,7 +96,7 @@ void doFalsePosition(double &a1,double &a2,double &root,
                     const double g12,
                     const double g22)
 {
- double fl,fh,xl,xh,swap,dx,del,f;   
+ double fl,fh,xl,xh,swap,dx,del,f;
  double xacc=.0000000000001;
  
  int Maxit=100;
@@ -144,10 +144,13 @@ void doSecant(double &root,
               const double g12,
               const double g22)
 {
- double an2=-0.00000001;
- double an1=0.0000001;
+ double an2=0;
+ double an1=0.002;
+ 
+/* double an2=-.1;
+ double an1=.1*/;
  double an;
- double tol=0.0000001;
+ double tol=0.000000001;
  int q=0; 
  double dEda2,dEda1;
  
@@ -158,95 +161,68 @@ dEda2=dEda(XY+an2*s0,s0,springlist,springpairs,kappa,g11,g12,g22);
     an=an1-dEda1*(an1-an2)/(dEda1-dEda2);
     an2=an1;
     an1=an;
-    dEda2=dEda1;   
+    dEda2=dEda1;
     q++;
- }while(q<50 && abs(an2-an1)>tol);   
- root=an;   
+ }while(q<1000 && abs(an2-an1)>tol);   
+ root=an;
+ cout<<"Q IS  "<<q<<"       "<<endl;
 }
 
 void doConjStep(VectorXd &XY,
                 VectorXd &s0,
                 VectorXd &gradE,
-                vector<spring> &springlist,
-                vector<vector<int>> &springpairs,
-                double &root,
+                const vector<spring> &springlist,
+                const vector<vector<int>> &springpairs,
                 double kappa,
                 int conjsteps,
-                const double g11,
-                const double g12,
-                const double g22)
+                double g11,
+                double g12,
+                double g22)
 {
   
-//double a1=-.000001;
     double a1=0.0;
-    double a2=.000000001;
+    double a2=.0000001;
     double betan;
+    double root=0.0;
     VectorXd gradEn(gradE.size());
     VectorXd sn(s0.size());
-    
-    
 
     //Did find bracket
+    //doBracketfind(a1,a2,XY,s0,springlist,springpairs,kappa,g11,g12,g22);
+    //cout<<"bracket found  :"<<a1<<"  "<<a2<<endl;
     if(doBracketfind(a1,a2,XY,s0,springlist,springpairs,kappa,g11,g12,g22)){
     doFalsePosition(a1,a2,root,XY,s0,springlist,springpairs,kappa,g11,g12,g22);
     //doSecant(root,XY,s0,springlist,springpairs,kappa,g11,g12,g22); //Do Linesearch;
-    
+    //cout<<"The root is found alpha="<<root<<endl;
     double an=root;
     XY=XY+an*s0; //Update positions
-    gradEn=Gradient(springlist,XY,g11,g12,g22)+gradEbendn(springpairs,springlist,XY,g11,g12,g22,kappa);
-    //double betan=gradEn.dot(gradEn)/(gradE.dot(gradE));
+    gradEn=Gradient(springlist,XY,g11,g12,g22);//+gradEbend(springpairs,springlist,XY,g11,g12,g22,kappa);
     betan=(gradEn-gradE).dot(gradEn)/(gradE.dot(gradE));
-    
     //Did not find bracket, reset CG-method    
     } else{
         betan=0;
+        gradE=Gradient(springlist,XY,g11,g12,g22);//+gradEbend(springpairs,springlist,XY,g11,g12,g22,kappa);
+        s0=-gradE;
         cout<<"Bracket failed, Reset CG"<<endl;
+        return;
     }
-    if(betan<0.0000||betan>25) betan=0;   //beta is max(beta,0)
+    //if(betan<0.0000||betan>25) betan=0;   //beta is max(beta,0)
     if(conjsteps%100 ==0) betan=0;
+    if(betan<0) betan=0; //max(betan,0)
     if(abs(gradEn.dot(gradE))>.5*gradE.dot(gradE)) betan=0; 
-    //if(-2*gradE.dot(gradE)>gradE.dot(s0) && gradE.dot(s0) >-.2*gradE.dot(gradE)) betan=0;
-    cout<<"** Beta "<<betan<<endl;
+    if(-2*gradE.dot(gradE)>gradE.dot(s0) && gradE.dot(s0) >-.2*gradE.dot(gradE)) betan=0;
+    //cout<<"\r"<<"** Beta "<<betan<<flush;
     
     sn=-gradEn+betan*s0;    
     gradE=gradEn;
     s0=sn;
 }
 
-void doSteepestDescent(VectorXd &XY,
-                VectorXd &s0,
-                VectorXd &gradE,
-                vector<spring> &springlist,
-                vector<vector<int>> &springpairs,
-                double &root,
-                double kappa,
-                const double g11,
-                const double g12,
-                const double g22
-                //VectorXd &b
-                      )
-{
-    doSecant(root,XY,s0,springlist,springpairs,kappa,g11,g12,g22);
-    double an=root;
-    XY=XY+an*s0;
-//    s0=-gradE;
-    s0=-Gradient(springlist,XY,g11,g12,g22);
-    //-gradEbend(springpairs,springlist,XY,kappa);
-    gradE=-s0;   
-}
 
-VectorXd Hessianapprox(const VectorXd &XY,const VectorXd &XYm1,const VectorXd &g0,const VectorXd &g0m1)
-{
-    VectorXd H(XY.size());
-    VectorXd dXY(XY.size());
-    VectorXd dg(g0.size());
-        for(int i=0;i<XY.size();i++){
-            dXY(i)=XY(i)-XYm1(i);
-            dg(i)=g0(i)-g0m1(i);
-            double hi=dg(i)/dXY(i);
-            H(i)=hi > 0 ? hi : 1;
-         }
-    
-return H; 
-   
-}
+
+
+
+
+
+
+

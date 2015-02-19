@@ -7,7 +7,6 @@
 #include <eigen3/Eigen/Core>
 #include <eigen3/Eigen/LU>
 #include <eigen3/Eigen/Sparse>
-
 #include <fstream>
 #include <iomanip>
 #include <algorithm>
@@ -15,7 +14,6 @@
 #include <math.h>
 #include <functional>
 #include "importparam.h"
-#include "prestress.h"
 
 using namespace std;
 using namespace Eigen;
@@ -87,7 +85,6 @@ for(;;) {
  
 int main (int argc,char **argv)
 {
-  
 if(argc>1){
   int SEED=stoi(argv[1]);
   my_random::set_seed(SEED);
@@ -111,7 +108,7 @@ vector<node> nodes(0);
 vector<node> singleNodes; 
 vector<vector<int>> springpairs(0);
 double lenGrad;
-//vector<double> alpha(100);
+vector<double> alpha(100);
 
 int Nit=Mikadoparameters.Nit;  
 double tolE=Mikadoparameters.tolE;
@@ -130,10 +127,10 @@ ofstream XYfile("conjpoints.txt");
 ofstream EFile("Energy.txt");
 ofstream shearcoordinates("shearcoordinates.txt");
 ofstream shearenergy("shearenergy.txt");
-ofstream dEdafile("dEda.txt");
 
 makeSticks(mikado,mikorig,NumberMikado,LStick);
-    //write sticks to mikado.txt
+
+//write sticks to mikado.txt
 for(int i=0;i<mikado.size();i++){
     mikadofile<<mikado[i].nr<<"\t"<<mikado[i].x<<"\t"<<mikado[i].y<<"\t"<<mikado[i].th<<"\t"<<mikado[i].wlr<<
     mikado[i].wud<<endl;
@@ -166,133 +163,118 @@ for(std::size_t i=0;i<nodes.size();i++){
      singleNodes.push_back(unique);  
    }
 }
-//**************MAKE HERE THE PAIR OF SPRINGS
-    makeSpringpairs(springpairs,springlist);
-        for(int i=0;i<singleNodes.size();i++){
-        }
-
-    VectorXd X(singleNodes.size()),Y(singleNodes.size());
-    VectorXd XY(2*X.size());
-    VectorXd gradE(XY.size());
-    VectorXd XYn(XY.size());
-    VectorXd XYcopy(XY.size());
-    VectorXd gradEn(gradE.size());
-    VectorXd s0(gradE.size());
-
-
-    for(int i=0;i<singleNodes.size();i++){
-        nodefile<<singleNodes[i].number<<"\t"<<singleNodes[i].x<<"\t"<<singleNodes[i].y<<endl;
-    } nodefile.close();
-
-
-//The xy positions
-    for(std::size_t i=0;i<singleNodes.size();i++){
-        X(i)=singleNodes[i].x; 
-        Y(i)=singleNodes[i].y;
-    }
-    for(std::size_t i=0;i<singleNodes.size();i++){
-        X(i)=inbox(X(i),1.0);
-        Y(i)=inbox(Y(i),1.0);
-    }
-
-    XY<<X,Y;
-    double g11=1.0;
-    double g12=0.0;
-    double g22=1.0;
-    int relax=0;
-    gradE=Gradient(springlist,XY,g11,g12,g22)+gradEbendn(springpairs,springlist,XY,g11,g12,g22,kappa);
-    s0=-gradE; 
-    double lengradBegin=sqrt(s0.dot(s0));
-    double lengradconjstep;
-    cout<<lengradBegin<<endl;
-    
-//     vector<double> alpha(2000);
-//     for(int i=0; i<alpha.size();i++){
-//      alpha[i]=-1+i*.002;        
-//     dEdafile<<alpha[i]<<"\t";
-//     }
-//     dEdafile<<endl;
-    
-//Initial relaxation
-    
-    do{
-//         for(int q=0;q<alpha.size();q++){
-//         dEdafile<<dEda(XY+alpha[q]*s0,s0,springlist,springpairs,kappa,g11,g12,g22)<<"\t";        
-//         }
-//         dEdafile<<endl;
-        doConjStep(XY,s0,gradE,springlist,springpairs,kappa,relax,g11,g12,g22);
-        relax++;
-        lengradconjstep=sqrt(gradE.dot(gradE));
-        cout<<relax<<"  "<<lengradconjstep/lengradBegin<<endl;
-    }while(relax<Nit && lengradBegin<2000000*lengradconjstep);
-
-    double P=prestress(springlist,springpairs,XY,kappa,Nit);
-    cout<<"THE PRESTRESS IS "<<P<<endl;
-
-
-
-
-// //Shearproperties
-    double deltaAngle=.005;
-    double angle=0; 
-//This is the shearingloop
-    for(int k=0;k<175;k++){ 
-        double g11=1;
-        double g12=tan(angle);
-        double g21=g12;
-        double g22=1+tan(angle)*tan(angle);
-
-//Here comes the conjugate gradient
-        gradE=Gradient(springlist,XY,g11,g12,g22)+gradEbendn(springpairs,springlist,XY,g11,g12,g22,kappa);
-        s0=-gradE;  
-
-        int conjsteps=0;
-        double root1=0;
-        double ESTRETCH=Energynetwork(springlist,XY,g11,g12,g22);
-        double EBEND=Ebend(springpairs,springlist,XY,g11,g12,g22,kappa);
-        double ETOT=ESTRETCH+EBEND; 
-        EFile<<ESTRETCH<<"\t"<<EBEND<<"\t"<<ETOT<<"\t"<<0<<endl;
-
-//loop of the cg-method
-        lengradBegin=sqrt(gradE.dot(gradE));
-        do{
-        //for(int j=0;j<XY.size();j++){ //write the XY-data to txt
-        //XYfile<<XY(j)<<"\t";
-        //} XYfile<<endl;
-        conjsteps++;
-        cout<<"\r"<<conjsteps<<"   "<<flush;
-        doConjStep(XY,s0,gradE,springlist,springpairs,kappa,conjsteps,g11,g12,g22);         
-        ESTRETCH=Energynetwork(springlist,XY,g11,g12,g22);
-        EBEND=Ebend(springpairs,springlist,XY,g11,g12,g22,kappa);    
-        ETOT=ESTRETCH+EBEND;    
-        lengradconjstep=sqrt(gradE.dot(gradE));
-        //Write the Energy to a txt-file.
-        EFile<<ESTRETCH<<"\t"<<EBEND<<"\t"<<ETOT<<"\t"<<lenGrad<<endl; 
-    }while(conjsteps<Nit && lengradBegin<2000000*lengradconjstep);
-
-    for(int ii=0;ii<XY.size();ii++){
-        shearcoordinates<<XY(ii)<<"\t";
-    }
-    shearenergy<<angle<<"\t"<<ETOT<<endl;
-
-        if(k<25||(k>=75&&k<125)){
-    angle=angle+deltaAngle;
-    }
-    if((k>=25&&k<75)||k>=125){
-        angle=angle-deltaAngle;
-    }
-    angle=angle+deltaAngle;
-    shearcoordinates<<endl;
+     //**************MAKE HERE THE PAIR OF SPRINGS
+makeSpringpairs(springpairs,springlist);
+for(int i=0;i<singleNodes.size();i++){
 }
 
+VectorXd X(singleNodes.size()),Y(singleNodes.size());
+VectorXd XY(2*X.size());
+VectorXd gradE(XY.size());
+VectorXd XYn(XY.size());
+VectorXd XYcopy(XY.size());
+VectorXd gradEn(gradE.size());
+VectorXd s0(gradE.size());
 
+
+for(int i=0;i<singleNodes.size();i++){
+    nodefile<<singleNodes[i].number<<"\t"<<singleNodes[i].x<<"\t"<<singleNodes[i].y<<endl;
+} nodefile.close();
+
+
+     //The xy positions
+  for(std::size_t i=0;i<singleNodes.size();i++){
+     X(i)=singleNodes[i].x; 
+     Y(i)=singleNodes[i].y;
+  }
+  for(std::size_t i=0;i<singleNodes.size();i++){
+     X(i)=inbox(X(i),1.0);
+     Y(i)=inbox(Y(i),1.0);
+  }
+
+XY<<X,Y;
+
+//Shearing steps
+double angle=0.0; 
+double deltaboxdx=0.01;
+double boxdx=0;
+
+for(int k=0;k<10;k++){
+double g11=1;
+double g12=boxdx;
+double g22=1+boxdx*boxdx;
+angle=atan(boxdx);
+
+ESTRETCH=Energynetwork(springlist,XY,g11,g12,g22);
+EBEND=Ebend(springpairs,springlist,XY,g11,g12,g22,kappa);
+ETOT=ESTRETCH+EBEND;
+
+//Here comes the conjugate gradient
+gradE=Gradient(springlist,XY,g11,g12,g22);//+gradEbend(springpairs,springlist,XY,kappa);
+s0=-gradE;
+
+//Here be some testing code
+// VectorXd testvector(XY.size());
+// for (int i=0;i<testvector.size();i++) {
+//         testvector[i]=0;
+// }
+// cout << "Now comparing delta E direct with delta E from gradient\n";
+// for (int i=0;i<testvector.size();i++) {
+//         testvector[i]=1e-5;
+//         cout << ESTRETCH << "\t" << Energynetwork(springlist,XY+testvector,g11,g12,g22)-ESTRETCH << "\t";
+//         cout << gradE.dot(testvector) << "\t";
+//         cout << EBEND << "\t" << Ebend(springpairs,springlist,XY+testvector,g11,g12,g22,kappa)-EBEND << "\t";
+//         cout << (gradEbend(springpairs,springlist,XY,g11,g12,g22,kappa)).dot(testvector) << endl;
+//         testvector[i]=0;
+// }
+//end of testing code
+
+EFile<<ESTRETCH<<"\t"<<EBEND<<"\t"<<ETOT<<"\t"<<0<<endl;
+int conjsteps=0;
+ESTRETCH=Energynetwork(springlist,XY,g11,g12,g22);
+EBEND=Ebend(springpairs,springlist,XY,g11,g12,g22,kappa);  
+
+//loop of the cg-method
+do{
+//     for(int j=0;j<XY.size();j++){ //write the XY-data to txt
+//       XYfile<<XY(j)<<"\t";
+//     } XYfile<<endl;
+    conjsteps++;
+    doConjStep(XY,s0,gradE,springlist,springpairs,kappa,conjsteps,g11,g12,g22);         
+    ESTRETCH=Energynetwork(springlist,XY,g11,g12,g22);
+    EBEND=Ebend(springpairs,springlist,XY,g11,g12,g22,kappa);    
+    ETOT=ESTRETCH+EBEND;    
+
+// if (k==-1) {
+// cout << "Now comparing delta E direct with delta E from gradient\n";
+// for (int i=0;i<5;i++) {
+//         testvector[i]=1e-8;
+//         cout << ESTRETCH << "\t" << Energynetwork(springlist,XY+testvector,g11,g12,g22)-ESTRETCH << "\t";
+//         cout << gradE.dot(testvector) << "\t";
+//         cout << EBEND << "\t" << Ebend(springpairs,springlist,XY+testvector,g11,g12,g22,kappa)-EBEND << "\t";
+//         cout << (gradEbend(springpairs,springlist,XY,g11,g12,g22,kappa)).dot(testvector) << endl;
+//         testvector[i]=0;
+// }
+// }
+    lenGrad=sqrt(gradE.dot(gradE));
+    EFile<<ESTRETCH<<"\t"<<EBEND<<"\t"<<ETOT<<"\t"<<lenGrad<<endl; //Write the Energy to a txt-file.
+}while(conjsteps<Nit && lenGrad>tolE);
+
+for(int ii=0;ii<XY.size();ii++){
+    shearcoordinates<<XY(ii)<<"\t";
+}
+
+//shearenergy<<ETOT<<"\t"<<angle<<endl;
+shearenergy<<ESTRETCH<<"\t"<<angle<<endl;
+boxdx=boxdx+deltaboxdx;
+shearcoordinates<<endl;
+}
 
 
 XYfile.close();
 EFile.close();
 shearcoordinates.close();
 shearenergy.close();
-//dEdafile.close();
 
 
 return 0;

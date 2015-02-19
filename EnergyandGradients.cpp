@@ -9,44 +9,6 @@
 using namespace Eigen;
 using namespace std;
 const double pi=4.0*atan(1.0);
-   
-int SIGN(double a,double b)
-{
-    double c=a*b;
-    if(c>=0) {
-        return 1;
-    } else{
-        return -1;    
-    }
-}
-
-int sgn(double x)
-{
-    if(x>=0) {
-        return 1;
-    } else{
-        return -1;}  
-}
-
-double ROSENBROCK(const Eigen::VectorXd &XY)
-{
- double f=pow((1-XY(0)),2)+pow((XY(1)-XY(0)*XY(0)),2);
- return f;
-}
-
-VectorXd GRAD_rosen(const Eigen::VectorXd &XY)
-{
- VectorXd GRAD(2);
- GRAD<<-2*(1-XY(0))-4*XY(0)*(XY(1)-XY(0)*XY(0)),2*(XY(1)-XY(0)*XY(0));
- return GRAD;
-}
-
-double dROSENdA(const Eigen::VectorXd &XY,const Eigen::VectorXd &s)
-{
- double dda=s.dot(GRAD_rosen(XY));
- return dda;
-    
-}
 
 double Energynetwork(const vector<spring> &springlist, const VectorXd &XY,
                      const double g11, const double g12, const double g22)
@@ -75,12 +37,6 @@ double Energynetwork(const vector<spring> &springlist, const VectorXd &XY,
   return Energy;  
 }
 
-double distance1(const double x1, const double y1, const double x2,const double y2)
-{
- double dist=sqrt(pow((x2-x1),2)+pow((y2-y1),2));
- return dist;
-}
-
 double Dist(double x1,double y1,double x2,double y2,double g11,double g12,double g22)
 {
  double d;
@@ -88,7 +44,6 @@ double Dist(double x1,double y1,double x2,double y2,double g11,double g12,double
  d=sqrt(d);
  return d;   
 }
-
 
 double Ebend(const vector<vector<int>> &springpairs,
              const vector<spring> &springlist,
@@ -134,7 +89,6 @@ double Ebend(const vector<vector<int>> &springpairs,
 return Energy; 
 }
 
-
 VectorXd Gradient(const vector<spring> &springlist,
                   const VectorXd &XY,
                   const double g11,
@@ -149,73 +103,30 @@ VectorXd Gradient(const vector<spring> &springlist,
   VectorXd Y(XY.size()/2);
   X=XY.head(XY.size()/2);
   Y=XY.tail(XY.size()/2);
-  
-  double x1,x2,y1,y2;
-  double k; 
-  double L;
-  int one; int two; 
-  int num=XY.size()/2;
-for(int i=0;i<springlist.size();i++){
+
+  for(int i=0;i<springlist.size();i++){
     
-    one=springlist[i].one;
-    two=springlist[i].two;
-    x1=X(one);
-    x2=X(two)+springlist[i].wlr;
-    y1=Y(one);
-    y2=Y(two)+springlist[i].wud;
-    k=springlist[i].k;
-    L=springlist[i].rlen;
-    
- 
-    gradE(one)=gradE(one)+
-    k*(sqrt(
-        g11*(x1-x2)*(x1-x2)+
-        g12*(x1-x2)*(y1-y2)+
-        g22*(y1-y2)*(y1-y2))-L)/
-        sqrt(
-        g11*(x1-x2)*(x1-x2)+
-        g12*(x1-x2)*(y1-y2)+
-        g22*(y1-y2)*(y1-y2))*
-        (g11*(x1-x2)+g12*(y1-y2));
-        
-    gradE(two)=gradE(two)+
-      k*(sqrt(
-        g11*(x1-x2)*(x1-x2)+
-        g12*(x1-x2)*(y1-y2)+
-        g22*(y1-y2)*(y1-y2))-L)/
-        sqrt(
-        g11*(x1-x2)*(x1-x2)+
-        g12*(x1-x2)*(y1-y2)+
-        g22*(y1-y2)*(y1-y2))*
-        (g11*(x2-x1)+g12*(y2-y2));
-        
-        
-    gradE(one+num)=gradE(one+num)+
-        k*(sqrt(
-        g11*(x1-x2)*(x1-x2)+
-        g12*(x1-x2)*(y1-y2)+
-        g22*(y1-y2)*(y1-y2))-L)/
-        sqrt(
-        g11*(x1-x2)*(x1-x2)+
-        g12*(x1-x2)*(y1-y2)+
-        g22*(y1-y2)*(y1-y2))*
-        (g22*(y1-y2)+g12*(x1-x2));
-        
-    gradE(two+num)=gradE(two+num)+
-        k*(sqrt(
-        g11*(x1-x2)*(x1-x2)+
-        g12*(x1-x2)*(y1-y2)+
-        g22*(y1-y2)*(y1-y2))-L)/
-        sqrt(
-        g11*(x1-x2)*(x1-x2)+
-        g12*(x1-x2)*(y1-y2)+
-        g22*(y1-y2)*(y1-y2))*
-        (g22*(y2-y1)+g12*(x2-x1));
-}
+    int one=springlist[i].one;
+    int two=springlist[i].two;
+    int num=XY.size()/2;
+    double dx=X(one)-(X(two)+springlist[i].wlr);
+    double dy=Y(one)-(Y(two)+springlist[i].wud);
+    double k=springlist[i].k;
+    double L=springlist[i].rlen;
+    double dist=sqrt( g11*dx*dx+ 2*g12*dx*dy+ g22*dy*dy );
+   
+    double gradx= k*(dist-L)*(g11*dx+g12*dy)/dist;
+    double grady= k*(dist-L)*(g22*dy+g12*dx)/dist;
+
+    gradE(one) += gradx;
+    gradE(two) -= gradx;
+    gradE(one+num) += grady;
+    gradE(two+num) -= grady;
+  }
 return gradE;  
 }
 
-VectorXd gradEbendn(const vector<vector<int>> &springpairs, 
+VectorXd gradEbend(const vector<vector<int>> &springpairs, 
                     const vector<spring> &springlist, 
                     const VectorXd &XY,
                     double g11,double g12, double g22, 
@@ -312,7 +223,7 @@ VectorXd gradEbendn(const vector<vector<int>> &springpairs,
         gradDenom=l1*gradL2+l2*gradL1;
         gradC=(denominator*gradNum-numerator*gradDenom)/(denominator*denominator);
         
-        secondpart=secondpart+2*(pi-acos(costh))*sinth*gradC/(l1+l2);        
+        secondpart=secondpart+2*(pi-acos(costh))*sinth*gradC/(l1+l2);
     }
     grad=kappa*(secondpart+firstpart);
     return grad;
@@ -327,7 +238,7 @@ double dEda(const VectorXd &XY,const VectorXd &s0,const vector<spring> &springli
     const double g22)
 {  
     double out;
-    out=s0.dot(Gradient(springlist,XY,g11,g12,g22)+gradEbendn(springpairs,springlist,XY,g11,g12,g22,kappa));
+    out=s0.dot(Gradient(springlist,XY,g11,g12,g22));//+gradEbend(springpairs,springlist,XY,g11,g12,g22,kappa));
     return out;  
 }
 
