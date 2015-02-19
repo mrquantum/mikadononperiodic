@@ -15,16 +15,9 @@ int sgn(double x);
 double ROSENBROCK(const Eigen::VectorXd &XY);
 Eigen::VectorXd GRAD_rosen(const Eigen::VectorXd &XY);
 double dROSENdA(const Eigen::VectorXd &XY,const Eigen::VectorXd &s);
-
-
-double distance(const Eigen::VectorXd &XY,int one, int two);
-double dldxi(const Eigen::VectorXd &XY,int one, int two);
-double dldyi(const Eigen::VectorXd &XY,int one,int two);
-Eigen::VectorXd gradL(const double x1,const double y1,const double x2, const double y2, 
-               const int springnr, const std::vector<spring> &springlist,const int num);
-
-
 double distance1(const double x1, const double y1, const double x2,const double y2);
+double Dist(double x1,double y1,double x2,double y2,
+            double g11,double g12,double g22);
 
 double Energynetwork(const std::vector<spring> &springlist, 
                      const Eigen::VectorXd &XY,
@@ -46,20 +39,10 @@ Eigen::VectorXd Gradient(const std::vector<spring> &springlist,
                         const double g12,
                         const double g22);
 
-double Dist(double x1,double y1,double x2,double y2,
-            double g11,double g12,double g22);
-
 Eigen::VectorXd gradEbendn(const std::vector<std::vector<int>> &springpairs, 
                     const std::vector<spring> &springlist, 
                     const Eigen::VectorXd &XY,
                     double g11,double g12, double g22, double kappa);
-
-
-
-Eigen::VectorXd gradEbend(const std::vector<std::vector<int>> &springpairs,
-                          const std::vector<spring> &springlist,
-                          const Eigen::VectorXd &XY,
-                          double kappa);
 
 double dEda(const Eigen::VectorXd &XY,
             const Eigen::VectorXd &s0,
@@ -70,7 +53,6 @@ double dEda(const Eigen::VectorXd &XY,
             const double g12,
             const double g22); //,const std::vector<triplet> &tripl,const int BendOn); 
 
-double quad(double x);
 
 
 

@@ -15,6 +15,7 @@
 #include <math.h>
 #include <functional>
 #include "importparam.h"
+#include "prestress.h"
 
 using namespace std;
 using namespace Eigen;
@@ -110,7 +111,7 @@ vector<node> nodes(0);
 vector<node> singleNodes; 
 vector<vector<int>> springpairs(0);
 double lenGrad;
-vector<double> alpha(100);
+//vector<double> alpha(100);
 
 int Nit=Mikadoparameters.Nit;  
 double tolE=Mikadoparameters.tolE;
@@ -129,10 +130,7 @@ ofstream XYfile("conjpoints.txt");
 ofstream EFile("Energy.txt");
 ofstream shearcoordinates("shearcoordinates.txt");
 ofstream shearenergy("shearenergy.txt");
-//ofstream dEdafile("dEda.txt");
-//ofstream Rootalpha("rootalpha.txt");
-
-cout<<"This is the slanted version"<<endl;
+ofstream dEdafile("dEda.txt");
 
 makeSticks(mikado,mikorig,NumberMikado,LStick);
     //write sticks to mikado.txt
@@ -198,9 +196,44 @@ for(std::size_t i=0;i<nodes.size();i++){
     }
 
     XY<<X,Y;
+    double g11=1.0;
+    double g12=0.0;
+    double g22=1.0;
+    int relax=0;
+    gradE=Gradient(springlist,XY,g11,g12,g22)+gradEbendn(springpairs,springlist,XY,g11,g12,g22,kappa);
+    s0=-gradE; 
+    double lengradBegin=sqrt(s0.dot(s0));
+    double lengradconjstep;
+    cout<<lengradBegin<<endl;
+    
+//     vector<double> alpha(2000);
+//     for(int i=0; i<alpha.size();i++){
+//      alpha[i]=-1+i*.002;        
+//     dEdafile<<alpha[i]<<"\t";
+//     }
+//     dEdafile<<endl;
+    
+//Initial relaxation
+    
+    do{
+//         for(int q=0;q<alpha.size();q++){
+//         dEdafile<<dEda(XY+alpha[q]*s0,s0,springlist,springpairs,kappa,g11,g12,g22)<<"\t";        
+//         }
+//         dEdafile<<endl;
+        doConjStep(XY,s0,gradE,springlist,springpairs,kappa,relax,g11,g12,g22);
+        relax++;
+        lengradconjstep=sqrt(gradE.dot(gradE));
+        cout<<relax<<"  "<<lengradconjstep/lengradBegin<<endl;
+    }while(relax<Nit && lengradBegin<2000000*lengradconjstep);
 
-//Shearproperties
-    double deltaAngle=.01;
+    double P=prestress(springlist,springpairs,XY,kappa,Nit);
+    cout<<"THE PRESTRESS IS "<<P<<endl;
+
+
+
+
+// //Shearproperties
+    double deltaAngle=.005;
     double angle=0; 
 //This is the shearingloop
     for(int k=0;k<175;k++){ 
@@ -209,52 +242,46 @@ for(std::size_t i=0;i<nodes.size();i++){
         double g21=g12;
         double g22=1+tan(angle)*tan(angle);
 
-
-        ESTRETCH=Energynetwork(springlist,XY,g11,g12,g22);
-        EBEND=Ebend(springpairs,springlist,XY,g11,g12,g22,kappa);
-        ETOT=ESTRETCH+EBEND;
-
-
 //Here comes the conjugate gradient
         gradE=Gradient(springlist,XY,g11,g12,g22)+gradEbendn(springpairs,springlist,XY,g11,g12,g22,kappa);
         s0=-gradE;  
 
-        EFile<<ESTRETCH<<"\t"<<EBEND<<"\t"<<ETOT<<"\t"<<0<<endl;
         int conjsteps=0;
         double root1=0;
-        ESTRETCH=Energynetwork(springlist,XY,g11,g12,g22);
-        EBEND=Ebend(springpairs,springlist,XY,g11,g12,g22,kappa);
- 
-//loop of the cg-method
-    do{
-        for(int j=0;j<XY.size();j++){ //write the XY-data to txt
-        XYfile<<XY(j)<<"\t";
-        } XYfile<<endl;
+        double ESTRETCH=Energynetwork(springlist,XY,g11,g12,g22);
+        double EBEND=Ebend(springpairs,springlist,XY,g11,g12,g22,kappa);
+        double ETOT=ESTRETCH+EBEND; 
+        EFile<<ESTRETCH<<"\t"<<EBEND<<"\t"<<ETOT<<"\t"<<0<<endl;
 
+//loop of the cg-method
+        lengradBegin=sqrt(gradE.dot(gradE));
+        do{
+        //for(int j=0;j<XY.size();j++){ //write the XY-data to txt
+        //XYfile<<XY(j)<<"\t";
+        //} XYfile<<endl;
         conjsteps++;
-        cout<<conjsteps<<endl;
-        //doSteepestDescent(XY,s0,gradE,springlist,springpairs,root,kappa);
-        doConjStep(XY,s0,gradE,springlist,springpairs,root1,kappa,conjsteps,g11,g12,g22);         
-        //Rootalpha<<root1<<"\t";
+        cout<<"\r"<<conjsteps<<"   "<<flush;
+        doConjStep(XY,s0,gradE,springlist,springpairs,kappa,conjsteps,g11,g12,g22);         
         ESTRETCH=Energynetwork(springlist,XY,g11,g12,g22);
         EBEND=Ebend(springpairs,springlist,XY,g11,g12,g22,kappa);    
         ETOT=ESTRETCH+EBEND;    
-        lenGrad=sqrt(gradE.dot(gradE));
-    //Write the Energy to a txt-file.
+        lengradconjstep=sqrt(gradE.dot(gradE));
+        //Write the Energy to a txt-file.
         EFile<<ESTRETCH<<"\t"<<EBEND<<"\t"<<ETOT<<"\t"<<lenGrad<<endl; 
-    }while(conjsteps<Nit && lenGrad>tolE);
+    }while(conjsteps<Nit && lengradBegin<2000000*lengradconjstep);
 
     for(int ii=0;ii<XY.size();ii++){
         shearcoordinates<<XY(ii)<<"\t";
     }
-
     shearenergy<<angle<<"\t"<<ETOT<<endl;
-    if(k<25||(k>=75&&k<125)){
+
+        if(k<25||(k>=75&&k<125)){
     angle=angle+deltaAngle;
     }
     if((k>=25&&k<75)||k>=125){
         angle=angle-deltaAngle;
     }
+    angle=angle+deltaAngle;
     shearcoordinates<<endl;
 }
 
@@ -266,7 +293,6 @@ EFile.close();
 shearcoordinates.close();
 shearenergy.close();
 //dEdafile.close();
-//Rootalpha.close();
 
 
 return 0;
