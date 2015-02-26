@@ -5,6 +5,7 @@
 #include <eigen3/Eigen/LU>
 #include <vector>
 #include "EnergyandGradients.h"
+#include "BendingGrad.h"
 #include<iostream>
 using namespace Eigen;
 using namespace std;
@@ -145,12 +146,10 @@ void doSecant(double &root,
               const double g22)
 {
  double an2=0;
- double an1=0.002;
+ double an1=0.00001;
  
-/* double an2=-.1;
- double an1=.1*/;
  double an;
- double tol=0.000000001;
+ double tol=0.000000000001;
  int q=0; 
  double dEda2,dEda1;
  
@@ -163,9 +162,9 @@ dEda2=dEda(XY+an2*s0,s0,springlist,springpairs,kappa,g11,g12,g22);
     an1=an;
     dEda2=dEda1;
     q++;
- }while(q<1000 && abs(an2-an1)>tol);   
+ }while(q<1000 && abs(an2-an1)>tol);
  root=an;
- cout<<"Q IS  "<<q<<"       "<<endl;
+ cout<<"Q IS  "<<"\t"<<q<<endl;
 }
 
 void doConjStep(VectorXd &XY,
@@ -188,31 +187,28 @@ void doConjStep(VectorXd &XY,
     VectorXd sn(s0.size());
 
     //Did find bracket
-    //doBracketfind(a1,a2,XY,s0,springlist,springpairs,kappa,g11,g12,g22);
-    //cout<<"bracket found  :"<<a1<<"  "<<a2<<endl;
+    doBracketfind(a1,a2,XY,s0,springlist,springpairs,kappa,g11,g12,g22);
     if(doBracketfind(a1,a2,XY,s0,springlist,springpairs,kappa,g11,g12,g22)){
-    doFalsePosition(a1,a2,root,XY,s0,springlist,springpairs,kappa,g11,g12,g22);
-    //doSecant(root,XY,s0,springlist,springpairs,kappa,g11,g12,g22); //Do Linesearch;
-    //cout<<"The root is found alpha="<<root<<endl;
-    double an=root;
-    XY=XY+an*s0; //Update positions
-    gradEn=Gradient(springlist,XY,g11,g12,g22);//+gradEbend(springpairs,springlist,XY,g11,g12,g22,kappa);
-    betan=(gradEn-gradE).dot(gradEn)/(gradE.dot(gradE));
+       doFalsePosition(a1,a2,root,XY,s0,springlist,springpairs,kappa,g11,g12,g22);
+    //    doSecant(root,XY,s0,springlist,springpairs,kappa,g11,g12,g22); //Do Linesearch;
+        double an=root;
+        XY=XY+an*s0; //Update positions
+        gradEn=HarmonicGradient(springlist,XY,g11,g12,g22)+BendingGrad(springpairs,springlist,XY,kappa,g11,g12,g22);
+        betan=(gradEn-gradE).dot(gradEn)/(gradE.dot(gradE));
+    
     //Did not find bracket, reset CG-method    
     } else{
         betan=0;
-        gradE=Gradient(springlist,XY,g11,g12,g22);//+gradEbend(springpairs,springlist,XY,g11,g12,g22,kappa);
+        gradE=HarmonicGradient(springlist,XY,g11,g12,g22)+BendingGrad(springpairs,springlist,XY,kappa,g11,g12,g22);
         s0=-gradE;
         cout<<"Bracket failed, Reset CG"<<endl;
         return;
     }
-    //if(betan<0.0000||betan>25) betan=0;   //beta is max(beta,0)
     if(conjsteps%100 ==0) betan=0;
     if(betan<0) betan=0; //max(betan,0)
     if(abs(gradEn.dot(gradE))>.5*gradE.dot(gradE)) betan=0; 
     if(-2*gradE.dot(gradE)>gradE.dot(s0) && gradE.dot(s0) >-.2*gradE.dot(gradE)) betan=0;
     //cout<<"\r"<<"** Beta "<<betan<<flush;
-    
     sn=-gradEn+betan*s0;    
     gradE=gradEn;
     s0=sn;

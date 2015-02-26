@@ -5,15 +5,24 @@
 #include <eigen3/Eigen/LU>
 #include <vector>
 #include "EnergyandGradients.h"
+#include "BendingGrad.h"
 #include<iostream>
 using namespace Eigen;
 using namespace std;
 const double pi=4.0*atan(1.0);
 
+
+double Dist(double x1,double y1,double x2,double y2,double g11,double g12,double g22)
+{
+ double d;
+ d=g11*(x2-x1)*(x2-x1)+2*g12*(x2-x1)*(y2-y1)+g22*(y2-y1)*(y2-y1);
+ d=sqrt(d);
+ return d;   
+}
+
 double Energynetwork(const vector<spring> &springlist, const VectorXd &XY,
                      const double g11, const double g12, const double g22)
 {
-
   double Energy=0;
   int num=XY.size()/2;
   double k,L;
@@ -37,21 +46,13 @@ double Energynetwork(const vector<spring> &springlist, const VectorXd &XY,
   return Energy;  
 }
 
-double Dist(double x1,double y1,double x2,double y2,double g11,double g12,double g22)
-{
- double d;
- d=g11*(x2-x1)*(x2-x1)+2*g12*(x2-x1)*(y2-y1)+g22*(y2-y1)*(y2-y1);
- d=sqrt(d);
- return d;   
-}
-
 double Ebend(const vector<vector<int>> &springpairs,
              const vector<spring> &springlist,
              const VectorXd &XY,
              const double g11,
              const double g12,
              const double g22,
-             const double kappa)  
+             const double kappa)
 {
  double Energy=0;
  int num=XY.size()/2;
@@ -82,14 +83,14 @@ double Ebend(const vector<vector<int>> &springpairs,
     costh=(g11*(x21-x1)*(x3-x23)+g12*(x21-x1)*(y3-y23)+g12*(y21-y1)*(x3-x23)+g22*(y21-y1)*(y3-y23))/(l1*l2);
     if(costh>1.0) costh=1.0;
     if(costh<-1.0) costh=-1.0;
-    
+
     Energy=Energy+kappa*pow(pi-acos(costh),2)/(l1+l2);
 }
 
 return Energy; 
 }
 
-VectorXd Gradient(const vector<spring> &springlist,
+VectorXd HarmonicGradient(const vector<spring> &springlist,
                   const VectorXd &XY,
                   const double g11,
                   const double g12,
@@ -105,7 +106,6 @@ VectorXd Gradient(const vector<spring> &springlist,
   Y=XY.tail(XY.size()/2);
 
   for(int i=0;i<springlist.size();i++){
-    
     int one=springlist[i].one;
     int two=springlist[i].two;
     int num=XY.size()/2;
@@ -123,13 +123,15 @@ VectorXd Gradient(const vector<spring> &springlist,
     gradE(one+num) += grady;
     gradE(two+num) -= grady;
   }
-return gradE;  
+return gradE;
 }
 
 VectorXd gradEbend(const vector<vector<int>> &springpairs, 
                     const vector<spring> &springlist, 
                     const VectorXd &XY,
-                    double g11,double g12, double g22, 
+                    double g11,
+                    double g12, 
+                    double g22, 
                     double kappa)
 {
     VectorXd grad(XY.size()); //Total gradient
@@ -231,15 +233,18 @@ VectorXd gradEbend(const vector<vector<int>> &springpairs,
 }
 
 
-double dEda(const VectorXd &XY,const VectorXd &s0,const vector<spring> &springlist,
-    const vector<vector<int>> &springpairs,double kappa,
-    const double g11,
-    const double g12,
-    const double g22)
+double dEda(const VectorXd &XY,
+            const VectorXd &s0,
+            const vector<spring> &springlist,
+            const vector<vector<int>> &springpairs,
+            double kappa,
+            const double g11,
+            const double g12,
+            const double g22)
 {  
     double out;
-    out=s0.dot(Gradient(springlist,XY,g11,g12,g22));//+gradEbend(springpairs,springlist,XY,g11,g12,g22,kappa));
-    return out;  
+    out=s0.dot(HarmonicGradient(springlist,XY,g11,g12,g22)+BendingGrad(springpairs,springlist,XY,kappa,g11,g12,g22));
+    return out;
 }
 
   

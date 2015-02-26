@@ -27,7 +27,7 @@ double Ebend(const std::vector<std::vector<int>> &springpairs,
              const double g22,
              const double kappa);
 
-Eigen::VectorXd Gradient(const std::vector<spring> &springlist,
+Eigen::VectorXd HarmonicGradient(const std::vector<spring> &springlist,
                         const Eigen::VectorXd &XY,
                         const double g11,
                         const double g12,

@@ -4,6 +4,7 @@
 #include<vector>
 #include <eigen3/Eigen/Core>
 #include <eigen3/Eigen/LU>
+#include "BendingGrad.h"
 
 int doBracketfind(double &a1,
                   double &a2,

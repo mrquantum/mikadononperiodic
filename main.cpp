@@ -14,6 +14,8 @@
 #include <math.h>
 #include <functional>
 #include "importparam.h"
+#include "BendingEnergy.h"
+#include "BendingGrad.h"
 
 using namespace std;
 using namespace Eigen;
@@ -97,7 +99,6 @@ param Mikadoparameters;
 
 init(Mikadoparameters,"params.txt");
 
-double ESTRETCH,EBEND,ETOT;
 vector<int> order;
 vector<stick> mikado;
 vector<stick> mikorig;
@@ -181,7 +182,6 @@ for(int i=0;i<singleNodes.size();i++){
     nodefile<<singleNodes[i].number<<"\t"<<singleNodes[i].x<<"\t"<<singleNodes[i].y<<endl;
 } nodefile.close();
 
-
      //The xy positions
   for(std::size_t i=0;i<singleNodes.size();i++){
      X(i)=singleNodes[i].x; 
@@ -196,54 +196,64 @@ XY<<X,Y;
 
 //Shearing steps
 double angle=0.0; 
-double deltaboxdx=0.01;
+double deltaboxdx=0.001;
 double boxdx=0;
 
-for(int k=0;k<10;k++){
+for(int k=0;k<25;k++){
 double g11=1;
 double g12=boxdx;
 double g22=1+boxdx*boxdx;
-angle=atan(boxdx);
+       angle=atan(boxdx);
 
-ESTRETCH=Energynetwork(springlist,XY,g11,g12,g22);
-EBEND=Ebend(springpairs,springlist,XY,g11,g12,g22,kappa);
-ETOT=ESTRETCH+EBEND;
+ double EBEND=Ebending(springpairs,springlist,XY,kappa,g11,g12,g22);
+ double ESTRETCH=Energynetwork(springlist,XY,g11,g12,g22);
+// VectorXd Gbend(XY.size());
+// Gbend=BendingGrad(springpairs,springlist,XY,kappa,g11,g12,g22);
+// 
+// VectorXd GBend2(XY.size());
+// GBend2=gradEbend(springpairs,springlist,XY,g11,g12,g22,kappa);
+// 
+// for(int i=0;i<Gbend.size();i++){
+//     cout<<Gbend(i)<<endl;
+// }
 
+double ETOT=ESTRETCH+EBEND;
+ 
 //Here comes the conjugate gradient
-gradE=Gradient(springlist,XY,g11,g12,g22);//+gradEbend(springpairs,springlist,XY,kappa);
+gradE=HarmonicGradient(springlist,XY,g11,g12,g22)+BendingGrad(springpairs,springlist,XY,kappa,g11,g12,g22);
 s0=-gradE;
-
-//Here be some testing code
-// VectorXd testvector(XY.size());
-// for (int i=0;i<testvector.size();i++) {
+ 
+    //Here be some testing code
+//     VectorXd testvector(XY.size());
+//     for (int i=0;i<testvector.size();i++) {
 //         testvector[i]=0;
-// }
-// cout << "Now comparing delta E direct with delta E from gradient\n";
-// for (int i=0;i<testvector.size();i++) {
-//         testvector[i]=1e-5;
-//         cout << ESTRETCH << "\t" << Energynetwork(springlist,XY+testvector,g11,g12,g22)-ESTRETCH << "\t";
-//         cout << gradE.dot(testvector) << "\t";
-//         cout << EBEND << "\t" << Ebend(springpairs,springlist,XY+testvector,g11,g12,g22,kappa)-EBEND << "\t";
-//         cout << (gradEbend(springpairs,springlist,XY,g11,g12,g22,kappa)).dot(testvector) << endl;
-//         testvector[i]=0;
-// }
-//end of testing code
+//     }
+//     cout << "Now comparing delta E direct with delta E from gradient\n";
+//     for (int i=0;i<testvector.size();i++) {
+//             testvector[i]=1e-5;
+//             cout << ESTRETCH << "\t" << Energynetwork(springlist,XY+testvector,g11,g12,g22)-ESTRETCH << "\t";
+//             cout << gradE.dot(testvector) << "\t";
+//             cout << EBEND << "\t" << Ebending(springpairs,springlist,XY+testvector,kappa,g11,g12,g22)-EBEND << "\t";
+//             cout << (BendingGrad(springpairs,springlist,XY,kappa,g11,g12,g22)).dot(testvector) << endl;
+//             testvector[i]=0;
+//     }
+//     //end of testing code
 
 EFile<<ESTRETCH<<"\t"<<EBEND<<"\t"<<ETOT<<"\t"<<0<<endl;
-int conjsteps=0;
 ESTRETCH=Energynetwork(springlist,XY,g11,g12,g22);
 EBEND=Ebend(springpairs,springlist,XY,g11,g12,g22,kappa);  
 
 //loop of the cg-method
+int conjsteps=0;
 do{
 //     for(int j=0;j<XY.size();j++){ //write the XY-data to txt
 //       XYfile<<XY(j)<<"\t";
 //     } XYfile<<endl;
     conjsteps++;
-    doConjStep(XY,s0,gradE,springlist,springpairs,kappa,conjsteps,g11,g12,g22);         
+    doConjStep(XY,s0,gradE,springlist,springpairs,kappa,conjsteps,g11,g12,g22);
     ESTRETCH=Energynetwork(springlist,XY,g11,g12,g22);
-    EBEND=Ebend(springpairs,springlist,XY,g11,g12,g22,kappa);    
-    ETOT=ESTRETCH+EBEND;    
+    EBEND=Ebend(springpairs,springlist,XY,g11,g12,g22,kappa);
+    ETOT=ESTRETCH+EBEND;
 
 // if (k==-1) {
 // cout << "Now comparing delta E direct with delta E from gradient\n";
@@ -252,13 +262,15 @@ do{
 //         cout << ESTRETCH << "\t" << Energynetwork(springlist,XY+testvector,g11,g12,g22)-ESTRETCH << "\t";
 //         cout << gradE.dot(testvector) << "\t";
 //         cout << EBEND << "\t" << Ebend(springpairs,springlist,XY+testvector,g11,g12,g22,kappa)-EBEND << "\t";
-//         cout << (gradEbend(springpairs,springlist,XY,g11,g12,g22,kappa)).dot(testvector) << endl;
+//         cout << (gradEbend(springpairs,springlist,XY,g11,g12,g22,kappa)).doct(testvector) << endl;
 //         testvector[i]=0;
 // }
 // }
     lenGrad=sqrt(gradE.dot(gradE));
     EFile<<ESTRETCH<<"\t"<<EBEND<<"\t"<<ETOT<<"\t"<<lenGrad<<endl; //Write the Energy to a txt-file.
 }while(conjsteps<Nit && lenGrad>tolE);
+
+
 
 for(int ii=0;ii<XY.size();ii++){
     shearcoordinates<<XY(ii)<<"\t";
@@ -268,6 +280,7 @@ for(int ii=0;ii<XY.size();ii++){
 shearenergy<<ESTRETCH<<"\t"<<angle<<endl;
 boxdx=boxdx+deltaboxdx;
 shearcoordinates<<endl;
+cout<<"This was a shearstep"<<endl;
 }
 
 
@@ -280,5 +293,5 @@ shearenergy.close();
 return 0;
 }
 
- 
- 
+
+
