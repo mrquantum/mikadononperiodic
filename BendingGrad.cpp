@@ -115,5 +115,6 @@ VectorXd BendingGrad(const vector<vector<int>> &springpairs,
 
     }
     bendinggrad=kappa*(gradp1+gradp2);
+    //bendinggrad=kappa*gradp2;
     return bendinggrad;
 }

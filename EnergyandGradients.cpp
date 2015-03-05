@@ -232,7 +232,6 @@ VectorXd gradEbend(const vector<vector<int>> &springpairs,
     
 }
 
-
 double dEda(const VectorXd &XY,
             const VectorXd &s0,
             const vector<spring> &springlist,

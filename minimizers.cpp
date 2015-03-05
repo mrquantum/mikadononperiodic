@@ -36,10 +36,10 @@ int doBracketfind(double &a1,double &a2,
  if(a1==a2){ //We need two different points
     cout<<"Bad initial range in bracketfinder"<<endl;
   }
- 
+ int jj=0;
   for(int j=0;j<maxit;j++){ //Make a bracket.
       if(f1*f2<0.0) break; 
-    
+    jj++;
 //     if(abs(f1)<abs(f2)){
 //         a1=a1+FACTOR*(a1-a2);
 //         f1=dEda(XY+a1*s0,s0,springlist,springpairs,kappa);
@@ -54,36 +54,10 @@ int doBracketfind(double &a1,double &a2,
         
     }
   }  
-
+   
+//   cout<<jj<<endl;
    if(f1>f2) cout<<"EXTERMINATE  "<<dEda(XY,s0,springlist,springpairs,kappa,g11,g12,g22)<<endl;
    return 1;
-}
-
-
-void doBisection(double a1,double a2,double &root,
-    const VectorXd &XY,
-    const VectorXd &s0, 
-    const vector<spring> &springlist,
-    const vector<vector<int>> &springpairs, 
-    double kappa,
-    const double g11,
-    const double g12,
-    const double g22
-    )
-{
- double f1,f2,fc,c;
- int q=0;
- do{
- c=0.5*(a1+a2);
- f1=dEda(XY+a1*s0,s0,springlist,springpairs,kappa,g11,g12,g22);
- f2=dEda(XY+a2*s0,s0,springlist,springpairs,kappa,g11,g12,g22);
- fc=dEda(XY+c*s0,s0,springlist,springpairs,kappa,g11,g12,g22);
- 
- if(f1*fc>0.0) a1=c;
- else a2=c;
- q++;
-}while(abs(fc)>.000001 && q<50);
- root=c;
 }
 
 
@@ -98,7 +72,7 @@ void doFalsePosition(double &a1,double &a2,double &root,
                     const double g22)
 {
  double fl,fh,xl,xh,swap,dx,del,f;
- double xacc=.0000000000001;
+ double xacc=.00001;
  
  int Maxit=100;
  fl=dEda(XY+a1*s0,s0,springlist,springpairs,kappa,g11,g12,g22);
@@ -117,6 +91,7 @@ void doFalsePosition(double &a1,double &a2,double &root,
      fh=swap;
 }
 dx=xh-xl;
+//int ii=0;
 for(int i=0;i<Maxit;i++){
     root=xl+dx*fl/(fl-fh); //This is a secant step
     f=dEda(XY+root*s0,s0,springlist,springpairs,kappa,g11,g12,g22);
@@ -131,8 +106,11 @@ for(int i=0;i<Maxit;i++){
         fh=f;
     }
     dx=xh-xl;
-    if(abs(del)<xacc || f==0.0) break;
+//    ii++;
+    if(fabs(del)<xacc || f==0.0) break;
 }
+
+//  cout<<"i=    "<<ii<<endl;
 }
 
 void doSecant(double &root,
@@ -162,7 +140,7 @@ dEda2=dEda(XY+an2*s0,s0,springlist,springpairs,kappa,g11,g12,g22);
     an1=an;
     dEda2=dEda1;
     q++;
- }while(q<1000 && abs(an2-an1)>tol);
+ }while(q<1000 && fabs(an2-an1)>tol);
  root=an;
  cout<<"Q IS  "<<"\t"<<q<<endl;
 }
@@ -180,7 +158,7 @@ void doConjStep(VectorXd &XY,
 {
   
     double a1=0.0;
-    double a2=.0000001;
+    double a2=.0001;
     double betan;
     double root=0.0;
     VectorXd gradEn(gradE.size());
@@ -189,7 +167,8 @@ void doConjStep(VectorXd &XY,
     //Did find bracket
     doBracketfind(a1,a2,XY,s0,springlist,springpairs,kappa,g11,g12,g22);
     if(doBracketfind(a1,a2,XY,s0,springlist,springpairs,kappa,g11,g12,g22)){
-       doFalsePosition(a1,a2,root,XY,s0,springlist,springpairs,kappa,g11,g12,g22);
+    doFalsePosition(a1,a2,root,XY,s0,springlist,springpairs,kappa,g11,g12,g22);
+    //cout<<root<<endl;
     //    doSecant(root,XY,s0,springlist,springpairs,kappa,g11,g12,g22); //Do Linesearch;
         double an=root;
         XY=XY+an*s0; //Update positions

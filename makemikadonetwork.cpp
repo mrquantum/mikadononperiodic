@@ -246,13 +246,6 @@ order.push_back(0);
 }
 
 
-
-
-
-
-
-
-
 //With the points per stick, we can now make nodes and springs.
 void makeSpringsAndNodes(const vector<elonstick> &ELONSTICK,const vector<stick> &mikorig, vector<spring> &springlist,
 vector<node> &nodes,
@@ -275,14 +268,16 @@ for(int i=0;i<ELONSTICK.size();i++){
             y1=CURRENTSTICK.y+posonsticki[j]*sin(CURRENTSTICK.th);
             y2=CURRENTSTICK.y+posonsticki[j+1]*sin(CURRENTSTICK.th);
             
-            if(sticknr%2==0){
-                newspring.rlen=rlenshort;
-                newspring.k=k1;
-            }
-            else{
-                newspring.rlen=rlenlong;
-                newspring.k=k2;
-            }
+//             if(sticknr%2==0){
+//                 newspring.rlen=rlenshort;
+//                 newspring.k=k1;
+//             }
+//             else{
+//                 newspring.rlen=rlenlong;
+//                 newspring.k=k2;
+//             }
+            newspring.rlen=sqrt((x1-x2)*(x1-x2)+(y1-y2)*(y1-y2))/1.0;
+            newspring.k=100;
            // newspring.rlen=.1;
            // newspring.k=1;
 
@@ -363,11 +358,7 @@ for(std::size_t i=0;i<springlist.size()-1;i++){
 }
 
 
-
-
-
-
-void makeSticks(vector<stick> &mikado,vector<stick> &mikorig,const int NumberMikado,const double LStick)
+ void makeSticks(vector<stick> &mikado,vector<stick> &mikorig,const int NumberMikado,const double LStick)
 {
     mikado=make_sticks(NumberMikado);
     mikorig=mikado; //The original set of sticks
