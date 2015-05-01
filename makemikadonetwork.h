@@ -45,7 +45,7 @@ void orderElonstick(std::vector<int> &order,std::vector<elonstick> &ELONSTICK);
 
 void makeSpringsAndNodes(const std::vector<elonstick> &ELONSTICK,
 		     const std::vector<stick> &mikorig, std::vector<spring> &springlist, std::vector<node> &nodes,
-		     double rlenshort,double rlenlong,double k1, double k2);
+		     double rlenshort,double rlenlong,double k1, double k2,double stretchf);
 bool operator<(const node& first,const node& second);
 bool operator<(const elonstick &first, const elonstick &second);
 bool operator<(const stick &first, const stick &second);

@@ -17,4 +17,13 @@ double Ebending(const vector<vector<int>> &springpairs,
                 const double g11,
                 const double g12,
                 const double g22);
+
+
+double EbendingC(const vector< vector< int > >& springpairs, 
+                 const vector< spring >& springlist, 
+                 const Eigen::VectorXd &XY, 
+                 const double kappa, 
+                 const double g11, const double g12, const double g22);
+
+
 #endif

@@ -249,7 +249,7 @@ order.push_back(0);
 //With the points per stick, we can now make nodes and springs.
 void makeSpringsAndNodes(const vector<elonstick> &ELONSTICK,const vector<stick> &mikorig, vector<spring> &springlist,
 vector<node> &nodes,
-double rlenshort, double rlenlong,double k1,double k2)
+double rlenshort, double rlenlong,double k1,double k2,double stretchf)
 {
 for(int i=0;i<ELONSTICK.size();i++){
     int sticknr=ELONSTICK[i].sticki;
@@ -276,10 +276,15 @@ for(int i=0;i<ELONSTICK.size();i++){
 //                 newspring.rlen=rlenlong;
 //                 newspring.k=k2;
 //             }
-            newspring.rlen=sqrt((x1-x2)*(x1-x2)+(y1-y2)*(y1-y2))/1.0;
-            newspring.k=100;
-           // newspring.rlen=.1;
-           // newspring.k=1;
+            newspring.rlen=sqrt((x1-x2)*(x1-x2)+(y1-y2)*(y1-y2))/stretchf;
+            newspring.k=k1;
+//             if(sticknr%2==0){
+//             newspring.k=10;}
+//             else{
+//                 newspring.k=1000;
+//             }
+//            newspring.rlen=.1;
+//            newspring.k=1;
 
             newspring.sticki=sticknr;
             if((x1<1 && x1>0)&&(x2>0&&x2<1)){ //Check if crossed wlr or wud wall.
@@ -341,7 +346,7 @@ return x;
 void makeSpringpairs(vector<vector<int>> &springpairs,const vector<spring> &springlist)
 {
 //springpairs is an vector, coding a triplet in each row: 
-//springpairs[i][1]= ith triplet first spring
+//springpairs[i][1]=ith triplet first spring
 //springpairs[i][2] ith triplet second spring. 
 //springpairs[i][3] ith triplet mikado nr.
 //the labels for the springs are the indexnumbers of coding the
@@ -357,8 +362,7 @@ for(std::size_t i=0;i<springlist.size()-1;i++){
 }
 }
 
-
- void makeSticks(vector<stick> &mikado,vector<stick> &mikorig,const int NumberMikado,const double LStick)
+void makeSticks(vector<stick> &mikado,vector<stick> &mikorig,const int NumberMikado,const double LStick)
 {
     mikado=make_sticks(NumberMikado);
     mikorig=mikado; //The original set of sticks
@@ -408,10 +412,6 @@ for(std::size_t i=0;i<Connection.size()-1;i++){
         }
     }
 }
-       
 }
-    
-    
-    
-    
+
 

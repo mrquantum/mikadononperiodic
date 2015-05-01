@@ -1,10 +1,20 @@
+###Network parameters###
 <rlenshort=.0001>
 <rlenlong=0.01>
-<kappa=.00000000>
-<k1=.05>
+<stretchf=1.0>
+<kappa=1.0e-9>
+<k1=0.5>
 <k2=.1>
-<Lstick=.3>
-<NumberMikado=400>
-<Nit=10000>
-<tolE=.0001>
+<Lstick=.4>
+<NumberMikado=100>
+
+###Conjugate gradient parameters####
+<Nit=10000000000000>
+<tolGradE=1e-8>
+
+###Shear-params###
+<StepSize=.00003>
+<NumberStepsLeft=0>
+<NumberStepsRight=10000>
+
 <END>

@@ -20,19 +20,20 @@ using namespace std;
 
 class param
 {
-public: double rlenshort,rlenlong,kappa,k1,k2,LStick,tolE;
-        int NumberMikado,Nit; //Number of mikado, max number of conjugate iterations
+public: double rlenshort,rlenlong,kappa,k1,k2,LStick,tolGradE,stretchf,StepSize;
+        int NumberMikado,Nit,NumberStepsRight,NumberStepsLeft; //Number of mikado, max number of conjugate iterations
     param()
     {
      rlenshort=.0;
      rlenlong=.0;
      kappa=.0;
+     stretchf=1.0;
      k1=.0;
      k2=.0;
      LStick=.0;
      NumberMikado=0;
      Nit=0;
-     tolE=.0;        
+     tolGradE=.0;        
     }  
     
     ~param(){         
@@ -113,9 +114,22 @@ public: double rlenshort,rlenlong,kappa,k1,k2,LStick,tolE;
         else if(strcmp(lvalue,"Nit")==0){
             Nit=atoi(rvalue);
         }
-        else if(strcmp(lvalue,"tolE")==0){
-            tolE=atof(rvalue);
-        } else{
+        else if(strcmp(lvalue,"tolGradE")==0){
+            tolGradE=atof(rvalue);
+        }
+        else if(strcmp(lvalue,"stretchf")==0){
+            stretchf=atof(rvalue);
+        }
+        else if(strcmp(lvalue,"StepSize")==0){
+            StepSize=atof(rvalue);
+        }
+        else if(strcmp(lvalue,"NumberStepsLeft")==0){
+            NumberStepsLeft=atoi(rvalue);
+        }
+         else if(strcmp(lvalue,"NumberStepsRight")==0){
+            NumberStepsRight=atoi(rvalue);
+         }
+        else{
             cout<<"Did not recognise param"<<endl;
             return -1;            
             

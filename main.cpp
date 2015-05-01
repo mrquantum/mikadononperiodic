@@ -7,6 +7,7 @@
 #include <eigen3/Eigen/Core>
 #include <eigen3/Eigen/LU>
 #include <eigen3/Eigen/Sparse>
+#include <nlopt.hpp>
 #include <fstream>
 #include <iomanip>
 #include <algorithm>
@@ -96,12 +97,11 @@ if(argc>1){
 
 param Mikadoparameters;
 //char parameterfile = "params.txt";
-
 init(Mikadoparameters,"params.txt");
 
 vector<int> order;
-vector<stick> mikado;
-vector<stick> mikorig;
+vector<stick> mikado(5);
+vector<stick> mikorig(5);
 vector<connected> Connection;
 vector<elonstick> ELONSTICK;
 vector<spring> springlist(0);
@@ -111,7 +111,7 @@ vector<vector<int>> springpairs(0);
 double lenGrad;
 
 int Nit=Mikadoparameters.Nit;  
-double tolE=Mikadoparameters.tolE;
+double tolGradE=Mikadoparameters.tolGradE;
 int NumberMikado=Mikadoparameters.NumberMikado;
 double LStick=Mikadoparameters.LStick; //Stick Length
 double k1=Mikadoparameters.k1;
@@ -119,6 +119,11 @@ double k2=Mikadoparameters.k2;
 double kappa=Mikadoparameters.kappa;
 double rlenshort=Mikadoparameters.rlenshort;
 double rlenlong=Mikadoparameters.rlenlong;
+double stretchf=Mikadoparameters.stretchf;
+double deltaboxdx=Mikadoparameters.StepSize;
+int NumberStepsRight=Mikadoparameters.NumberStepsRight;
+int NumberStepsLeft=Mikadoparameters.NumberStepsLeft;
+
 
 ofstream mikadofile("mikado.txt"); 
 ofstream nodefile("nodes.txt");
@@ -130,6 +135,7 @@ ofstream shearenergy("shearenergy.txt");
 
 makeSticks(mikado,mikorig,NumberMikado,LStick);
 
+//mikorig=mikado;
 //write sticks to mikado.txt
 for(int i=0;i<mikado.size();i++){
     mikadofile<<mikado[i].nr<<"\t"<<mikado[i].x<<"\t"<<mikado[i].y<<"\t"<<mikado[i].th<<"\t"<<mikado[i].wlr<<
@@ -140,7 +146,7 @@ makeConnections(Connection,mikado,LStick); //Here we create the nodes, and the s
                                            //been made above. 
 sortELEMENTSperMIKADO(ELONSTICK,Connection);
 orderElonstick(order,ELONSTICK); 
-makeSpringsAndNodes(ELONSTICK,mikorig,springlist,nodes,rlenshort,rlenlong,k1,k2);//Make the springs and Nodes. 
+makeSpringsAndNodes(ELONSTICK,mikorig,springlist,nodes,rlenshort,rlenlong,k1,k2,stretchf);//Make the springs and Nodes. 
                                                                                 //Input springlist and nodes are (empty vectors)
 //write sticks to springs.txt
 for(int i=0;i<springlist.size();i++){
@@ -191,78 +197,58 @@ for(int i=0;i<singleNodes.size();i++){
 XY<<X,Y;
 
 //Shearing steps
-double angle=0.0; 
-double deltaboxdx=0.01;
 double boxdx=0;
+//double angle;
 
-for(int k=0;k<100;k++){
-double g11=1;
+for(int k=0;k<(NumberStepsRight+NumberStepsLeft);k++){
+double g11=1.0;
 double g12=boxdx;
-double g22=1+boxdx*boxdx;
-       angle=atan(boxdx);
+double g22=1.0+boxdx*boxdx;
 
- double EBEND=Ebending(springpairs,springlist,XY,kappa,g11,g12,g22);
- double ESTRETCH=Energynetwork(springlist,XY,g11,g12,g22);
+double EBEND=EbendingC(springpairs,springlist,XY,kappa,g11,g12,g22);
+double ESTRETCH=Energynetwork(springlist,XY,g11,g12,g22);
 double ETOT=ESTRETCH+EBEND;
  
+
 //Here comes the conjugate gradient
 gradE=HarmonicGradient(springlist,XY,g11,g12,g22)+BendingGrad(springpairs,springlist,XY,kappa,g11,g12,g22);
 s0=-gradE;
- 
-//     //Here be some testing code
-// if(k==2){
-//     VectorXd testvector(XY.size());
-//     for (int i=0;i<testvector.size();i++) {
-//         testvector[i]=0;
-//     }
-//     cout << "Now comparing delta E direct with delta E from gradient\n";
-//     for (int i=0;i<testvector.size();i++) {
-//             testvector[i]=1e-5;
-//             cout << ESTRETCH << "\t" << Energynetwork(springlist,XY+testvector,g11,g12,g22)-ESTRETCH << "\t";
-//             cout << gradE.dot(testvector) << "\t";
-//             cout << EBEND << "\t" << Ebending(springpairs,springlist,XY+testvector,kappa,g11,g12,g22)-EBEND << "\t";
-//             cout << (BendingGrad(springpairs,springlist,XY,kappa,g11,g12,g22)).dot(testvector) << endl;
-//             testvector[i]=0;
-//     }
-// }
-//     //end of testing code
 
-EFile<<ESTRETCH<<"\t"<<EBEND<<"\t"<<ETOT<<"\t"<<0<<endl;
+EFile<<ESTRETCH<<"\t"<<EBEND<<"\t"<<ETOT<<"\t"<<0<<"\t"<<0<<endl;
+
 ESTRETCH=Energynetwork(springlist,XY,g11,g12,g22);
-EBEND=Ebend(springpairs,springlist,XY,g11,g12,g22,kappa);  
+EBEND=EbendingC(springpairs,springlist,XY,kappa,g11,g12,g22);  
 
 //loop of the cg-method
 int conjsteps=0;
 do{
-//     for(int j=0;j<XY.size();j++){ //write the XY-data to txt
-//       XYfile<<XY(j)<<"\t";
-//     } XYfile<<endl;
     conjsteps++;
     doConjStep(XY,s0,gradE,springlist,springpairs,kappa,conjsteps,g11,g12,g22);
     ESTRETCH=Energynetwork(springlist,XY,g11,g12,g22);
-    EBEND=Ebend(springpairs,springlist,XY,g11,g12,g22,kappa);
+    EBEND=EbendingC(springpairs,springlist,XY,kappa,g11,g12,g22);  
     ETOT=ESTRETCH+EBEND;
     lenGrad=sqrt(gradE.dot(gradE));
+    //cout<<"  "<<lenGrad<<"  "<<Nit<<"  "<<tolGradE<<endl;
     EFile<<ESTRETCH<<"\t"<<EBEND<<"\t"<<ETOT<<"\t"<<lenGrad<<endl; //Write the Energy to a txt-file.
-}while(conjsteps<Nit && lenGrad>tolE);
+}while(conjsteps<Nit && lenGrad>tolGradE);
 
-
-
+//write the data to shearcoordinates.txt
 for(int ii=0;ii<XY.size();ii++){
     shearcoordinates<<XY(ii)<<"\t";
 }
 
-//shearenergy<<ETOT<<"\t"<<angle<<endl;
-shearenergy<<boxdx<<"\t"<<ETOT<<endl; //Write the deformation and the Energy to a txtfile
+//and the deformation + energy to shearenergy.txt
+shearenergy<<boxdx<<"\t"<<ETOT<<"\t"<<ESTRETCH<<"\t"<<EBEND<<"\t"<<conjsteps<<endl; //Write the deformation and the Energy to a txtfile
 shearcoordinates<<endl;
 
-if(k<100){
+//Perform the sheardeformation for the next step.
+if(k<NumberStepsRight){
 boxdx=boxdx+deltaboxdx;
 }
-if(k>100){
+if(k>NumberStepsRight){ 
     boxdx=boxdx-deltaboxdx;
 }
-cout<<"This was a shearstep"<<endl;
+cout<<"\rThis was a shearstep     "<<k<<flush;
 }
 
 
@@ -270,8 +256,7 @@ XYfile.close();
 EFile.close();
 shearcoordinates.close();
 shearenergy.close();
-
-
+cout<<endl;
 return 0;
 }
 
