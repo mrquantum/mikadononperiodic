@@ -5,3 +5,4 @@ It calculates the energy, using a harmonic potential between to found nodes (str
 and a potential penelizing the bending of a fiber (discrete persistent chain model).
 
 mikadonetworks
+#calculateclusaters
