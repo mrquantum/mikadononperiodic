@@ -17,6 +17,9 @@
 #include "importparam.h"
 #include "BendingEnergy.h"
 #include "BendingGrad.h"
+#include "clusters.h"
+#include <stdio.h>
+#include <stdlib.h>
 
 using namespace std;
 using namespace Eigen;
@@ -88,28 +91,29 @@ for(;;) {
  
 int main (int argc,char **argv)
 {
+int SEED;
+if(argc==0) SEED=0;
 if(argc>1){
-  int SEED=stoi(argv[1]);
+   SEED=stoi(argv[1]);
   my_random::set_seed(SEED);
 }  
 //my_random::set_seed(0);
 //System parameters  
 
 param Mikadoparameters;
-//char parameterfile = "params.txt";
 init(Mikadoparameters,"params.txt");
 
 vector<int> order;
-vector<stick> mikado(5);
-vector<stick> mikorig(5);
-vector<connected> Connection;
+vector<stick> mikado(0);
+vector<stick> mikorig(0);
+vector<connected> Connection(0);
 vector<elonstick> ELONSTICK;
 vector<spring> springlist(0);
 vector<node> nodes(0);
 vector<node> singleNodes; 
 vector<vector<int>> springpairs(0);
-double lenGrad;
 
+double lenGrad;
 int Nit=Mikadoparameters.Nit;  
 double tolGradE=Mikadoparameters.tolGradE;
 int NumberMikado=Mikadoparameters.NumberMikado;
@@ -124,7 +128,6 @@ double deltaboxdx=Mikadoparameters.StepSize;
 int NumberStepsRight=Mikadoparameters.NumberStepsRight;
 int NumberStepsLeft=Mikadoparameters.NumberStepsLeft;
 
-
 ofstream mikadofile("mikado.txt"); 
 ofstream nodefile("nodes.txt");
 ofstream springfile("springs.txt");
@@ -132,18 +135,26 @@ ofstream XYfile("conjpoints.txt");
 ofstream EFile("Energy.txt");
 ofstream shearcoordinates("shearcoordinates.txt");
 ofstream shearenergy("shearenergy.txt");
+ofstream cluster("clusters.txt");
+ofstream clusterdata("clusterdata.txt", ios_base::app | ios_base::out);
+char s[80];
+sprintf(s,"clusterdistri/clusterdistribution_%0d.txt",SEED);
+
+ofstream clusterdistribution(s);
 
 makeSticks(mikado,mikorig,NumberMikado,LStick);
 
 //mikorig=mikado;
 //write sticks to mikado.txt
 for(int i=0;i<mikado.size();i++){
-    mikadofile<<mikado[i].nr<<"\t"<<mikado[i].x<<"\t"<<mikado[i].y<<"\t"<<mikado[i].th<<"\t"<<mikado[i].wlr<<
+    mikadofile<<mikado[i].nr<<"\t"<<mikado[i].x<<"\t"<<mikado[i].y<<"\t"<<mikado[i].th<<"\t"<<mikado[i].wlr<<"\t"<<
     mikado[i].wud<<endl;
 } mikadofile.close();
 
+
 makeConnections(Connection,mikado,LStick); //Here we create the nodes, and the springs from the conncection structure that has already
                                            //been made above. 
+
 sortELEMENTSperMIKADO(ELONSTICK,Connection);
 orderElonstick(order,ELONSTICK); 
 makeSpringsAndNodes(ELONSTICK,mikorig,springlist,nodes,rlenshort,rlenlong,k1,k2,stretchf);//Make the springs and Nodes. 
@@ -159,6 +170,45 @@ for(int i=0;i<springlist.size();i++){
               <<springlist[i].sticki<<endl;
 }               springfile.close();
 
+
+
+//Here some nice info about are networks
+
+//make a table with sticks that are connected
+vector<int> NEWROW(2);
+vector<vector<int>> ConnectSticks;
+    for(int i=0;i<Connection.size();i++){
+        NEWROW[0]=Connection[i].first; 
+        NEWROW[1]=Connection[i].second;
+        ConnectSticks.push_back(NEWROW);
+    }
+//vector<vector<int>> M=connectivitymatrix(springlist);
+vector<vector<int>> conmatr=connectivitymatrix(ConnectSticks,NumberMikado);
+vector<vector<int>> C=clusters(conmatr);
+
+//can we make a cluster size distribution from the clusters? -> ofcourse
+int totnr=0;
+vector<vector<int>> numberdistribution=Numberdistribution(C,NumberMikado);
+
+for(int i=0;i<numberdistribution.size();i++){
+        //cout<<numberdistribution[i][0]<<"  "<<numberdistribution[i][1]<<endl;
+        clusterdistribution<<numberdistribution[i][0]<<"    "<<numberdistribution[i][1]<<endl;
+        totnr=totnr+numberdistribution[i][0]*numberdistribution[i][1];
+    }
+
+
+for(int i=0;i<C.size();i++){
+    for(int j=0;j<C[i].size();j++){
+        cluster<<C[i][j]<<",";
+    }
+    cluster<<endl;
+}
+
+cluster.close();
+
+
+clusterdata<<SEED<<"    "<<NumberMikado<<"      "<<LStick<<"    "<<C.size()<<endl;
+clusterdata.close();
 
 //Remove all double info
 for(std::size_t i=0;i<nodes.size();i++){
@@ -197,8 +247,9 @@ for(int i=0;i<singleNodes.size();i++){
 XY<<X,Y;
 
 //Shearing steps
+
 double boxdx=0;
-//double angle;
+double angle;
 
 for(int k=0;k<(NumberStepsRight+NumberStepsLeft);k++){
 double g11=1.0;
