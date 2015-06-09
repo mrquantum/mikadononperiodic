@@ -235,7 +235,7 @@ for(int i=0;i<singleNodes.size();i++){
     nodefile<<singleNodes[i].number<<"\t"<<singleNodes[i].x<<"\t"<<singleNodes[i].y<<endl;
 } nodefile.close();
 
-     //The xy positions
+/*     //The xy positions
   for(std::size_t i=0;i<singleNodes.size();i++){
      X(i)=singleNodes[i].x; 
      Y(i)=singleNodes[i].y;
@@ -307,7 +307,7 @@ XYfile.close();
 EFile.close();
 shearcoordinates.close();
 shearenergy.close();
-cout<<endl;
+cout<<endl*/;
 return 0;
 }
 
