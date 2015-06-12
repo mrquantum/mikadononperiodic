@@ -1,8 +1,8 @@
 #include "random.h"
 #include <algorithm>
 #include "makemikadonetwork.h"
-#include <eigen3/Eigen/Core>
-#include <eigen3/Eigen/LU>
+#include "eigen3/Eigen/Core"
+#include "eigen3/Eigen/LU"
 #include <vector>
 #include <iostream>
 
@@ -386,32 +386,32 @@ void makeConnections(vector<connected> &Connection,
                      const vector<stick> &mikado,
                      const double LStick)
 {
-make_connections(Connection,mikado,LStick); //Make Connections
-vector<connected> Connection2(1); //sives the double elements from the connections
-Connection2[0]=Connection[0];
-for(std::size_t i=0;i<Connection.size();i++){
-    int flag=1;
-    for(std::size_t j=0;j<Connection2.size();j++){
-        if(Connection[i].first==Connection2[j].first && Connection[i].second==Connection2[j].second){
-            flag=0; 
-            break;
+    make_connections(Connection,mikado,LStick); //Make Connections
+    vector<connected> Connection2(1); //sives the double elements from the connections
+    Connection2[0]=Connection[0];
+    for(std::size_t i=0;i<Connection.size();i++){
+        int flag=1;
+        for(std::size_t j=0;j<Connection2.size();j++){
+            if(Connection[i].first==Connection2[j].first && Connection[i].second==Connection2[j].second){
+                flag=0; 
+                break;
+            }
         }
+        if(flag==1){
+            Connection2.push_back(Connection[i]);
+        } 
     }
-    if(flag==1){
-      Connection2.push_back(Connection[i]);
-    } 
-}
 Connection=Connection2;
 
 //Check for pairs in the connected struct if at least a pair exists (2 points on same mikado)
 //then connection[j].recur=1; Else recur =0.
-for(std::size_t i=0;i<Connection.size()-1;i++){
-    for(std::size_t j=i+1;j<Connection.size();j++){
-        if(Connection[i].first==Connection[j].first){
-            Connection[i].recur=1;  Connection[j].recur=1;
+    for(std::size_t i=0;i<Connection.size()-1;i++){
+        for(std::size_t j=i+1;j<Connection.size();j++){
+            if(Connection[i].first==Connection[j].first){
+                Connection[i].recur=1;  Connection[j].recur=1;
+            }
         }
     }
-}
 }
 
 

@@ -27,6 +27,8 @@ struct spring{
 struct node{
   //int number, sticki;
   int number;
+  //int stick1;
+  //int stick2;
   double x;
   double y;
 };

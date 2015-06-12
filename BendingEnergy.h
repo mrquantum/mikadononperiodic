@@ -4,8 +4,8 @@
 #include<iostream>
 #include<vector>
 #include<algorithm>
-#include <eigen3/Eigen/Core>
-#include <eigen3/Eigen/LU>
+#include "eigen3/Eigen/Core"
+#include "eigen3/Eigen/LU"
 #include "makemikadonetwork.h"
 
 

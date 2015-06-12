@@ -2,8 +2,8 @@
 #define EMERGYANDGRADIENTS_H
 
 #include<vector>
-#include <eigen3/Eigen/Core>
-#include <eigen3/Eigen/LU>
+#include "eigen3/Eigen/Core"
+#include "eigen3/Eigen/LU"
 
 struct anchor{
   int label; 

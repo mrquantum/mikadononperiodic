@@ -7,8 +7,8 @@
 #include "makemikadonetwork.h"
 #include "EnergyandGradients.h"
 #include "minimizers.h"
-#include <eigen3/Eigen/Core>
-#include <eigen3/Eigen/LU>
+#include "eigen3/Eigen/Core"
+#include "eigen3/Eigen/LU"
 #include <fstream>
 #include <iomanip>
 #include <algorithm>

@@ -7,8 +7,8 @@
 #define EPS 2.0e-8
 
 #include<vector>
-#include <eigen3/Eigen/Core>
-#include <eigen3/Eigen/LU>
+#include "eigen3/Eigen/Core"
+#include "eigen3/Eigen/LU"
 #include "BendingGrad.h"
 #include "EnergyandGradients.h"
 //#include "nrutil.h"

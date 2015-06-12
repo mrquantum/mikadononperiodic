@@ -4,9 +4,9 @@
 #include "makemikadonetwork.h"
 #include "EnergyandGradients.h"
 #include "minimizers.h"
-#include <eigen3/Eigen/Core>
-#include <eigen3/Eigen/LU>
-#include <eigen3/Eigen/Sparse>
+#include "eigen3/Eigen/Core"
+#include "eigen3/Eigen/LU"
+#include "eigen3/Eigen/Sparse"
 #include <nlopt.hpp>
 #include <fstream>
 #include <iomanip>
@@ -265,7 +265,7 @@ double ETOT=ESTRETCH+EBEND;
 gradE=HarmonicGradient(springlist,XY,g11,g12,g22)+BendingGrad(springpairs,springlist,XY,kappa,g11,g12,g22);
 s0=-gradE;
 
-EFile<<ESTRETCH<<"\t"<<EBEND<<"\t"<<ETOT<<"\t"<<0<<"\t"<<0<<endl;
+//EFile<<ESTRETCH<<"\t"<<EBEND<<"\t"<<ETOT<<"\t"<<0<<"\t"<<0<<endl;
 
 ESTRETCH=Energynetwork(springlist,XY,g11,g12,g22);
 EBEND=EbendingC(springpairs,springlist,XY,kappa,g11,g12,g22);  
@@ -280,7 +280,7 @@ do{
     ETOT=ESTRETCH+EBEND;
     lenGrad=sqrt(gradE.dot(gradE));
     //cout<<"  "<<lenGrad<<"  "<<Nit<<"  "<<tolGradE<<endl;
-    EFile<<ESTRETCH<<"\t"<<EBEND<<"\t"<<ETOT<<"\t"<<lenGrad<<endl; //Write the Energy to a txt-file.
+//    EFile<<ESTRETCH<<"\t"<<EBEND<<"\t"<<ETOT<<"\t"<<lenGrad<<endl; //Write the Energy to a txt-file.
 }while(conjsteps<Nit && lenGrad>tolGradE);
 
 //write the data to shearcoordinates.txt
