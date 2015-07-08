@@ -7,7 +7,7 @@
 #include "eigen3/Eigen/Core"
 #include "eigen3/Eigen/LU"
 #include "eigen3/Eigen/Sparse"
-#include <nlopt.hpp>
+//#include <nlopt.hpp>
 #include <fstream>
 #include <iomanip>
 #include <algorithm>
