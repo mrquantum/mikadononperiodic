@@ -129,7 +129,9 @@ int main (int argc,char **argv)
     double deltaboxdx=Mikadoparameters.StepSize;
     int NumberStepsRight=Mikadoparameters.NumberStepsRight;
     int NumberStepsLeft=Mikadoparameters.NumberStepsLeft;
+     cout<<"The number of rightssteps= "<<NumberStepsRight<<endl;
 
+    cout<<"The number of leftsteps= "<<NumberStepsLeft<<endl;
     ofstream mikadofile("mikado.txt"); 
     ofstream nodefile("nodes.txt");
     ofstream springfile("springs.txt");
@@ -139,6 +141,8 @@ int main (int argc,char **argv)
     ofstream shearenergy("shearenergy.txt");
     ofstream cluster("clusters.txt");
     ofstream clusterdata("clusterdata.txt", ios_base::app | ios_base::out);
+    ofstream anglefile("angles.txt");
+    
     char s[80];
     sprintf(s,"clusterdistri/clusterdistribution_%0d.txt",SEED);
 
@@ -181,7 +185,7 @@ int main (int argc,char **argv)
             NEWROW[1]=Connection[i].second;
             ConnectSticks.push_back(NEWROW);
         }
-//vector<vector<int>> M=connectivitymatrix(springlist);
+//C is a vector w. on its entries the clusters 
     vector<vector<int>> conmatr=connectivitymatrix(ConnectSticks,NumberMikado);
     vector<vector<int>> C=clusters(conmatr);
 
@@ -204,7 +208,7 @@ int main (int argc,char **argv)
     }
     cluster.close();
 
-
+    //Write 
     clusterdata<<SEED<<"    "<<NumberMikado<<"      "<<LStick<<"    "<<C.size()<<endl;
     clusterdata.close();
 
@@ -218,6 +222,21 @@ int main (int argc,char **argv)
 
 //MAKE HERE THE PAIR OF SPRINGS
 makeSpringpairs(springpairs,springlist);
+int springone,springtwo,node1,node2,node3;
+for(int i=0;i<springpairs.size();i++){
+    springone=springpairs[i][0];
+    springtwo=springpairs[i][1];
+    node1=springlist[springone].one;
+    node2=springlist[springone].two;
+    node3=springlist[springtwo].two;
+    
+    anglefile<<node1<<"\t"<<node2<<"\t"<<node3<<endl;
+    
+}
+
+
+
+
 for(int i=0;i<singleNodes.size();i++){
 }
 VectorXd X(singleNodes.size()),Y(singleNodes.size());
@@ -250,53 +269,51 @@ for(int i=0;i<singleNodes.size();i++){
     double angle;
 
     for(int k=0;k<(NumberStepsRight+NumberStepsLeft);k++){
-    double g11=1.0;
-    double g12=boxdx;
-    double g22=1.0+boxdx*boxdx;
+        double g11=1.0;
+        double g12=boxdx;
+        double g22=1.0+boxdx*boxdx;
 
-    double EBEND=EbendingC(springpairs,springlist,XY,kappa,g11,g12,g22);
-    double ESTRETCH=Energynetwork(springlist,XY,g11,g12,g22);
-    double ETOT=ESTRETCH+EBEND;
- 
+        double EBEND=EbendingC(springpairs,springlist,XY,kappa,g11,g12,g22);
+        double ESTRETCH=Energynetwork(springlist,XY,g11,g12,g22);
+        double ETOT=ESTRETCH+EBEND;
+     //Here comes the conjugate gradient
+        gradE=HarmonicGradient(springlist,XY,g11,g12,g22)+BendingGrad(springpairs,springlist,XY,kappa,g11,g12,g22);
+        s0=-gradE;
 
-    //Here comes the conjugate gradient
-    gradE=HarmonicGradient(springlist,XY,g11,g12,g22)+BendingGrad(springpairs,springlist,XY,kappa,g11,g12,g22);
-    s0=-gradE;
+        //EFile<<ESTRETCH<<"\t"<<EBEND<<"\t"<<ETOT<<"\t"<<0<<"\t"<<0<<endl;
 
-    //EFile<<ESTRETCH<<"\t"<<EBEND<<"\t"<<ETOT<<"\t"<<0<<"\t"<<0<<endl;
-
-    ESTRETCH=Energynetwork(springlist,XY,g11,g12,g22);
-    EBEND=EbendingC(springpairs,springlist,XY,kappa,g11,g12,g22);  
-
-    //loop of the cg-method
-    int conjsteps=0;
-    do{
-        conjsteps++;
-        doConjStep(XY,s0,gradE,springlist,springpairs,kappa,conjsteps,g11,g12,g22);
         ESTRETCH=Energynetwork(springlist,XY,g11,g12,g22);
         EBEND=EbendingC(springpairs,springlist,XY,kappa,g11,g12,g22);  
-        ETOT=ESTRETCH+EBEND;
-        lenGrad=sqrt(gradE.dot(gradE));
-    }while(conjsteps<Nit && lenGrad>tolGradE);
 
-    //write the data to shearcoordinates.txt
-    for(int ii=0;ii<XY.size();ii++){
-        shearcoordinates<<XY(ii)<<"\t";
-    }
-    shearcoordinates<<endl;
+        //loop of the cg-method
+        int conjsteps=0;
+        do{
+            conjsteps++;
+            doConjStep(XY,s0,gradE,springlist,springpairs,kappa,conjsteps,g11,g12,g22);
+            ESTRETCH=Energynetwork(springlist,XY,g11,g12,g22);
+            EBEND=EbendingC(springpairs,springlist,XY,kappa,g11,g12,g22);  
+            ETOT=ESTRETCH+EBEND;
+            lenGrad=sqrt(gradE.dot(gradE));
+        }while(conjsteps<Nit && lenGrad>tolGradE);
 
-    //and the deformation + energy to shearenergy.txt
-    shearenergy<<boxdx<<"\t"<<ETOT<<"\t"
-    <<ESTRETCH<<"\t"<<EBEND<<"\t"<<lenGrad<<"\t"<<conjsteps<<endl; 
+        //write the data to shearcoordinates.txt
+        for(int ii=0;ii<XY.size();ii++){
+            shearcoordinates<<XY(ii)<<"\t";
+        }
+        shearcoordinates<<endl;
+    
+        //and the deformation + energy to shearenergy.txt
+        shearenergy<<boxdx<<"\t"<<ETOT<<"\t"
+        <<ESTRETCH<<"\t"<<EBEND<<"\t"<<lenGrad<<"\t"<<conjsteps<<endl; 
 
-    //Perform the sheardeformation for the next step.
-    if(k<NumberStepsRight){
-    boxdx=boxdx+deltaboxdx;
-    }
-    if(k>NumberStepsRight){ 
-        boxdx=boxdx-deltaboxdx;
-    }
-    cout<<"\rThis was a shearstep     "<<k<<flush;
+        //Perform the sheardeformation for the next step.
+        if(k<NumberStepsRight){
+        boxdx=boxdx+deltaboxdx;
+        }
+        if(k>NumberStepsRight){ 
+            boxdx=boxdx-deltaboxdx;
+        }
+        cout<<"\rThis was a shearstep     "<<k<<flush;
     }
 
 

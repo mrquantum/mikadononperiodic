@@ -50,15 +50,24 @@ VectorXd BendingGrad(const vector<vector<int>> &springpairs,
         double d12=sqrt(d12squared);
         double d23=sqrt(d23squared);
     
-        bendinggrad(one)=bendinggrad(one)+(  (2*  (-((-2*g11*dx12 - 2*g12*dy12)*
-        (g11*dx12 + g12*dy12))/(2.*pow(d12squared,1.5))   -g11/d12)
-        *((g11*dx12 + g12*dy12)/d12 -(g11*dx23 + g12*dy23)/d23)   +
-        2*(-((-2*g11*dx12 - 2*g12*dy12)*(g12*dx12 + g22*dy12))/(2.*pow(d12squared,1.5))   
-        -g12/d12)*((g12*dx12 + g22*dy12)/d12 -(g12*dx23 + g22*dy23)/d23)  )  
-        /(d12 + sqrt(g11*pow(dx23,2) + 2*g12*dx23*dy13 + g22*pow(dy13,2)))  
-        -   (  (-2*g11*dx12 - 2*g12*dy12)*(  pow((g11*dx12 + g12*dy12)/d12 - (g11*dx23 + g12*dy23)
-        /d23,2) +   pow((g12*dx12 + g22*dy12)/d12 -(g12*dx23 + g22*dy23)/d23,2))  )  
-        /(2.*d12*pow(d12 + sqrt(g11*pow(dx23,2) + 2*g12*dx23*(dy13) + g22*pow(dy13,2)),2)));
+        bendinggrad(one)=bendinggrad(one)+
+        (
+            (
+                2*(
+                    -((-2*g11*dx12 - 2*g12*dy12)*
+            (g11*dx12 + g12*dy12))/(2.*pow(d12squared,1.5))   -g11/d12
+                )
+            *   (
+                    (g11*dx12 + g12*dy12)/d12 -(g11*dx23 + g12*dy23)/d23
+                ) +
+                2*(-((-2*g11*dx12 - 2*g12*dy12)*(g12*dx12 + g22*dy12))/(2.*pow(d12squared,1.5))   
+                    -g12/d12)*((g12*dx12 + g22*dy12)/d12 -(g12*dx23 + g22*dy23)/d23)  
+            )
+            /(d12 + sqrt(g11*pow(dx23,2) + 2*g12*dx23*dy13 + g22*pow(dy13,2)))  
+            -   (  (-2*g11*dx12 - 2*g12*dy12)*(  pow((g11*dx12 + g12*dy12)/d12 - (g11*dx23 + g12*dy23)
+            /d23,2) +   pow((g12*dx12 + g22*dy12)/d12 -(g12*dx23 + g22*dy23)/d23,2))  )  
+            /(2.*d12*pow(d12 + sqrt(g11*pow(dx23,2) + 2*g12*dx23*(dy13) + g22*pow(dy13,2)),2))
+        );
         
    
         bendinggrad(two)=  bendinggrad(two)+( (2*  (  -(  (g11*dx12 + g12*dy12)*
