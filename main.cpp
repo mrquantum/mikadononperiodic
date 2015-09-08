@@ -7,7 +7,6 @@
 #include "eigen3/Eigen/Core"
 #include "eigen3/Eigen/LU"
 #include "eigen3/Eigen/Sparse"
-//#include <nlopt.hpp>
 #include <fstream>
 #include <iomanip>
 #include <algorithm>
@@ -20,6 +19,8 @@
 #include "clusters.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include "exportfiles.h"
+#include "writefunctions.h"
 
 using namespace std;
 using namespace Eigen;
@@ -115,6 +116,8 @@ int main (int argc,char **argv)
     vector<node> singleNodes; 
     vector<vector<int>> springpairs(0);
 
+    
+    
     double lenGrad;
     int Nit=Mikadoparameters.Nit;  
     double tolGradE=Mikadoparameters.tolGradE;
@@ -129,53 +132,16 @@ int main (int argc,char **argv)
     double deltaboxdx=Mikadoparameters.StepSize;
     int NumberStepsRight=Mikadoparameters.NumberStepsRight;
     int NumberStepsLeft=Mikadoparameters.NumberStepsLeft;
-     cout<<"The number of rightssteps= "<<NumberStepsRight<<endl;
-
+    cout<<"The number of rightssteps= "<<NumberStepsRight<<endl;
     cout<<"The number of leftsteps= "<<NumberStepsLeft<<endl;
-    ofstream mikadofile("mikado.txt"); 
-    ofstream nodefile("nodes.txt");
-    ofstream springfile("springs.txt");
-    ofstream XYfile("conjpoints.txt");
-    //ofstream EFile("Energy.txt");
-    ofstream shearcoordinates("shearcoordinates.txt");
-    ofstream shearenergy("shearenergy.txt");
-    ofstream cluster("clusters.txt");
-    ofstream clusterdata("clusterdata.txt", ios_base::app | ios_base::out);
-    ofstream anglefile("angles.txt");
-    
-    char s[80];
-    sprintf(s,"clusterdistri/clusterdistribution_%0d.txt",SEED);
-
-    ofstream clusterdistribution(s);
-
+ 
     makeSticks(mikado,mikorig,NumberMikado,LStick);
-
-    //mikorig=mikado;
-    //write sticks to mikado.txt
-    for(int i=0;i<mikado.size();i++){
-        mikadofile<<mikado[i].nr<<"\t"<<mikado[i].x<<"\t"<<mikado[i].y<<"\t"<<mikado[i].th<<"\t"<<mikado[i].wlr<<"\t"<<
-        mikado[i].wud<<endl;
-    } 
-    mikadofile.close();
-
-//Here we create the nodes, and the springs from the conncection structure that has already
-//been made above. 
+    Write_Mikado_2txt(mikadofile,mikado);
     makeConnections(Connection,mikado,LStick); 
     sortELEMENTSperMIKADO(ELONSTICK,Connection);
     orderElonstick(order,ELONSTICK); 
     makeSpringsAndNodes(ELONSTICK,mikorig,springlist,nodes,rlenshort,rlenlong,k1,k2,stretchf);//Make the springs and Nodes. 
-                                                                                //Input springlist and nodes are (empty vectors)
-    //write sticks to springs.txt
-    for(int i=0;i<springlist.size();i++){
-        springfile<<springlist[i].one<<"\t"
-                <<springlist[i].two<<"\t"
-                <<springlist[i].wlr<<"\t"
-                <<springlist[i].wud<<"\t"
-                <<springlist[i].rlen<<"\t"
-                <<springlist[i].k<<"\t"
-                <<springlist[i].sticki<<endl;
-    }
-    springfile.close();
+    Write_Springs_2txt(springfile,springlist);
 
 //make a table with sticks that are connected
     vector<int> NEWROW(2);
@@ -185,20 +151,14 @@ int main (int argc,char **argv)
             NEWROW[1]=Connection[i].second;
             ConnectSticks.push_back(NEWROW);
         }
-//C is a vector w. on its entries the clusters 
+
+    //C is a vector w. on its entries the clusters 
     vector<vector<int>> conmatr=connectivitymatrix(ConnectSticks,NumberMikado);
     vector<vector<int>> C=clusters(conmatr);
-
-    //can we make a cluster size distribution from the clusters? -> ofcourse
-    int totnr=0;
+    //Make a cluster size distribution from the clusters
     vector<vector<int>> numberdistribution=Numberdistribution(C,NumberMikado);
 
-    for(int i=0;i<numberdistribution.size();i++){
-            //cout<<numberdistribution[i][0]<<"  "<<numberdistribution[i][1]<<endl;
-            clusterdistribution<<numberdistribution[i][0]<<"    "<<numberdistribution[i][1]<<endl;
-            totnr=totnr+numberdistribution[i][0]*numberdistribution[i][1];
-        }
-
+    Write_Clusterdistribution_2txt(clusterdistribution,numberdistribution);
 
     for(int i=0;i<C.size();i++){
         for(int j=0;j<C[i].size();j++){
@@ -208,9 +168,7 @@ int main (int argc,char **argv)
     }
     cluster.close();
 
-    //Write 
-    clusterdata<<SEED<<"    "<<NumberMikado<<"      "<<LStick<<"    "<<C.size()<<endl;
-    clusterdata.close();
+    Write_Clusterdata_2txt(clusterdata,NumberMikado,SEED,LStick,C);
 
     //Remove all double info
     for(std::size_t i=0;i<nodes.size();i++){
@@ -236,9 +194,8 @@ for(int i=0;i<springpairs.size();i++){
 
 
 
-
-for(int i=0;i<singleNodes.size();i++){
-}
+// for(int i=0;i<singleNodes.size();i++){
+// }
 VectorXd X(singleNodes.size()),Y(singleNodes.size());
 VectorXd XY(2*X.size());
 VectorXd gradE(XY.size());
@@ -247,12 +204,10 @@ VectorXd XYcopy(XY.size());
 VectorXd gradEn(gradE.size());
 VectorXd s0(gradE.size());
 
-//Write the original nodes to .../nodes.txt
-for(int i=0;i<singleNodes.size();i++){
-    nodefile<<singleNodes[i].number<<"\t"<<singleNodes[i].x<<"\t"<<singleNodes[i].y<<endl;
-} nodefile.close();
 
-     //The xy positions
+    Write_Nodes_2txt(nodefile,singleNodes);
+
+    //The xy positions
     for(std::size_t i=0;i<singleNodes.size();i++){
         X(i)=singleNodes[i].x; 
         Y(i)=singleNodes[i].y;
@@ -266,7 +221,6 @@ for(int i=0;i<singleNodes.size();i++){
     //Shearing steps
 
     double boxdx=0;
-    double angle;
 
     for(int k=0;k<(NumberStepsRight+NumberStepsLeft);k++){
         double g11=1.0;
@@ -297,11 +251,13 @@ for(int i=0;i<singleNodes.size();i++){
         }while(conjsteps<Nit && lenGrad>tolGradE);
 
         //write the data to shearcoordinates.txt
-        for(int ii=0;ii<XY.size();ii++){
-            shearcoordinates<<XY(ii)<<"\t";
-        }
-        shearcoordinates<<endl;
-    
+//         for(int ii=0;ii<XY.size();ii++){
+//             shearcoordinates<<XY(ii)<<"\t";
+//         }
+//         shearcoordinates<<endl;
+        Write_ShearCoordinates_2txt(shearcoordinates,XY);
+
+
         //and the deformation + energy to shearenergy.txt
         shearenergy<<boxdx<<"\t"<<ETOT<<"\t"
         <<ESTRETCH<<"\t"<<EBEND<<"\t"<<lenGrad<<"\t"<<conjsteps<<endl; 
