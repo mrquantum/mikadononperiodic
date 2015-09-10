@@ -13,7 +13,7 @@
 #include <iomanip>
 #include <algorithm>
 #include <vector>
-#include <math.h>X
+#include <math.h>
 #include "makemikadonetwork.h"
 using namespace std;
 
