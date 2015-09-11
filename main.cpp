@@ -19,7 +19,6 @@
 #include "clusters.h"
 #include <stdio.h>
 #include <stdlib.h>
-//#include "exportfiles.h"
 #include "writefunctions.h"
 #include "shearleader.h"
 
@@ -126,6 +125,7 @@ int main (int argc,char **argv)
     double LStick=Mikadoparameters.LStick; //Stick Length
     double k1=Mikadoparameters.k1;
     double k2=Mikadoparameters.k2;
+    int bendingOn=Mikadoparameters.bendingOn;
     double kappa=Mikadoparameters.kappa;
     double rlenshort=Mikadoparameters.rlenshort;
     double rlenlong=Mikadoparameters.rlenlong;
@@ -214,17 +214,53 @@ int main (int argc,char **argv)
     XY<<X,Y;
     
     
+    //Here is some testing stuff
     
+    VectorXd Xtest=XY;
+    VectorXd dX(XY.size());
+    double Esreal,EsTaylor,dE,LgradE;
+    VectorXd gradEt;
+    for(int i=0;i<XY.size();i++){
+     dX(i)=0.01*(randf()-0.5);
+     Xtest(i)=randf(); 
+    }
+     Esreal=Energynetwork(springlist,Xtest+dX,1.0,0.0,1.0); 
+     gradEt=HarmonicGradient(springlist,Xtest,1.0,0.0,1.0);
+     EsTaylor=Energynetwork(springlist,Xtest,1.0,0.0,1.0)+dX.dot(gradEt);
+     LgradE=sqrt(gradEt.dot(gradEt));
+     dE=Esreal-EsTaylor;
+     
+    cout<<"E(x+dx)="<<Esreal<<"\t"<<"E(x)+dx.gradE(x)="<<EsTaylor<<"\t"<<"dE="<<dE<<"\t"<<"|grad|="<<LgradE<<endl;
+    
+    double kappat=0.00001;
+    VectorXd gradB=BendingGrad(springpairs,springlist,Xtest,kappat,1.0,0.0,1.0);
+    double Ebreal=EbendingC(springpairs,springlist,Xtest+dX,kappat,1.0,0.0,1.0);
+    double EbTaylor=EbendingC(springpairs,springlist,Xtest,kappat,1.0,0.0,1.0)+dX.dot(gradB);
+    double dEb=Ebreal-EbTaylor;
+    double LgradEb=sqrt(gradB.dot(gradB));
+    
+    cout<<"Eb(x+dx)="<<Ebreal<<"\t"<<"Eb(x)+dx.gradEb(x)="<<EbTaylor<<"\t"<<"dEb="<<dEb<<"\t"<<"|grad|="<<LgradEb<<endl;
+    cout<<EbendingC(springpairs,springlist,Xtest,kappat,1,0,1)<<endl;
+    
+    //**********************************
     
 
     //Shearing
-    shearsteps(deltaboxdx,NumberStepsRight,NumberStepsLeft,springlist,springpairs,XY,kappa,Nit,tolGradE,shearcoordinates,shearenergy);
+    shearsteps(deltaboxdx,NumberStepsRight,NumberStepsLeft,springlist,springpairs,XY,bendingOn,kappa,Nit,tolGradE,shearcoordinates,shearenergy);
 
     XYfile.close();
     shearcoordinates.close();
     shearenergy.close();
     cout<<endl;
 
+    
+    
+    
+    
+    
+    
+    
+    
     return 0;
 }
 

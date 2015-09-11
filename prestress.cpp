@@ -35,8 +35,9 @@ double prestress(const vector<spring> &springlist,
         double lengrad0=sqrt(s0.dot(s0));
         double lengradN;
         int count=0;
+	
         do{
-            doConjStep(XY,s0,gradE,springlist,springpairs,kappa,count,g11,g12,g22);
+            doConjStep(XY,s0,gradE,springlist,springpairs,0,kappa,count,g11,g12,g22);
             count++;
             lengradN=sqrt(gradE.dot(gradE));
             cout<<count<<"  "<<lengradN/lengrad0<<endl;

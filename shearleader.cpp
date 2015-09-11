@@ -32,6 +32,7 @@ void shearsteps(double deltaboxdx,
                vector<spring> &springlist,
                vector<vector<int>> &springpairs,
                VectorXd &XY,
+		int bendingOn,
                double kappa,
                int Nit,
                double tolGradE,
@@ -55,7 +56,7 @@ void shearsteps(double deltaboxdx,
         //Check wheather there is bending rigidity or not. If not, we shall not
         //have to compute the bending gradient and multiply it by zero each step
         //which will save massive amounts of time (hopefully)
-        if(kappa==0.0){
+        if(bendingOn==0){
             ESTRETCH=Energynetwork(springlist,XY,g11,g12,g22);
             ETOT=ESTRETCH;
             gradE=HarmonicGradient(springlist,XY,g11,g12,g22);
@@ -73,8 +74,8 @@ void shearsteps(double deltaboxdx,
         //Maybe we are going to change this in the future 
         do{
             conjsteps++;
-            doConjStep(XY,s0,gradE,springlist,springpairs,kappa,conjsteps,g11,g12,g22);
-            if(kappa==0.0){
+            doConjStep(XY,s0,gradE,springlist,springpairs,bendingOn,kappa,conjsteps,g11,g12,g22);
+            if(bendingOn==0){
                 ESTRETCH=Energynetwork(springlist,XY,g11,g12,g22);
                 ETOT=ESTRETCH;
             } else{

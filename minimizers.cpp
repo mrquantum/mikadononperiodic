@@ -102,6 +102,7 @@ void doConjStep(VectorXd &XY,
                 VectorXd &gradE,
                 const vector<spring> &springlist,
                 const vector<vector<int>> &springpairs,
+		int bendingOn,
                 double kappa,
                 int conjsteps,
                 double g11,
@@ -122,13 +123,21 @@ void doConjStep(VectorXd &XY,
         double an=Brent(network,a1,a2,1e-12);
         //Update the positions.
         XY=XY+an*s0;
-        gradEn=HarmonicGradient(springlist,XY,g11,g12,g22)+BendingGrad(springpairs,springlist,XY,kappa,g11,g12,g22);
-        betan=(gradEn-gradE).dot(gradEn)/(gradE.dot(gradE));
+	if(bendingOn==0){
+	  gradEn=HarmonicGradient(springlist,XY,g11,g12,g22);
+	} else{
+	  gradEn=HarmonicGradient(springlist,XY,g11,g12,g22)+BendingGrad(springpairs,springlist,XY,kappa,g11,g12,g22);
+	}
+	betan=(gradEn-gradE).dot(gradEn)/(gradE.dot(gradE));
         //Did not find bracket, reset CG-method    
     } else{
         betan=0.0;
-        gradE=HarmonicGradient(springlist,XY,g11,g12,g22)+BendingGrad(springpairs,springlist,XY,kappa,g11,g12,g22);
-        s0=-gradE;
+	if(bendingOn==0){
+	  gradE=HarmonicGradient(springlist,XY,g11,g12,g22);
+	} else{
+	    gradE=HarmonicGradient(springlist,XY,g11,g12,g22)+BendingGrad(springpairs,springlist,XY,kappa,g11,g12,g22);
+	}
+	s0=-gradE;
         //cout<<"Bracket failed, Reset CG"<<endl;
         return;
     }

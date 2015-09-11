@@ -21,11 +21,12 @@ using namespace std;
 class param
 {
 public: double rlenshort,rlenlong,kappa,k1,k2,LStick,tolGradE,stretchf,StepSize;
-        int NumberMikado,Nit,NumberStepsRight,NumberStepsLeft; //Number of mikado, max number of conjugate iterations
+        int NumberMikado,bendingOn,Nit,NumberStepsRight,NumberStepsLeft; //Number of mikado, max number of conjugate iterations
     param()
     {
      rlenshort=.0;
      rlenlong=.0;
+     bendingOn=0;
      kappa=.0;
      stretchf=1.0;
      k1=.0;
@@ -70,10 +71,13 @@ public: double rlenshort,rlenlong,kappa,k1,k2,LStick,tolGradE,stretchf,StepSize;
                 cout<<"Make a better network"<<endl;
                 return 0;
             }
-                   if(Nit<=0) {
+		if(Nit<=0) {
                 cout<<"No conjugate steps are made"<<endl;
                 return 0;
-            } else{
+            } if(bendingOn>1){
+		cout<<"bendingOn can be 0 or 1"<<endl;
+		  return 0;
+	    }   else{
                 return 1; 
             }
         
@@ -96,6 +100,9 @@ public: double rlenshort,rlenlong,kappa,k1,k2,LStick,tolGradE,stretchf,StepSize;
         else if(strcmp(lvalue,"rlenlong")==0){
             rlenlong=atof(rvalue);
         }
+        else if(strcmp(lvalue,"bendingOn")==0){
+	  bendingOn=atoi(rvalue);
+	}
         else if(strcmp(lvalue,"kappa")==0){
             kappa=atof(rvalue);
         }
