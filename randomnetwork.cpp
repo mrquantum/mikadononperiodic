@@ -63,7 +63,7 @@ VectorXd initiateRandomNetwork(vector<spring> &springlist,
     sortELEMENTSperMIKADO(ELONSTICK,Connection);
     orderElonstick(order,ELONSTICK); 
     makeSpringsAndNodes(ELONSTICK,mikorig,springlist,nodes,rlenshort,rlenlong,k1,k2,stretchf);//Make the springs and Nodes. 
-    Write_Springs_2txt(springfile,springlist);
+    //Write_Springs_2txt(springfile,springlist);
 
     //make a table with sticks that are connected
     vector<int> NEWROW(2);

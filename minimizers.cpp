@@ -65,6 +65,38 @@ using namespace std;
 // //  cout<<"i=    "<<ii<<endl;
 // }
 
+
+//     //Here is some testing stuff
+//     VectorXd Xtest=XY;
+//     VectorXd dX(XY.size());
+//     double Esreal,EsTaylor,dE,LgradE;
+//     VectorXd gradEt;
+//     for(int i=0;i<XY.size();i++){
+//      dX(i)=0.01*(randf()-0.5);
+//      //Xtest(i)=randf(); 
+//     }
+//      Esreal=Energynetwork(springlist,Xtest+dX,1.0,0.0,1.0); 
+//      gradEt=HarmonicGradient(springlist,Xtest,1.0,0.0,1.0);
+//      EsTaylor=Energynetwork(springlist,Xtest,1.0,0.0,1.0)+dX.dot(gradEt);
+//      LgradE=sqrt(gradEt.dot(gradEt));
+//      dE=Esreal-EsTaylor;
+//      
+//     cout<<"E(x+dx)="<<Esreal<<"\t"<<"E(x)+dx.gradE(x)="<<EsTaylor<<"\t"<<"dE="<<dE<<"\t"<<"|grad|="<<LgradE<<endl;
+//     
+//     double kappat=0.00001;
+//     VectorXd gradB=BendingGrad(springpairs,springlist,Xtest,kappat,1.0,0.0,1.0);
+//     double Ebreal=EbendingC(springpairs,springlist,Xtest+dX,kappat,1.0,0.0,1.0);
+//     double EbTaylor=EbendingC(springpairs,springlist,Xtest,kappat,1.0,0.0,1.0)+dX.dot(gradB);
+//     double dEb=Ebreal-EbTaylor;
+//     double LgradEb=sqrt(gradB.dot(gradB));
+//     
+//     cout<<"Eb(x+dx)="<<Ebreal<<"\t"<<"Eb(x)+dx.gradEb(x)="<<EbTaylor<<"\t"<<"dEb="<<dEb<<"\t"<<"|grad|="<<LgradEb<<endl;
+//     cout<<EbendingC(springpairs,springlist,Xtest,kappat,1,0,1)<<endl;
+
+//      //**********************************
+
+
+
 void doSecant(double &root,
               const VectorXd &XY,
               const VectorXd &s0, 

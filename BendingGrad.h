@@ -20,4 +20,7 @@ Eigen::VectorXd BendingGrad(const vector<vector<int>> &springpairs,
 
 
 
+double l_ij(int springnr, Eigen::VectorXd &XY,vector<spring> &springlist,double g11, double g12,double g22);
+
+
 #endif

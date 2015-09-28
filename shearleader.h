@@ -22,6 +22,7 @@
 #include <stdlib.h>
 //#include "exportfiles.h"
 #include "writefunctions.h"
+#include "cgwoagony.h"
 
 using namespace std;
 
