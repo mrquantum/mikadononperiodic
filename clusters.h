@@ -14,7 +14,8 @@
 #include <algorithm>
 #include <vector>
 #include <math.h>
-#include "makemikadonetwork.h"
+//#include "makemikadonetwork.h"
+#include "structs.h"
 using namespace std;
 
 struct site{int number; 

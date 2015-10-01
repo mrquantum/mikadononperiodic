@@ -22,6 +22,8 @@
 #include "writefunctions.h"
 #include "shearleader.h"
 #include "makeSpringNetworks.h"
+#include "structs.h"
+
 
 using namespace std;
 using namespace Eigen;
@@ -38,6 +40,8 @@ VectorXd initiateRandomNetwork(vector<spring> &springlist,
                                 vector<vector<int>> &Clusterv,
                                 vector<vector<int>> &numberdistribution,
                                 int NumberMikado,
+                                vector<spring> &background,
+                                VectorXd &XYb,
                                 int SEED,
                                 double LStick,
                                 double rlenshort,
@@ -59,7 +63,7 @@ VectorXd initiateRandomNetwork(vector<spring> &springlist,
     vector<int> order;
     makeSticks(mikado,mikorig,NumberMikado,LStick);
     Write_Mikado_2txt(mikadofile,mikado);
-    makeConnections(Connection,mikado,LStick); 
+    makeConnections(Connection,mikado,LStick,background,XYb); 
     sortELEMENTSperMIKADO(ELONSTICK,Connection);
     orderElonstick(order,ELONSTICK); 
     makeSpringsAndNodes(ELONSTICK,mikorig,springlist,nodes,rlenshort,rlenlong,k1,k2,stretchf);//Make the springs and Nodes. 

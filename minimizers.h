@@ -11,6 +11,8 @@
 #include "eigen3/Eigen/LU"
 #include "BendingGrad.h"
 #include "EnergyandGradients.h"
+#include "structs.h"
+
 //#include "nrutil.h"
 
 struct functor{

@@ -23,6 +23,8 @@
 //#include "exportfiles.h"
 #include "writefunctions.h"
 #include "cgwoagony.h"
+#include "structs.h"
+
 
 using namespace std;
 

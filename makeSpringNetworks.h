@@ -24,6 +24,7 @@
 #include <stdlib.h>
 #include "writefunctions.h"
 #include "shearleader.h"
+#include "structs.h"
 
 Eigen::VectorXd makeSquareNetwork(int Number, vector<spring> &springlist);
 

@@ -4,6 +4,9 @@
 #include<vector>
 #include "eigen3/Eigen/Core"
 #include "eigen3/Eigen/LU"
+//#include "makemikadonetwork.h"
+#include "structs.h"
+
 
 struct anchor{
   int label; 

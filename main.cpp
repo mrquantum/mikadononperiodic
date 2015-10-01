@@ -23,6 +23,8 @@
 #include "shearleader.h"
 #include "randomnetwork.h"
 #include "makeSpringNetworks.h"
+#include "structs.h"
+
 
 using namespace std;
 using namespace Eigen;
@@ -143,9 +145,10 @@ int main (int argc,char **argv)
     cout<<"The number of leftsteps= "<<NumberStepsLeft<<endl;
 
     int randomnetwork=0;
-
+    vector<spring> background;
+    VectorXd XYb(0);
     VectorXd XY=initiateRandomNetwork(springlist,springpairs,mikado,mikorig,ELONSTICK,Connection,nodes,
-                                singleNodes,conmatr,Clusterv,numberdistribution,NumberMikado,
+                                singleNodes,conmatr,Clusterv,numberdistribution,NumberMikado,background,XYb,
                                 SEED,LStick,rlenshort,rlenlong,k1,k2,stretchf,
                                 springfile,anglefile,mikadofile,clusterdistribution,cluster,
                                 clusterdata,nodefile);
@@ -158,9 +161,9 @@ int main (int argc,char **argv)
      vector<spring> springlistsq(0);
      int Numberf=4;
      VectorXd XYsq=makeSquareNetwork(Numberf,springlistsq);
-     for(int i=0;i<springlistsq.size();i++){
-          cout<<springlistsq[i].one<<"\t"<<springlist[i].two<<"\t"<<springlist[i].wlr<<"\t"<<springlist[i].wud<<endl;
-      }
+//      for(int i=0;i<springlistsq.size();i++){
+//           cout<<springlistsq[i].one<<"\t"<<springlist[i].two<<"\t"<<springlist[i].wlr<<"\t"<<springlist[i].wud<<endl;
+//       }
  
     XY=XYsq;
     springlist=springlistsq;
@@ -169,7 +172,7 @@ int main (int argc,char **argv)
     
     //Shearing
     vector<vector<int>> springp;
-    shearsteps(deltaboxdx,NumberStepsRight,NumberStepsLeft,springlist,springp,XY,bendingOn,kappa,Nit,tolGradE,shearcoordinates,shearenergy);
+    //shearsteps(deltaboxdx,NumberStepsRight,NumberStepsLeft,springlist,springp,XY,bendingOn,kappa,Nit,tolGradE,shearcoordinates,shearenergy);
 
     XYfile.close();
     shearcoordinates.close();
