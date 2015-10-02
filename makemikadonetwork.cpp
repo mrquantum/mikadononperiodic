@@ -241,24 +241,24 @@ void make_connections(vector<connected> &Connection,
   
   
   
-  cout<<"The mik-mik connections are:"<<endl;
-for(int i=0;i<Connection.size();i++){
-    if(Connection[i].type==0){
-        cout<<Connection[i].nrCon<<"\t"<<Connection[i].first<<"\t"<<Connection[i].second<<"\t"<<Connection[i].type<<"\t"<<Connection[i].backgroundspring[0]
-        <<"\t"<<Connection[i].backgroundspring[1]<<endl;
-    }
-}
-    cout<<"END"<<endl;
-
-cout<<"The mik-spring connections are:"<<endl;
-for(int i=0;i<Connection.size();i++){
-    if(Connection[i].type==1){
-        cout<<Connection[i].nrCon<<"\t"<<Connection[i].first<<"\t"<<Connection[i].second<<"\t"<<Connection[i].type<<"\t"<<Connection[i].backgroundspring[0]<<
-        "\t"<<Connection[i].backgroundspring[1]<<endl;
-        
-    }
-}
-cout<<"END2"<<endl;
+//   cout<<"The mik-mik connections are:"<<endl;
+// for(int i=0;i<Connection.size();i++){
+//     if(Connection[i].type==0){
+//         cout<<Connection[i].nrCon<<"\t"<<Connection[i].first<<"\t"<<Connection[i].second<<"\t"<<Connection[i].type<<"\t"<<Connection[i].backgroundspring[0]
+//         <<"\t"<<Connection[i].backgroundspring[1]<<endl;
+//     }
+// }
+//     cout<<"END"<<endl;
+// 
+// cout<<"The mik-spring connections are:"<<endl;
+// for(int i=0;i<Connection.size();i++){
+//     if(Connection[i].type==1){
+//         cout<<Connection[i].nrCon<<"\t"<<Connection[i].first<<"\t"<<Connection[i].second<<"\t"<<Connection[i].type<<"\t"<<Connection[i].backgroundspring[0]<<
+//         "\t"<<Connection[i].backgroundspring[1]<<endl;
+//         
+//     }
+// }
+// cout<<"END2"<<endl;
 
 }
 
@@ -270,16 +270,19 @@ cout<<"END2"<<endl;
 void sortELEMENTSperMIKADO(vector<elonstick> &ELONSTICK,vector<connected> &Connection)
 {
 //vector<elonstick> ELONSTICK;
-    
+elonstick extrarow;
+int sticki;
 for(int i=0;i<Connection.size()-1;i++){
+  vector<double> extrarowpos(1);
+  vector<int> extrarownumber(1);
+  vector<int> elementtype(1);
     if(Connection[i].type==0){
         if(Connection[i].recur==1){
-            elonstick extrarow;
-            vector<double> extrarowpos(1);
-            vector<int> extrarownumber(1);
+            
             extrarowpos[0]=Connection[i].s1;
             extrarownumber[0]=Connection[i].nrCon;
-        
+	    elementtype[0]=0;
+	    sticki=Connection[i].first;
             for(int j=i+1;j<Connection.size();j++){
                 if(Connection[j].recur==1 && Connection[j].type==0){
                     if(Connection[i].first==Connection[j].first){
@@ -287,21 +290,48 @@ for(int i=0;i<Connection.size()-1;i++){
     
                         extrarownumber.push_back(Connection[j].nrCon);
                         extrarowpos.push_back(Connection[j].s1);
-                        extrarow.sticki=Connection[j].first;
-                        extrarow.nr=extrarownumber;
-                        extrarow.S=extrarowpos;
+                        elementtype.push_back(0);
                     }
                 }
             }
-            for(int k=0;Connection.size();k++){
+	}
+            for(int k=i+1;Connection.size();k++){
                 //loop over springs
-            
+	      if(Connection[k].type==1){
+		extrarownumber.push_back(Connection[k].nrCon);
+		//cout<<Connection[k].nrCon<<endl;
+		extrarowpos.push_back(Connection[k].s1);
+		elementtype.push_back(1);
+// 		extrarow.sticki=Connection[k].first;
+// 		extrarow.nr=extrarownumber;
+// 		extrarow.S=extrarowpos;
+		
+		
+	      }
+// 	      cout<<"TEST"<<endl;
+//             for(int l=0;l<elementtype.size();l++){
+// 	     cout<<elementtype[l]<<"\t"<<extrarowpos[l]<<endl; 
+// 	    }
             }
-            
+            extrarow.sticki=sticki;
+            extrarow.nr=extrarownumber;
+            extrarow.S=extrarowpos;
+	    extrarow.type=elementtype;
             ELONSTICK.push_back(extrarow);
-        }
+        
  
     }
+cout<<"THE ELONSTICKS ARE"<<endl;
+//NEVER GET HERE!!
+// for(int j=0;j<ELONSTICK.size();j++){
+//  cout<<ELONSTICK[j].sticki<<"\t";
+//  for(int m=0;m<ELONSTICK[j].S.size();m++){
+//    cout<<"\t"<<ELONSTICK[j].S[m]<<"\t"<<ELONSTICK[j].type[m]<<endl;
+//  }
+//   
+// }
+  
+  
 } 
 // now sort extrarow on descending order per stick;
 for(int j=0; j<ELONSTICK.size();j++){
