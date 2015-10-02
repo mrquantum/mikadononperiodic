@@ -1,10 +1,28 @@
+#include <iostream>
+#include <ctime>
 #include "random.h"
-#include <algorithm>
-#include "makemikadonetwork.h"
+#include "EnergyandGradients.h"
+#include "minimizers.h"
 #include "eigen3/Eigen/Core"
 #include "eigen3/Eigen/LU"
+#include "eigen3/Eigen/Sparse"
+#include <fstream>
+#include <iomanip>
+#include <algorithm>
 #include <vector>
-#include <iostream>
+#include <math.h>
+#include <functional>
+#include "importparam.h"
+#include "BendingEnergy.h"
+#include "BendingGrad.h"
+#include "clusters.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include "writefunctions.h"
+#include "shearleader.h"
+#include "randomnetwork.h"
+#include "makeSpringNetworks.h"
+#include "structs.h"
 
 using namespace Eigen;
 using namespace std;
@@ -122,11 +140,17 @@ vector<stick> make_ghost_ud(const vector<stick> &m, double LStick, int NumberMik
 }
 
 //Checks whether the mikado's are connected
-void make_connections(vector<connected> &Connection,const vector<stick> &m, double LStick)
+void make_connections(vector<connected> &Connection,
+                      const vector<stick> &m, 
+                      double LStick,
+                      const vector<spring> &background,
+                      const VectorXd &XYb)
 {
   Matrix2d A; //The matrix to solve with
   Vector2d b,st; // A*st=b
   int nr=0;
+  connected xtrarow, xtrarow2;
+
   //Loop over all sticks to find coordinates
   for (int i=0;i<m.size()-1;i++){
     for (int j=i+1;j<m.size();j++){
@@ -135,13 +159,15 @@ void make_connections(vector<connected> &Connection,const vector<stick> &m, doub
             b<<m[i].x-m[j].x,m[i].y-m[j].y;
             st=A.lu().solve(b);
             if ((st(0)>0 && st(0)<LStick)&&(st(1)>0 && st(1)<LStick)){
-                connected xtrarow, xtrarow2;
                 xtrarow.first=m[i].nr;	//[stick i stick j sij sji] 
                 xtrarow.second=m[j].nr;
                 xtrarow.s1=st(0);
                 xtrarow.s2=st(1);
                 xtrarow.nrCon=nr;
                 xtrarow.recur=0;
+                xtrarow.type=0;
+                xtrarow.backgroundspring[0]=-1;
+                xtrarow.backgroundspring[1]=-1;
                 
                 xtrarow2.first=m[j].nr;	//[stick j sticki sji sij]
                 xtrarow2.second=m[i].nr;
@@ -149,6 +175,9 @@ void make_connections(vector<connected> &Connection,const vector<stick> &m, doub
                 xtrarow2.s2=st(0);
                 xtrarow2.nrCon=nr;
                 xtrarow2.recur=0;
+                xtrarow2.type=0;
+                xtrarow2.backgroundspring[0]=-1;
+                xtrarow2.backgroundspring[1]=-1;
                 Connection.push_back(xtrarow);
                 Connection.push_back(xtrarow2);
             nr++;
@@ -156,36 +185,124 @@ void make_connections(vector<connected> &Connection,const vector<stick> &m, doub
         }
     }
   }
+  
+  //Now loop over the 
+    int one;
+    int two;
+    int number=XYb.size()/2;
+    double xsb,xse,ysb,yse,xmik,ymik;
+    double thspr, thmik;
+    double lenspring; //the coordinates + parameters of the spring 
+    double s,t;
+  if(background.size()>0){//check wheather this block needs to be executed
+    for(int i=0; i<m.size();i++){
+        xmik=m[i].x;
+        ymik=m[i].y;
+        thmik=m[i].th;
+      for(int j=0;j<background.size();j++){
+          //calculate the intersections similar to the previous
+        one=background[j].one;
+        two=background[j].two;
+        xsb=XYb(one);
+        ysb=XYb(one+number);
+        xse=XYb(two)+background[j].wlr;
+        yse=XYb(two+number)+background[j].wud;
+        thspr=atan2((yse-ysb),(xse-xsb));
+        lenspring=sqrt(pow((yse-ysb),2)+pow((xse-xsb),2));
+        
+        
+        if(fabs(thspr-thmik)>1e-10 && fabs(fabs(thspr-thmik)-pi)>1e-10){
+            A<<cos(thmik),-cos(thspr),sin(thmik),-sin(thspr);
+            b<<xsb-xmik,ysb-ymik;
+            st=A.lu().solve(b);
+            s=st(0);
+            t=st(1);
+            
+            if(s>0.0 && t>0.0 && s<LStick && t<lenspring){
+                //then we found a node!   
+                xtrarow.first=m[i].nr;
+                xtrarow.second=-1; //the signature of a collision w spring
+                xtrarow.s1=s;
+                xtrarow.s2=t;
+                xtrarow.nrCon=nr;
+                xtrarow.type=1;
+                xtrarow.backgroundspring[0]=one;
+                xtrarow.backgroundspring[1]=two;
+                xtrarow.recur=0;
+                Connection.push_back(xtrarow);
+                nr++;
+            }
+            
+        }
+        
+      }
+    }
+  }
+  
+  
+  
+  cout<<"The mik-mik connections are:"<<endl;
+for(int i=0;i<Connection.size();i++){
+    if(Connection[i].type==0){
+        cout<<Connection[i].nrCon<<"\t"<<Connection[i].first<<"\t"<<Connection[i].second<<"\t"<<Connection[i].type<<"\t"<<Connection[i].backgroundspring[0]
+        <<"\t"<<Connection[i].backgroundspring[1]<<endl;
+    }
+}
+    cout<<"END"<<endl;
+
+cout<<"The mik-spring connections are:"<<endl;
+for(int i=0;i<Connection.size();i++){
+    if(Connection[i].type==1){
+        cout<<Connection[i].nrCon<<"\t"<<Connection[i].first<<"\t"<<Connection[i].second<<"\t"<<Connection[i].type<<"\t"<<Connection[i].backgroundspring[0]<<
+        "\t"<<Connection[i].backgroundspring[1]<<endl;
+        
+    }
+}
+cout<<"END2"<<endl;
+
 }
 
+
 //Calculate per mikado how many and where other mikado's cross
+//!!!Now also for the springs!!! 
+
+//THAT IS SOMETHING FOR TOMORROW.
 void sortELEMENTSperMIKADO(vector<elonstick> &ELONSTICK,vector<connected> &Connection)
 {
 //vector<elonstick> ELONSTICK;
-for(int i=0;i<Connection.size()-1;i++){
-    if(Connection[i].recur==1){
-        elonstick extrarow;
-        vector<double> extrarowpos(1);
-        vector<int> extrarownumber(1);
-        extrarowpos[0]=Connection[i].s1;
-        extrarownumber[0]=Connection[i].nrCon;
     
-        for(int j=i+1;j<Connection.size();j++){
-            if(Connection[j].recur==1){
-                if(Connection[i].first==Connection[j].first){
-                    Connection[j].recur=0; 
-                        //Connection[i].recur=0;  
-                    extrarownumber.push_back(Connection[j].nrCon);
-                    extrarowpos.push_back(Connection[j].s1);
-                    extrarow.sticki=Connection[j].first;
-                    extrarow.nr=extrarownumber;
-                    extrarow.S=extrarowpos;
+for(int i=0;i<Connection.size()-1;i++){
+    if(Connection[i].type==0){
+        if(Connection[i].recur==1){
+            elonstick extrarow;
+            vector<double> extrarowpos(1);
+            vector<int> extrarownumber(1);
+            extrarowpos[0]=Connection[i].s1;
+            extrarownumber[0]=Connection[i].nrCon;
+        
+            for(int j=i+1;j<Connection.size();j++){
+                if(Connection[j].recur==1 && Connection[j].type==0){
+                    if(Connection[i].first==Connection[j].first){
+                        Connection[j].recur=0; 
+    
+                        extrarownumber.push_back(Connection[j].nrCon);
+                        extrarowpos.push_back(Connection[j].s1);
+                        extrarow.sticki=Connection[j].first;
+                        extrarow.nr=extrarownumber;
+                        extrarow.S=extrarowpos;
+                    }
                 }
             }
+            for(int k=0;Connection.size();k++){
+                //loop over springs
+            
+            }
+            
+            ELONSTICK.push_back(extrarow);
         }
-ELONSTICK.push_back(extrarow);
-   }
- } 
+ 
+    }
+} 
 // now sort extrarow on descending order per stick;
 for(int j=0; j<ELONSTICK.size();j++){
     vector<double> distances=ELONSTICK[j].S;
@@ -193,30 +310,29 @@ for(int j=0; j<ELONSTICK.size();j++){
 // now sort extrarow on descending order per stick;
     int swapped=0;
       do{
-	int k=0;
-	swapped=0; //this is the control parameter, checks 1 if elements are swapped
-	  for(int i=0;i<distances.size()-1;i++){ //loop through the list thill the end-k-1 th element;
-	    if(distances[i]>distances[i+1]){ //checks if neighbours are in right order, if not then swap en change swap parameter
-	      double aa=distances[i];
-	      double bb=distances[i+1];
-	      distances[i]=bb;
-	      distances[i+1]=aa;
-	      int a=numbers[i]; 
-	      int b=numbers[i+1];
-	      numbers[i]=b; 
-	      numbers[i+1]=a;
-	      swapped=1;
-	      k++;
-	    }
-	  }
+        int k=0;
+        swapped=0; //this is the control parameter, checks 1 if elements are swapped
+          for(int i=0;i<distances.size()-1;i++){ //loop through the list thill the end-k-1 th element;
+            if(distances[i]>distances[i+1]){ //checks if neighbours are in right order, if not then swap en change swap parameter
+              double aa=distances[i];
+              double bb=distances[i+1];
+              distances[i]=bb;
+              distances[i+1]=aa;
+              int a=numbers[i]; 
+              int b=numbers[i+1];
+              numbers[i]=b; 
+              numbers[i+1]=a;
+              swapped=1;
+              k++;
+            }
+          }
     } while(swapped==1);
-	ELONSTICK[j].S=distances; //Put the new data back into the original vectors
-	ELONSTICK[j].nr=numbers;
+        ELONSTICK[j].S=distances; //Put the new data back into the original vectors
+        ELONSTICK[j].nr=numbers;
     }
 std::sort(ELONSTICK.begin(),ELONSTICK.end());
 //return ELONSTICK;
 }
-
 
 void orderElonstick(vector<int> &order,vector<elonstick> &ELONSTICK)
 {
@@ -384,9 +500,16 @@ void makeSticks(vector<stick> &mikado,vector<stick> &mikorig,const int NumberMik
 
 void makeConnections(vector<connected> &Connection,
                      const vector<stick> &mikado,
-                     const double LStick)
+                     const double LStick,
+                     const vector<spring> &background,
+                     const Eigen::VectorXd &XYb)
 {
-    make_connections(Connection,mikado,LStick); //Make Connections
+    make_connections(Connection,
+                     mikado,
+                     LStick,
+                     background,
+                     XYb
+                    ); //Make Connections
     vector<connected> Connection2(1); //sives the double elements from the connections
     Connection2[0]=Connection[0];
     for(std::size_t i=0;i<Connection.size();i++){

@@ -144,42 +144,43 @@ int main (int argc,char **argv)
     cout<<"The number of rightssteps= "<<NumberStepsRight<<endl;
     cout<<"The number of leftsteps= "<<NumberStepsLeft<<endl;
 
-    int randomnetwork=0;
-    vector<spring> background;
-    VectorXd XYb(0);
+    
+        vector<spring> background(0);
+        //VectorXd XYb(0);
+
+        int Numberf=4;
+        VectorXd XYb=makeSquareNetwork(Numberf,background);
+    
+    
     VectorXd XY=initiateRandomNetwork(springlist,springpairs,mikado,mikorig,ELONSTICK,Connection,nodes,
                                 singleNodes,conmatr,Clusterv,numberdistribution,NumberMikado,background,XYb,
                                 SEED,LStick,rlenshort,rlenlong,k1,k2,stretchf,
                                 springfile,anglefile,mikadofile,clusterdistribution,cluster,
                                 clusterdata,nodefile);
+    
+//     cout<<"the springs are"<<endl;
+//     for(int i=0;i<springlist.size();i++){
+//         cout<<springlist[i].one<<"\t"<<springlist[i].two<<endl;
+//         
+//     }
+    
    // Write_Springs_2txt(springfile,springlist);
     VectorXd gradE(XY.size());
     VectorXd gradEn(gradE.size());
     VectorXd s0(gradE.size());
 
-
-     vector<spring> springlistsq(0);
-     int Numberf=4;
-     VectorXd XYsq=makeSquareNetwork(Numberf,springlistsq);
-//      for(int i=0;i<springlistsq.size();i++){
-//           cout<<springlistsq[i].one<<"\t"<<springlist[i].two<<"\t"<<springlist[i].wlr<<"\t"<<springlist[i].wud<<endl;
-//       }
- 
-    XY=XYsq;
-    springlist=springlistsq;
-    
     Write_Springs_2txt(springfile,springlist);
-    
+
     //Shearing
     vector<vector<int>> springp;
-    //shearsteps(deltaboxdx,NumberStepsRight,NumberStepsLeft,springlist,springp,XY,bendingOn,kappa,Nit,tolGradE,shearcoordinates,shearenergy);
+    shearsteps(deltaboxdx,NumberStepsRight,NumberStepsLeft,springlist,
+               springp,XY,bendingOn,kappa,Nit,tolGradE,shearcoordinates,shearenergy);
 
     XYfile.close();
     shearcoordinates.close();
     shearenergy.close();
+    
     cout<<endl;
-
-
     return 0;
 }
 

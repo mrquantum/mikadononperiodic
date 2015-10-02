@@ -108,6 +108,7 @@ void shearsteps(double deltaboxdx,
 
         //cout<<"lengrad="<<lenGrad<<endl;
         Write_ShearCoordinates_2txt(shearcoordinates,XY);
+        cout<<"BEENTHERE"<<endl;
         Write_ShearEnergy_2txt(shearenergy,boxdx,ETOT,ESTRETCH,EBEND,lenGrad,conjsteps);
 
         if(k<NumberStepsRight){
