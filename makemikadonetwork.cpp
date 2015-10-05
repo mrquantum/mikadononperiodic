@@ -196,9 +196,11 @@ void make_connections(vector<connected> &Connection,
     double s,t;
   if(background.size()>0){//check wheather this block needs to be executed
     for(int i=0; i<m.size();i++){
-        xmik=m[i].x;
-        ymik=m[i].y;
+        xmik=m[i].x+m[i].wlr;
+        ymik=m[i].y+m[i].wud;
         thmik=m[i].th;
+	cout<<i<<"\t"<<m[i].nr<<"count for the mikado"<<endl;
+
       for(int j=0;j<background.size();j++){
           //calculate the intersections similar to the previous
         one=background[j].one;
@@ -209,7 +211,6 @@ void make_connections(vector<connected> &Connection,
         yse=XYb(two+number)+background[j].wud;
         thspr=atan2((yse-ysb),(xse-xsb));
         lenspring=sqrt(pow((yse-ysb),2)+pow((xse-xsb),2));
-        
         
         if(fabs(thspr-thmik)>1e-10 && fabs(fabs(thspr-thmik)-pi)>1e-10){
             A<<cos(thmik),-cos(thspr),sin(thmik),-sin(thspr);
@@ -239,34 +240,13 @@ void make_connections(vector<connected> &Connection,
     }
   }
   
-  
-  
-//   cout<<"The mik-mik connections are:"<<endl;
-// for(int i=0;i<Connection.size();i++){
-//     if(Connection[i].type==0){
-//         cout<<Connection[i].nrCon<<"\t"<<Connection[i].first<<"\t"<<Connection[i].second<<"\t"<<Connection[i].type<<"\t"<<Connection[i].backgroundspring[0]
-//         <<"\t"<<Connection[i].backgroundspring[1]<<endl;
-//     }
-// }
-//     cout<<"END"<<endl;
-// 
-// cout<<"The mik-spring connections are:"<<endl;
-// for(int i=0;i<Connection.size();i++){
-//     if(Connection[i].type==1){
-//         cout<<Connection[i].nrCon<<"\t"<<Connection[i].first<<"\t"<<Connection[i].second<<"\t"<<Connection[i].type<<"\t"<<Connection[i].backgroundspring[0]<<
-//         "\t"<<Connection[i].backgroundspring[1]<<endl;
-//         
-//     }
-// }
-// cout<<"END2"<<endl;
+
+
 
 }
 
 
-//Calculate per mikado how many and where other mikado's cross
-//!!!Now also for the springs!!! 
 
-//THAT IS SOMETHING FOR TOMORROW.
 void sortELEMENTSperMIKADO(vector<elonstick> &ELONSTICK,vector<connected> &Connection)
 {
 //vector<elonstick> ELONSTICK;
@@ -293,7 +273,7 @@ for(int i=0;i<Connection.size()-1;i++){
                 }
             }
 	}
-            for(int k=0;k<Connection.size();k++){
+            for(int k=i+1;k<Connection.size();k++){
                 //loop over springs
 	      if(Connection[k].type==1){
 		extrarownumber.push_back(Connection[k].nrCon);
@@ -302,26 +282,39 @@ for(int i=0;i<Connection.size()-1;i++){
 	      }
             }
             extrarow.sticki=sticki;
+	    cout<<sticki<<"STICK"<<endl;
             extrarow.nr=extrarownumber;
             extrarow.S=extrarowpos;
 	    extrarow.type=elementtype;
  
     }
+
                 ELONSTICK.push_back(extrarow);
 
-//NEVER GET HERE!!
-    for(int j=0;j<ELONSTICK.size();j++){
-        cout<<"On Stick "<<ELONSTICK[j].sticki<<endl;
+// for(int j=0;j<ELONSTICK.size();j++){
+//         cout<<"On Stick "<<ELONSTICK[j].sticki<<endl;
 //         for(int m=0;m<ELONSTICK[j].S.size();m++){
-//             cout<<"\t"<<ELONSTICK[j].S[m]<<"\t"<<ELONSTICK[j].type[m]<<endl;
-       // }
-    }
+//              cout<<"\t"<<ELONSTICK[j].S[m]<<"\t"<<ELONSTICK[j].type[m]<<"\t"<<ELONSTICK[j].nr[m]<<endl;
+//         }
+//     }
+}
+ 
 
-} 
+// for(int j=0;j<ELONSTICK.size();j++){
+//         cout<<"On Stick "<<ELONSTICK[j].sticki<<endl;
+//         for(int m=0;m<ELONSTICK[j].S.size();m++){
+//              cout<<"\t"<<ELONSTICK[j].S[m]<<"\t"<<ELONSTICK[j].type[m]<<"\t"<<ELONSTICK[j].nr[m]<<endl;
+//         }
+//     }
+
+cout<<"ELONSTICKSIZE"<<ELONSTICK.size()<<endl;
+
+
 // now sort extrarow on descending order per stick;
 for(int j=0; j<ELONSTICK.size();j++){
     vector<double> distances=ELONSTICK[j].S;
     vector<int> numbers=ELONSTICK[j].nr;
+    vector<int> type=ELONSTICK[j].type;
 // now sort extrarow on descending order per stick;
     int swapped=0;
       do{
@@ -337,16 +330,33 @@ for(int j=0; j<ELONSTICK.size();j++){
               int b=numbers[i+1];
               numbers[i]=b; 
               numbers[i+1]=a;
-              swapped=1;
+              int aaa=type[i];
+	      int bbb=type[i+1];
+	      type[i]=bbb;
+	      type[i]=aaa;
+	            
+	      swapped=1;
               k++;
             }
           }
     } while(swapped==1);
         ELONSTICK[j].S=distances; //Put the new data back into the original vectors
         ELONSTICK[j].nr=numbers;
+	ELONSTICK[j].type=type;
     }
 std::sort(ELONSTICK.begin(),ELONSTICK.end());
 //return ELONSTICK;
+
+
+// for(int j=0;j<ELONSTICK.size();j++){
+//         cout<<"On Stick "<<ELONSTICK[j].sticki<<endl;
+//         for(int m=0;m<ELONSTICK[j].S.size();m++){
+//              cout<<"\t"<<ELONSTICK[j].S[m]<<"\t"<<ELONSTICK[j].type[m]<<"\t"<<ELONSTICK[j].nr[m]<<endl;
+//         }
+//     }
+
+
+
 }
 
 void orderElonstick(vector<int> &order,vector<elonstick> &ELONSTICK)

@@ -146,10 +146,10 @@ int main (int argc,char **argv)
 
     
         vector<spring> background(0);
-        //VectorXd XYb(0);
+        VectorXd XYb;
 
         int Numberf=4;
-        VectorXd XYb=makeSquareNetwork(Numberf,background);
+        //VectorXd XYb=makeSquareNetwork(Numberf,background);
     
     
     VectorXd XY=initiateRandomNetwork(springlist,springpairs,mikado,mikorig,ELONSTICK,Connection,nodes,
