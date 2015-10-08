@@ -23,6 +23,7 @@
 #include "randomnetwork.h"
 #include "makeSpringNetworks.h"
 #include "structs.h"
+#include "combineElementsOnMikado.h"
 
 using namespace Eigen;
 using namespace std;
@@ -158,9 +159,10 @@ void make_connections(vector<connected> &Connection,
             A<<-cos(m[i].th),cos(m[j].th),-sin(m[i].th),sin(m[j].th);
             b<<m[i].x-m[j].x,m[i].y-m[j].y;
             st=A.lu().solve(b);
-            if ((st(0)>0 && st(0)<LStick)&&(st(1)>0 && st(1)<LStick)){
+            if ((st(0)>0.0 && st(0)<LStick)&&(st(1)>0.0 && st(1)<LStick)){
                 xtrarow.first=m[i].nr;	//[stick i stick j sij sji] 
                 xtrarow.second=m[j].nr;
+		cout<<st(0)<<"\t"<<st(1)<<endl;
                 xtrarow.s1=st(0);
                 xtrarow.s2=st(1);
                 xtrarow.nrCon=nr;
@@ -186,7 +188,7 @@ void make_connections(vector<connected> &Connection,
     }
   }
   
-  //Now loop over the 
+  //Now loop over the background springs
     int one;
     int two;
     int number=XYb.size()/2;
@@ -195,6 +197,7 @@ void make_connections(vector<connected> &Connection,
     double lenspring; //the coordinates + parameters of the spring 
     double s,t;
   if(background.size()>0){//check wheather this block needs to be executed
+    cout<<"gethere1"<<endl;
     for(int i=0; i<m.size();i++){
         xmik=m[i].x;//+m[i].wlr;
         ymik=m[i].y;//+m[i].wud;
@@ -244,7 +247,7 @@ void make_connections(vector<connected> &Connection,
 for(int i=0;i<Connection.size();i++){
     cout<<Connection[i].first<<"\t"<<Connection[i].second<<"\t"
     <<Connection[i].nrCon<<"\t"<<Connection[i].type<<"\t"<<Connection[i].backgroundspring[0]<<"\t"
-    <<Connection[i].backgroundspring[1]<<"\t"<<Connection[i].s1<<"\t"<<Connection[1].s2<<endl;
+    <<Connection[i].backgroundspring[1]<<"\t"<<Connection[i].s1<<"\t"<<Connection[i].s2<<endl;
 }
   cout<<"END"<<endl;
 
@@ -256,53 +259,72 @@ for(int i=0;i<Connection.size();i++){
 void sortELEMENTSperMIKADO(vector<elonstick> &ELONSTICK,vector<connected> &Connection)
 {
 
-elonstick extrarow;
-int sticki;
-
-for(int i=0;i<Connection.size()-1;i++){
-  vector<double> extrarowpos(1);
-  vector<int> extrarownumber(1);
-  vector<int> elementtype(1);
+  combineElementsOnMikado(Connection,ELONSTICK);
+  for(int i=0;i<ELONSTICK.size();i++){
+   cout<<ELONSTICK[i].sticki<<"is the mik nr"<<endl;
+   
+    for(int j=0;j<ELONSTICK[i].S.size();j++){
+      cout<<ELONSTICK[i].nr[j]<<"	";
+    };
+    cout<<"**"<<endl;
+    for(int j=0;j<ELONSTICK[i].S.size();j++){
+     cout<<ELONSTICK[i].S[j]<<"	";
+    };
+    cout<<"**"<<endl;
+    for(int j=0;j<ELONSTICK[i].S.size();j++){
+     cout<<ELONSTICK[i].type[j]<<"	";
+    };
+    cout<<endl;
+   }
   
-  if(Connection[i].type==0){
-      if(Connection[i].recur==1){
-            
-            extrarowpos[0]=Connection[i].s1;
-            extrarownumber[0]=Connection[i].nrCon;
-            elementtype[0]=0;
-            sticki=Connection[i].first;
-            
-            for(int j=i+1;j<Connection.size();j++){
-                if(Connection[j].recur==1 && Connection[j].type==0){
-                    if(Connection[i].first==Connection[j].first){
-                        Connection[j].recur=0; 
-                        extrarownumber.push_back(Connection[j].nrCon);
-                        extrarowpos.push_back(Connection[j].s1);
-                        elementtype.push_back(0);
-                    }
-                }
-            }
-       }
-  }
-
-    if(Connection[i].type==1){
-        extrarownumber.push_back(Connection[i].nrCon);
-        extrarowpos.push_back(Connection[i].s1);
-        elementtype.push_back(1);
-        sticki=Connection[i].first;
-    }
-       extrarow.sticki=sticki;
-       extrarow.nr=extrarownumber;
-       extrarow.S=extrarowpos;
-       cout<<"stick     "<<sticki<<endl;
-       for(int m=0; m<extrarowpos.size();m++)
-       {cout<<extrarowpos[m]<<"\t";
-       }
-       cout<<endl;
-       extrarow.type=elementtype;   
-       ELONSTICK.push_back(extrarow);
-
-}
+  
+// elonstick extrarow;
+// int sticki;
+// 
+// for(int i=0;i<Connection.size()-1;i++){
+//   vector<double> extrarowpos(1);
+//   vector<int> extrarownumber(1);
+//   vector<int> elementtype(1);
+//   
+//   if(Connection[i].type==0){
+//       if(Connection[i].recur==1){
+//             
+//             extrarowpos[0]=Connection[i].s1;
+//             extrarownumber[0]=Connection[i].nrCon;
+//             elementtype[0]=0;
+//             sticki=Connection[i].first;
+//             
+//             for(int j=i+1;j<Connection.size();j++){
+//                 if(Connection[j].recur==1 && Connection[j].type==0){
+//                     if(Connection[i].first==Connection[j].first){
+//                         Connection[j].recur=0; 
+//                         extrarownumber.push_back(Connection[j].nrCon);
+//                         extrarowpos.push_back(Connection[j].s1);
+//                         elementtype.push_back(0);
+//                     }
+//                 }
+//             }
+//        }
+//   }
+// 
+//     if(Connection[i].type==1){
+//         extrarownumber.push_back(Connection[i].nrCon);
+//         extrarowpos.push_back(Connection[i].s1);
+//         elementtype.push_back(1);
+//         sticki=Connection[i].first;
+//     }
+//        extrarow.sticki=sticki;
+//        extrarow.nr=extrarownumber;
+//        extrarow.S=extrarowpos;
+// /*       cout<<"stick     "<<sticki<<endl;
+//        for(int m=0; m<extrarowpos.size();m++)
+//        {cout<<extrarowpos[m]<<"\t";
+//        }
+//        cout<<endl*/;
+//        extrarow.type=elementtype;   
+//        ELONSTICK.push_back(extrarow);
+// 
+// }
 
 
 
@@ -341,16 +363,15 @@ for(int j=0; j<ELONSTICK.size();j++){
 	ELONSTICK[j].type=type;
     }
 std::sort(ELONSTICK.begin(),ELONSTICK.end());
-//return ELONSTICK;
 
 
-for(int j=0;j<ELONSTICK.size();j++){
-        cout<<"STICKNR  S       type    nrcon"<<endl;
-        cout<<"On Stick "<<ELONSTICK[j].sticki<<endl;
-        for(int m=0;m<ELONSTICK[j].S.size();m++){
-             cout<<"\t"<<ELONSTICK[j].S[m]<<"\t"<<ELONSTICK[j].type[m]<<"\t"<<ELONSTICK[j].nr[m]<<endl;
-        }
-    }
+// for(int j=0;j<ELONSTICK.size();j++){
+//         cout<<"STICKNR  S       type    nrcon"<<endl;
+//         cout<<"On Stick "<<ELONSTICK[j].sticki<<endl;
+//         for(int m=0;m<ELONSTICK[j].S.size();m++){
+//              cout<<"\t"<<ELONSTICK[j].S[m]<<"\t"<<ELONSTICK[j].type[m]<<"\t"<<ELONSTICK[j].nr[m]<<endl;
+//         }
+//     }
     
 //somehow on some elements the sequence {0,0,0} occurs. 
 //I cant find an elegant way to remove it, so let's bruteforce it:
@@ -361,15 +382,15 @@ for(int i=0;i<ELONSTICK.size();i++){
         ELONSTICK2.push_back(ELONSTICK[i]);
     }
 }
-cout<<"****"<<endl;
+// cout<<"****"<<endl;
 
-for(int j=0;j<ELONSTICK2.size();j++){
-        cout<<"STICKNR  S       type    nrcon"<<endl;
-        cout<<"On Stick "<<ELONSTICK2[j].sticki<<endl;
-        for(int m=0;m<ELONSTICK2[j].S.size();m++){
-             cout<<"\t"<<ELONSTICK2[j].S[m]<<"\t"<<ELONSTICK2[j].type[m]<<"\t"<<ELONSTICK2[j].nr[m]<<endl;
-        }
-    }
+// for(int j=0;j<ELONSTICK2.size();j++){
+//         cout<<"STICKNR  S       type    nrcon"<<endl;
+//         cout<<"On Stick "<<ELONSTICK2[j].sticki<<endl;
+//         for(int m=0;m<ELONSTICK2[j].S.size();m++){
+//              cout<<"\t"<<ELONSTICK2[j].S[m]<<"\t"<<ELONSTICK2[j].type[m]<<"\t"<<ELONSTICK2[j].nr[m]<<endl;
+//         }
+//     }
 
 }
 
