@@ -250,7 +250,6 @@ for(int i=0;i<Connection.size();i++){
     <<Connection[i].backgroundspring[1]<<"\t"<<Connection[i].s1<<"\t"<<Connection[i].s2<<endl;
 }
   cout<<"END"<<endl;
-
 }
 
 
@@ -258,19 +257,22 @@ for(int i=0;i<Connection.size();i++){
 //in ELONSTICK 
 void sortELEMENTSperMIKADO(vector<elonstick> &ELONSTICK,vector<connected> &Connection)
 {
+    
+   // cout<<Connection.size()<<"SSSS"<<endl;
 
   combineElementsOnMikado(Connection,ELONSTICK);
+
   for(int i=0;i<ELONSTICK.size();i++){
-   cout<<ELONSTICK[i].sticki<<"is the mik nr"<<endl;
+   cout<<"MIK NR=       "<<ELONSTICK[i].sticki<<endl;
    
     for(int j=0;j<ELONSTICK[i].S.size();j++){
       cout<<ELONSTICK[i].nr[j]<<"	";
     };
-    cout<<"**"<<endl;
+    cout<<endl<<"**"<<endl;
     for(int j=0;j<ELONSTICK[i].S.size();j++){
      cout<<ELONSTICK[i].S[j]<<"	";
     };
-    cout<<"**"<<endl;
+    cout<<endl<<"**"<<endl;
     for(int j=0;j<ELONSTICK[i].S.size();j++){
      cout<<ELONSTICK[i].type[j]<<"	";
     };
@@ -365,6 +367,25 @@ for(int j=0; j<ELONSTICK.size();j++){
 std::sort(ELONSTICK.begin(),ELONSTICK.end());
 
 
+//   for(int i=0;i<ELONSTICK.size();i++){
+//    cout<<"MIK NR=       "<<ELONSTICK[i].sticki<<endl;
+//    
+//     for(int j=0;j<ELONSTICK[i].S.size();j++){
+//       cout<<ELONSTICK[i].nr[j]<<"    ";
+//     };
+//     cout<<endl<<"**"<<endl;
+//     for(int j=0;j<ELONSTICK[i].S.size();j++){
+//      cout<<ELONSTICK[i].S[j]<<"      ";
+//     };
+//     cout<<endl<<"**"<<endl;
+//     for(int j=0;j<ELONSTICK[i].S.size();j++){
+//      cout<<ELONSTICK[i].type[j]<<"   ";
+//     };
+//     cout<<endl;
+//    }
+
+
+
 // for(int j=0;j<ELONSTICK.size();j++){
 //         cout<<"STICKNR  S       type    nrcon"<<endl;
 //         cout<<"On Stick "<<ELONSTICK[j].sticki<<endl;
@@ -376,12 +397,12 @@ std::sort(ELONSTICK.begin(),ELONSTICK.end());
 //somehow on some elements the sequence {0,0,0} occurs. 
 //I cant find an elegant way to remove it, so let's bruteforce it:
 
-vector<elonstick> ELONSTICK2(0);
-for(int i=0;i<ELONSTICK.size();i++){
-    if(ELONSTICK[i].S[0]!=0){
-        ELONSTICK2.push_back(ELONSTICK[i]);
-    }
-}
+// vector<elonstick> ELONSTICK2(0);
+// for(int i=0;i<ELONSTICK.size();i++){
+//     if(ELONSTICK[i].S[0]!=0){
+//         ELONSTICK2.push_back(ELONSTICK[i]);
+//     }
+// }
 // cout<<"****"<<endl;
 
 // for(int j=0;j<ELONSTICK2.size();j++){
@@ -570,31 +591,31 @@ void makeConnections(vector<connected> &Connection,
                      background,
                      XYb
                     ); //Make Connections
-    vector<connected> Connection2(1); //sives the double elements from the connections
-    Connection2[0]=Connection[0];
-    for(std::size_t i=0;i<Connection.size();i++){
-        int flag=1;
-        for(std::size_t j=0;j<Connection2.size();j++){
-            if(Connection[i].first==Connection2[j].first && Connection[i].second==Connection2[j].second){
-                flag=0; 
-                break;
-            }
-        }
-        if(flag==1){
-            Connection2.push_back(Connection[i]);
-        } 
-    }
-Connection=Connection2;
+//     vector<connected> Connection2(1); //sives the double elements from the connections
+//     Connection2[0]=Connection[0];
+//     for(std::size_t i=0;i<Connection.size();i++){
+//         int flag=1;
+//         for(std::size_t j=0;j<Connection2.size();j++){
+//             if(Connection[i].first==Connection2[j].first && Connection[i].second==Connection2[j].second){
+//                 flag=0; 
+//                 break;
+//             }
+//         }
+//         if(flag==1){
+//             Connection2.push_back(Connection[i]);
+//         } 
+//     }
+// Connection=Connection2;
 
 //Check for pairs in the connected struct if at least a pair exists (2 points on same mikado)
 //then connection[j].recur=1; Else recur =0.
-    for(std::size_t i=0;i<Connection.size()-1;i++){
-        for(std::size_t j=i+1;j<Connection.size();j++){
-            if(Connection[i].first==Connection[j].first){
-                Connection[i].recur=1;  Connection[j].recur=1;
-            }
-        }
-    }
+//     for(std::size_t i=0;i<Connection.size()-1;i++){
+//         for(std::size_t j=i+1;j<Connection.size();j++){
+//             if(Connection[i].first==Connection[j].first){
+//                 Connection[i].recur=1;  Connection[j].recur=1;
+//             }
+//         }
+//     }
 }
 
 

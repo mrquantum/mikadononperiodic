@@ -16,75 +16,70 @@
 using namespace std;
 using namespace Eigen;
 
-void  combineElementsOnMikado(vector<connected> &connection,vector<elonstick> &elements){
+void combineElementsOnMikado(vector<connected> &connection,vector<elonstick> &elements){
 
- 
+
+    
+    
   vector<connected> con=connection;
   int nr;
-  
   nr=((con[0].first>con[0].second)?con[0].first:con[0].second);
-  
   int newnr;
+  //Make a vector of elements with the lenght of the max elements nr.
   for(int i=1; i<con.size();i++){
    newnr=((con[i].first>con[i].second)?con[i].first:con[i].second);
    nr=((newnr>nr)?newnr:nr);
-   cout<<"nr"<<nr<<endl;
   }
-  
-  
-  
   vector<elonstick> Elements(nr+1);
   for(int i=0;i<Elements.size();i++){
     Elements[i].sticki=i; 
-    cout<<i<<"i"<<endl;
   }
-  
-  
+
+
   int first,second,connr;
   double s1,s2;
   int type;
   int backgroundspring[2];
   
+  cout<<"first  second  s1      s2      type    nr"<<endl;
   while(con.size()>0){
-    first=connection[0].first;
-    second=connection[0].second;
-    s1=connection[0].s1;
-    s2=connection[0].s2;
-    type=connection[0].type;
-    connr=connection[0].nrCon;
-    cout<<"))()("<<connr<<endl;
+    first=con[0].first;
+    second=con[0].second;
+    //cout<<second<<endl;
+    //cout<<"xx"<<first<<"\t"<<second<<"xx"<<endl;
+    s1=con[0].s1;
+    s2=con[0].s2;
+    type=con[0].type;
+    connr=con[0].nrCon;
+    
+    cout<<first<<"\t"<<second<<"\t"<<s1<<"\t"<<s2<<"\t"<<type<<"\t"<<connr<<endl;
     
     if(type==0){
       Elements[first].nr.push_back(connr);
       Elements[first].S.push_back(s1);
       Elements[first].type.push_back(type);
-      
+    
       Elements[second].nr.push_back(connr);
       Elements[second].S.push_back(s2);
       Elements[second].type.push_back(type);
     
-      //con.erase(con.begin());
+      con.erase(con.begin());
       for(int j=0;j<con.size();j++){
-	if(con[j].first==second && con[j].second==first){
-	  con.erase(con.begin()+j); 
+	if((con[j].first==second && con[j].second==first) ||(con[j].first==first && con[j].second==second)){
+            con.erase(con.begin()+j); //erase the complimentary j-th elementh
 	}
       }
-      con.erase(con.begin());
     }
+
     
     if(type==1){
       Elements[first].nr.push_back(connr);
       Elements[first].S.push_back(s1);
       Elements[first].type.push_back(type);
-      
       con.erase(con.begin());
-      
     }
-    
-    
   }
-    
-    
+
    elements=Elements; 
     
     
