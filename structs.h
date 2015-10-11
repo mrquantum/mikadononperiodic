@@ -22,6 +22,8 @@ struct elonstick{
   std::vector<int> nr;
   std::vector<double> S;
   std::vector<int> type;
+ 
+  //include what spring it is. node 1 node j1
 };
 struct spring{
   int one, two, wlr, wud, sticki;

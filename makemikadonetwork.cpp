@@ -258,7 +258,6 @@ for(int i=0;i<Connection.size();i++){
 void sortELEMENTSperMIKADO(vector<elonstick> &ELONSTICK,vector<connected> &Connection)
 {
     
-   // cout<<Connection.size()<<"SSSS"<<endl;
 
   combineElementsOnMikado(Connection,ELONSTICK);
 
