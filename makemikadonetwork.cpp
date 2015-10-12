@@ -253,13 +253,9 @@ for(int i=0;i<Connection.size();i++){
 }
 
 
-//Tomorrow make sure that ALL the elements are include 
-//in ELONSTICK 
 void sortELEMENTSperMIKADO(vector<elonstick> &ELONSTICK,vector<connected> &Connection)
 {
-    
-
-  combineElementsOnMikado(Connection,ELONSTICK);
+    combineElementsOnMikado(Connection,ELONSTICK);
 
   for(int i=0;i<ELONSTICK.size();i++){
    cout<<"MIK NR=       "<<ELONSTICK[i].sticki<<endl;
@@ -275,9 +271,16 @@ void sortELEMENTSperMIKADO(vector<elonstick> &ELONSTICK,vector<connected> &Conne
     for(int j=0;j<ELONSTICK[i].S.size();j++){
      cout<<ELONSTICK[i].type[j]<<"	";
     };
+    cout<<endl<<"!!!";
+        cout<<endl<<"**"<<endl;
+    for(int j=0;j<ELONSTICK[i].S.size();j++){
+     cout<<"("<<ELONSTICK[i].backgroundspringn[j][0]<<" "<<ELONSTICK[i].backgroundspringn[j][1]<<")";
+    };
     cout<<endl;
+    
    }
   
+//commented section below is replaced (sucesfully?) by combineElementsOnMikado function
   
 // elonstick extrarow;
 // int sticki;
@@ -328,12 +331,12 @@ void sortELEMENTSperMIKADO(vector<elonstick> &ELONSTICK,vector<connected> &Conne
 // }
 
 
-
 // now sort extrarow on descending order per stick;
 for(int j=0; j<ELONSTICK.size();j++){
     vector<double> distances=ELONSTICK[j].S;
     vector<int> numbers=ELONSTICK[j].nr;
     vector<int> type=ELONSTICK[j].type;
+    vector<array<int,2>> backgroundspring=ELONSTICK[j].backgroundspringn;
 // now sort extrarow on descending order per stick;
     int swapped=0;
       do{
@@ -341,20 +344,26 @@ for(int j=0; j<ELONSTICK.size();j++){
         swapped=0; //this is the control parameter, checks 1 if elements are swapped
           for(int i=0;i<distances.size()-1;i++){ //loop through the list thill the end-k-1 th element;
             if(distances[i]>distances[i+1]){ //checks if neighbours are in right order, if not then swap en change swap parameter
-              double aa=distances[i];
-              double bb=distances[i+1];
-              distances[i]=bb;
-              distances[i+1]=aa;
-              int a=numbers[i]; 
-              int b=numbers[i+1];
-              numbers[i]=b; 
-              numbers[i+1]=a;
-              int aaa=type[i];
-	      int bbb=type[i+1];
-	      type[i]=bbb;
-	      type[i]=aaa;
-	            
-	      swapped=1;
+              double d1=distances[i];
+              double d2=distances[i+1];
+              distances[i]=d2;
+              distances[i+1]=d1;
+              int n1=numbers[i]; 
+              int n2=numbers[i+1];
+              numbers[i]=n2; 
+              numbers[i+1]=n1;
+              int t1=type[i];
+	      int t2=type[i+1];
+	      type[i]=t2;
+	      type[i+1]=t1;
+              int backspring1 [2]={backgroundspring[i][0],backgroundspring[i][1]};
+              int backspring2 [2]={backgroundspring[i+1][0],backgroundspring[i+1][1]};
+              backgroundspring[i][0]=backspring2[0];
+              backgroundspring[i][1]=backspring2[1];
+              backgroundspring[i+1][0]=backspring1[0];
+              backgroundspring[i+1][1]=backspring1[1];
+	      
+              swapped=1;
               k++;
             }
           }
@@ -362,8 +371,39 @@ for(int j=0; j<ELONSTICK.size();j++){
         ELONSTICK[j].S=distances; //Put the new data back into the original vectors
         ELONSTICK[j].nr=numbers;
 	ELONSTICK[j].type=type;
+        ELONSTICK[j].backgroundspringn=backgroundspring;
     }
 std::sort(ELONSTICK.begin(),ELONSTICK.end());
+
+   cout<<"GETHERE"<<endl;
+
+   
+   for(int i=0;i<ELONSTICK.size();i++){
+   cout<<"MIK NR=       "<<ELONSTICK[i].sticki<<endl;
+   
+    for(int j=0;j<ELONSTICK[i].S.size();j++){
+      cout<<ELONSTICK[i].nr[j]<<"       ";
+    };
+    cout<<endl<<"**"<<endl;
+    for(int j=0;j<ELONSTICK[i].S.size();j++){
+     cout<<ELONSTICK[i].S[j]<<" ";
+    };
+    cout<<endl<<"**"<<endl;
+    for(int j=0;j<ELONSTICK[i].S.size();j++){
+     cout<<ELONSTICK[i].type[j]<<"      ";
+    };
+    cout<<endl<<"!!!";
+        cout<<endl<<"**"<<endl;
+    for(int j=0;j<ELONSTICK[i].S.size();j++){
+     cout<<"("<<ELONSTICK[i].backgroundspringn[j][0]<<" "<<ELONSTICK[i].backgroundspringn[j][1]<<")";
+    };
+    cout<<endl;
+    
+   }
+  
+   
+
+
 
 
 //   for(int i=0;i<ELONSTICK.size();i++){
@@ -445,43 +485,32 @@ order.push_back(0);
 //With the points per stick, we can now make nodes and springs.
 void makeSpringsAndNodes(const vector<elonstick> &ELONSTICK,const vector<stick> &mikorig, vector<spring> &springlist,
 vector<node> &nodes,
-double rlenshort, double rlenlong,double k1,double k2,double stretchf)
-{
-for(int i=0;i<ELONSTICK.size();i++){
-    int sticknr=ELONSTICK[i].sticki;
-    vector<int> nodesonsticki=ELONSTICK[i].nr;
-    vector<double> posonsticki=ELONSTICK[i].S;
-    stick CURRENTSTICK=mikorig[sticknr];
+double rlenshort, double rlenlong,double k1,double k2,double stretchf,vector<spring> &background,VectorXd &XYb)
+{   
+    
+    int background_size=XYb.size()/2;
+    
+    
+    
+    for(int i=0;i<ELONSTICK.size();i++){
+        int sticknr=ELONSTICK[i].sticki;
+        vector<int> nodesonsticki=ELONSTICK[i].nr;
+        vector<double> posonsticki=ELONSTICK[i].S;
+        stick CURRENTSTICK=mikorig[sticknr];
         
         for(int j=0;j<nodesonsticki.size()-1;j++){
             spring newspring;
             newspring.one=nodesonsticki[j];
             newspring.two=nodesonsticki[j+1];
-            
+
             double x1, x2, y1, y2;
             x1=CURRENTSTICK.x+posonsticki[j]*cos(CURRENTSTICK.th); //calculate the position of the node
             x2=CURRENTSTICK.x+posonsticki[j+1]*cos(CURRENTSTICK.th);//and the position of the adjacent one
             y1=CURRENTSTICK.y+posonsticki[j]*sin(CURRENTSTICK.th);
             y2=CURRENTSTICK.y+posonsticki[j+1]*sin(CURRENTSTICK.th);
-            
-//             if(sticknr%2==0){
-//                 newspring.rlen=rlenshort;
-//                 newspring.k=k1;
-//             }
-//             else{
-//                 newspring.rlen=rlenlong;
-//                 newspring.k=k2;
-//             }
+
             newspring.rlen=sqrt((x1-x2)*(x1-x2)+(y1-y2)*(y1-y2))/stretchf;
             newspring.k=k1;
-//             if(sticknr%2==0){
-//             newspring.k=10;}
-//             else{
-//                 newspring.k=1000;
-//             }
-//            newspring.rlen=.1;
-//            newspring.k=1;
-
             newspring.sticki=sticknr;
             if((x1<1 && x1>0)&&(x2>0&&x2<1)){ //Check if crossed wlr or wud wall.
                 newspring.wlr=0;
@@ -525,8 +554,7 @@ for(int i=0;i<ELONSTICK.size();i++){
             springlist.push_back(newspring);
         }
     }
-std::sort(nodes.begin(),nodes.end());
-
+    std::sort(nodes.begin(),nodes.end());
 }
 
 double inbox(double x,double boxsize){

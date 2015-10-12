@@ -40,31 +40,35 @@ void combineElementsOnMikado(vector<connected> &connection,vector<elonstick> &el
   double s1,s2;
   int type;
   int backgroundspring[2];
+  int bspringn1, bspringn2;
   vector<int> bdeleted;
   
-  cout<<"first  second  s1      s2      type    nr"<<endl;
+  cout<<"first  second  s1      s2      type    nr      spr1    spr2"<<endl;
   int nrELE=0;
   while(con.size()>0){
     first=con[0].first;
     second=con[0].second;
-    //cout<<second<<endl;
-    //cout<<"xx"<<first<<"\t"<<second<<"xx"<<endl;
     s1=con[0].s1;
     s2=con[0].s2;
     type=con[0].type;
     connr=con[0].nrCon;
+    bspringn1=con[0].backgroundspring[0];
+    bspringn2=con[0].backgroundspring[1];
     
-    cout<<first<<"\t"<<second<<"\t"<<s1<<"\t"<<s2<<"\t"<<type<<"\t"<<connr<<endl;
-    
+    cout<<first<<"\t"<<second<<"\t"<<s1<<"\t"<<s2<<"\t"<<type<<"\t"<<connr<<"\t"<<bspringn1<<"\t"<<bspringn2<<endl;
+    int backgroundspring[2];
     
     if(type==0){
       Elements[first].nr.push_back(nrELE);
       Elements[first].S.push_back(s1);
       Elements[first].type.push_back(type);
-    
+      Elements[first].backgroundspringn.push_back({-1,-1});
+      
       Elements[second].nr.push_back(nrELE);
       Elements[second].S.push_back(s2);
       Elements[second].type.push_back(type);
+      Elements[second].backgroundspringn.push_back({-1,-1});
+
       nrELE++;
       con.erase(con.begin());
       
@@ -86,6 +90,7 @@ void combineElementsOnMikado(vector<connected> &connection,vector<elonstick> &el
       Elements[first].nr.push_back(nrELE);
       Elements[first].S.push_back(s1);
       Elements[first].type.push_back(type);
+      Elements[first].backgroundspringn.push_back({bspringn1,bspringn2});
       nrELE++;
       con.erase(con.begin());
     }

@@ -72,8 +72,8 @@ VectorXd initiateRandomNetwork(vector<spring> &springlist,
 //     }
     
     
-    orderElonstick(order,ELONSTICK); 
-    makeSpringsAndNodes(ELONSTICK,mikorig,springlist,nodes,rlenshort,rlenlong,k1,k2,stretchf);//Make the springs and Nodes. 
+    //orderElonstick(order,ELONSTICK); 
+    makeSpringsAndNodes(ELONSTICK,mikorig,springlist,nodes,rlenshort,rlenlong,k1,k2,stretchf,background,XYb);//Make the springs and Nodes. 
     //Write_Springs_2txt(springfile,springlist);
 
     //make a table with sticks that are connected

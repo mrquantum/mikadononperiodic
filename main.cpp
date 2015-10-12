@@ -146,10 +146,10 @@ int main (int argc,char **argv)
 
     
         vector<spring> background(0);
-        VectorXd XYb;
+        //VectorXd XYb;
 
         int Numberf=8;
-        //VectorXd XYb=makeSquareNetwork(Numberf,background);
+        VectorXd XYb=makeSquareNetwork(Numberf,background);
        
     
     VectorXd XY=initiateRandomNetwork(springlist,springpairs,mikado,mikorig,ELONSTICK,Connection,nodes,
@@ -170,12 +170,12 @@ int main (int argc,char **argv)
     VectorXd s0(gradE.size());
 
     Write_Springs_2txt(springfile,springlist);
+    cout<<"gethere?"<<endl;
 
     //Shearing
     vector<vector<int>> springp;
     shearsteps(deltaboxdx,NumberStepsRight,NumberStepsLeft,springlist,
                springp,XY,bendingOn,kappa,Nit,tolGradE,shearcoordinates,shearenergy);
-
     XYfile.close();
     shearcoordinates.close();
     shearenergy.close();
