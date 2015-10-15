@@ -21,7 +21,7 @@ using namespace std;
 class param
 {
 public: double rlenshort,rlenlong,kappa,k1,k2,LStick,tolGradE,stretchf,StepSize;
-        int NumberMikado,bendingOn,Nit,NumberStepsRight,NumberStepsLeft; //Number of mikado, max number of conjugate iterations
+        int NumberMikado,bendingOn,Nit,NumberStepsRight,NumberStepsLeft,backGroundOn,backGroundType; //Number of mikado, max number of conjugate iterations
     param()
     {
      rlenshort=.0;
@@ -35,6 +35,7 @@ public: double rlenshort,rlenlong,kappa,k1,k2,LStick,tolGradE,stretchf,StepSize;
      NumberMikado=0;
      Nit=0;
      tolGradE=.0;        
+     
     }  
     
     ~param(){         
@@ -135,6 +136,12 @@ public: double rlenshort,rlenlong,kappa,k1,k2,LStick,tolGradE,stretchf,StepSize;
         }
          else if(strcmp(lvalue,"NumberStepsRight")==0){
             NumberStepsRight=atoi(rvalue);
+         }
+         else if(strcmp(lvalue,"backGroundOn")==0){
+             backGroundOn=atoi(rvalue);
+         }
+         else if(strcmp(lvalue,"backGroundType")==0){
+             backGroundType=atoi(rvalue);
          }
         else{
             cout<<"Did not recognise param"<<endl;

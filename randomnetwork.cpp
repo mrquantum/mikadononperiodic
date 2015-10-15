@@ -63,33 +63,27 @@ VectorXd initiateRandomNetwork(vector<spring> &springlist,
     vector<int> order;
     makeSticks(mikado,mikorig,NumberMikado,LStick);
     Write_Mikado_2txt(mikadofile,mikado);
-    makeConnections(Connection,mikado,LStick,background,XYb); 
-    sortELEMENTSperMIKADO(ELONSTICK,Connection);
-//     cout<<"gethere??????"<<endl;
-//     for(int i=0;i<ELONSTICK.size();i++){
-//         cout<<ELONSTICK[i].sticki<<"\t"<<ELONSTICK[i].S.size()<<endl;
-//         
-//     }
-    
-    
-    //orderElonstick(order,ELONSTICK); 
-    makeSpringsAndNodes(ELONSTICK,mikorig,springlist,nodes,rlenshort,rlenlong,k1,k2,stretchf,background,XYb);//Make the springs and Nodes. 
-    //Write_Springs_2txt(springfile,springlist);
+//     makeConnections(Connection,mikado,LStick,background,XYb); 
+        make_connections(Connection,mikado,LStick,background,XYb); 
 
+    sortELEMENTSperMIKADO(ELONSTICK,Connection);
+    orderElonstick(order,ELONSTICK); 
+    makeSpringsAndNodes(ELONSTICK,mikorig,springlist,nodes,rlenshort,rlenlong,k1,k2,stretchf,background,XYb);//Make the springs and Nodes. 
+    Write_Springs_2txt(springfile,springlist);
     //make a table with sticks that are connected
-    vector<int> NEWROW(2);
-    vector<vector<int>> ConnectSticks;
-        for(int i=0;i<Connection.size();i++){
-            NEWROW[0]=Connection[i].first; 
-            NEWROW[1]=Connection[i].second;
-            ConnectSticks.push_back(NEWROW);
-        }
+//     vector<int> NEWROW(2);
+//     vector<vector<int>> ConnectSticks;
+//         for(int i=0;i<Connection.size();i++){
+//             NEWROW[0]=Connection[i].first; 
+//             NEWROW[1]=Connection[i].second;
+//             ConnectSticks.push_back(NEWROW);
+//         }
 
     //Clusterv is a vector w. on its entries the clusters 
-    conmatr=connectivitymatrix(ConnectSticks,NumberMikado);
-    Clusterv=clusters(conmatr);
+//     conmatr=connectivitymatrix(ConnectSticks,NumberMikado);
+//     Clusterv=clusters(conmatr);
     //Make a cluster size distribution from the clusters
-    numberdistribution=Numberdistribution(Clusterv,NumberMikado);
+//     numberdistribution=Numberdistribution(Clusterv,NumberMikado);
 
     Write_Clusterdistribution_2txt(clusterdistribution,numberdistribution);
     Write_Clusterdistribution_2txt(cluster,Clusterv);

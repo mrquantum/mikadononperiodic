@@ -24,7 +24,7 @@ void Write_Springs_2txt(ofstream &springfile,vector<spring> &springlist){
                 <<springlist[i].wud<<"\t"
                 <<springlist[i].rlen<<"\t"
                 <<springlist[i].k<<"\t"
-                <<springlist[i].sticki<<endl;
+                <<springlist[i].sticki<<endl;       
     }
     springfile.close();
 };

@@ -97,6 +97,7 @@ void makeConnections(std::vector<connected> &Connection,
 
 double inbox(double x,double boxsize);
 void makeSpringpairs(std::vector<std::vector<int>> &springpairs,const std::vector<spring> &springlist);
+spring makespring(int node1,int node2,double x1,double x2, double y1, double y2,int stick,double k,double stretchf);
 
 
 #endif // MAKEMIKADONETWORK_H

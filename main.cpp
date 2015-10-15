@@ -140,17 +140,20 @@ int main (int argc,char **argv)
     double deltaboxdx=Mikadoparameters.StepSize;
     int NumberStepsRight=Mikadoparameters.NumberStepsRight;
     int NumberStepsLeft=Mikadoparameters.NumberStepsLeft;
-
+    int backGroundOn=Mikadoparameters.backGroundOn;
+    int backGroundType=Mikadoparameters.backGroundType;
+    
     cout<<"The number of rightssteps= "<<NumberStepsRight<<endl;
     cout<<"The number of leftsteps= "<<NumberStepsLeft<<endl;
 
     
         vector<spring> background(0);
-        //VectorXd XYb;
+        VectorXd XYb;
 
-        int Numberf=8;
-        VectorXd XYb=makeSquareNetwork(Numberf,background);
-       
+        int Numberf=18;
+        if(backGroundOn==1){
+            XYb=makeSquareNetwork(Numberf,background);
+        }
     
     VectorXd XY=initiateRandomNetwork(springlist,springpairs,mikado,mikorig,ELONSTICK,Connection,nodes,
                                 singleNodes,conmatr,Clusterv,numberdistribution,NumberMikado,background,XYb,
@@ -158,6 +161,10 @@ int main (int argc,char **argv)
                                 springfile,anglefile,mikadofile,clusterdistribution,cluster,
                                 clusterdata,nodefile);
     
+    cout<<"SPRINGPAIRS"<<endl;
+    for(int i=0;i<springpairs.size();i++){
+        cout<<springpairs[i][0]<<"  "<<springpairs[i][1]<<"  "<<springpairs[i][2]<<endl;
+    }
 //     cout<<"the springs are"<<endl;
 //     for(int i=0;i<springlist.size();i++){
 //         cout<<springlist[i].one<<"\t"<<springlist[i].two<<endl;
@@ -170,7 +177,6 @@ int main (int argc,char **argv)
     VectorXd s0(gradE.size());
 
     Write_Springs_2txt(springfile,springlist);
-    cout<<"gethere?"<<endl;
 
     //Shearing
     vector<vector<int>> springp;

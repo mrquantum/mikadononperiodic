@@ -32,8 +32,9 @@ long_line_behaviour=1
 long_line_column=72
 
 [files]
-current_page=0
+current_page=1
 FILE_NAME_0=0;Python;0;EUTF-8;1;1;0;%2Fhome%2Fmathijs%2Fprojects%2FMikadoSlanted%2Frelease%2Fplotmikado.py;0;4
+FILE_NAME_1=2301;Python;0;EUTF-8;1;1;0;%2Fhome%2Fmathijs%2Fprojects%2FMikadoSlanted%2Frelease%2Fmakemovie.py;0;4
 
 [VTE]
 last_dir=/home/mathijs

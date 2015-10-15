@@ -63,7 +63,7 @@ VectorXd makeSquareNetwork(int Number, vector<spring> &springlist){
 	//These are the horizontal springs
 	newspring.one=(i)+(j*Number);
 	newspring.two=(i+1)+(j*Number);
-	newspring.sticki=sticki;
+	newspring.sticki=-1;
 	newspring.rlen=dx;
 	newspring.k=1.0;
 	newspring.wlr=0;
@@ -72,7 +72,7 @@ VectorXd makeSquareNetwork(int Number, vector<spring> &springlist){
       }
       newspring.one=(Number-1)+(j*Number);
       newspring.two=j*(Number);
-      newspring.sticki=sticki;
+      newspring.sticki=-1;
       newspring.rlen=dx;
       newspring.k=1.0;
       newspring.wlr=1;
@@ -87,7 +87,7 @@ VectorXd makeSquareNetwork(int Number, vector<spring> &springlist){
    for(int j=0;j<Number-1;j++){
     newspring.one=i+j*Number;
     newspring.two=i+(j+1)*Number;
-    newspring.sticki=sticki;
+    newspring.sticki=-1;
     newspring.rlen=dy;
     newspring.k=1.0;
     newspring.wlr=0;
@@ -97,7 +97,7 @@ VectorXd makeSquareNetwork(int Number, vector<spring> &springlist){
    }
     newspring.one=i+(Number-1)*Number;
     newspring.two=i;
-    newspring.sticki=sticki;
+    newspring.sticki=-1;
     newspring.rlen=dy;
     newspring.k=1.0;
     newspring.wlr=0;

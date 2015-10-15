@@ -375,32 +375,30 @@ for(int j=0; j<ELONSTICK.size();j++){
     }
 std::sort(ELONSTICK.begin(),ELONSTICK.end());
 
-   cout<<"GETHERE"<<endl;
 
-   
-   for(int i=0;i<ELONSTICK.size();i++){
-   cout<<"MIK NR=       "<<ELONSTICK[i].sticki<<endl;
-   
-    for(int j=0;j<ELONSTICK[i].S.size();j++){
-      cout<<ELONSTICK[i].nr[j]<<"       ";
-    };
-    cout<<endl<<"**"<<endl;
-    for(int j=0;j<ELONSTICK[i].S.size();j++){
-     cout<<ELONSTICK[i].S[j]<<" ";
-    };
-    cout<<endl<<"**"<<endl;
-    for(int j=0;j<ELONSTICK[i].S.size();j++){
-     cout<<ELONSTICK[i].type[j]<<"      ";
-    };
-    cout<<endl<<"!!!";
-        cout<<endl<<"**"<<endl;
-    for(int j=0;j<ELONSTICK[i].S.size();j++){
-     cout<<"("<<ELONSTICK[i].backgroundspringn[j][0]<<" "<<ELONSTICK[i].backgroundspringn[j][1]<<")";
-    };
-    cout<<endl;
-    
-   }
-  
+//    for(int i=0;i<ELONSTICK.size();i++){
+//    cout<<"MIK NR=       "<<ELONSTICK[i].sticki<<endl;
+//    
+//     for(int j=0;j<ELONSTICK[i].S.size();j++){
+//       cout<<ELONSTICK[i].nr[j]<<"       ";
+//     };
+//     cout<<endl<<"**"<<endl;
+//     for(int j=0;j<ELONSTICK[i].S.size();j++){
+//      cout<<ELONSTICK[i].S[j]<<" ";
+//     };
+//     cout<<endl<<"**"<<endl;
+//     for(int j=0;j<ELONSTICK[i].S.size();j++){
+//      cout<<ELONSTICK[i].type[j]<<"      ";
+//     };
+//     cout<<endl<<"!!!";
+//         cout<<endl<<"**"<<endl;
+//     for(int j=0;j<ELONSTICK[i].S.size();j++){
+//      cout<<"("<<ELONSTICK[i].backgroundspringn[j][0]<<" "<<ELONSTICK[i].backgroundspringn[j][1]<<")";
+//     };
+//     cout<<endl;
+//     
+//    }
+//   
    
 
 
@@ -489,59 +487,43 @@ double rlenshort, double rlenlong,double k1,double k2,double stretchf,vector<spr
 {   
     
     int background_size=XYb.size()/2;
+    //first make the background networks into 'nodes'
+    VectorXd Xb(background_size), Yb(background_size);
+    node backgroundnode;
+    for(int i=0;i<background_size;i++){
+        Xb(i)=XYb(i);
+        Yb(i)=XYb(i+background_size);
+        backgroundnode.number=i;
+        backgroundnode.x=Xb(i);
+        backgroundnode.y=Yb(i);
+        nodes.push_back(backgroundnode);
+    }
+    springlist=background;
+    //we have now set up the background spring network in terms of the struct node and we the springs
+    //are loaded into the springlist as the first N springs. 
+    //Now we are going to append the new springs to the network.
     
-    
-    
+
     for(int i=0;i<ELONSTICK.size();i++){
         int sticknr=ELONSTICK[i].sticki;
         vector<int> nodesonsticki=ELONSTICK[i].nr;
         vector<double> posonsticki=ELONSTICK[i].S;
         stick CURRENTSTICK=mikorig[sticknr];
-        
+        int node1, node2;
         for(int j=0;j<nodesonsticki.size()-1;j++){
             spring newspring;
-            newspring.one=nodesonsticki[j];
-            newspring.two=nodesonsticki[j+1];
+            node1=nodesonsticki[j]+background_size;
+            node2=nodesonsticki[j+1]+background_size;
 
+            
             double x1, x2, y1, y2;
             x1=CURRENTSTICK.x+posonsticki[j]*cos(CURRENTSTICK.th); //calculate the position of the node
             x2=CURRENTSTICK.x+posonsticki[j+1]*cos(CURRENTSTICK.th);//and the position of the adjacent one
             y1=CURRENTSTICK.y+posonsticki[j]*sin(CURRENTSTICK.th);
             y2=CURRENTSTICK.y+posonsticki[j+1]*sin(CURRENTSTICK.th);
-
-            newspring.rlen=sqrt((x1-x2)*(x1-x2)+(y1-y2)*(y1-y2))/stretchf;
-            newspring.k=k1;
-            newspring.sticki=sticknr;
-            if((x1<1 && x1>0)&&(x2>0&&x2<1)){ //Check if crossed wlr or wud wall.
-                newspring.wlr=0;
-            }
-            else if((x1>0&&x1<1)&&x2>1){
-                newspring.wlr=1;       
-            }
-            else if((x1>0&&x1<1)&&x2<0){
-                newspring.wlr=-1;
-            }
-            else if(x1<0&&x2<0){
-                newspring.wlr=0;
-            }
-            else if(x1>1&&x2>1){
-                newspring.wlr=0;
-            }
-            if((y1<1 && y1>0)&&(y2>0&&y2<1)){
-                newspring.wud=0;
-            }
-            else if((y1>0&&y1<1)&&y2>1){
-                newspring.wud=1;
-            }
-            else if((y1>0&&y1<1)&&y2<0){
-                newspring.wud=-1;
-            }
-            else if(y1<0&&y2<0){
-                newspring.wud=0;
-            }
-            else if(y1>1&&y2>1){
-                newspring.wud=0;
-            }
+            
+            newspring=makespring(node1,node2,x1,x2,y1,y2,sticknr,1.0,stretchf);
+            
             node nodetemp1, nodetemp2;
             nodetemp1.number=newspring.one;
             nodetemp1.x=x1;
@@ -552,6 +534,66 @@ double rlenshort, double rlenlong,double k1,double k2,double stretchf,vector<spr
             nodes.push_back(nodetemp1);
             nodes.push_back(nodetemp2);
             springlist.push_back(newspring);
+            
+            int backnode1,backnode2,midpoint;
+            int wlr,wud;
+            double xbn1,xbn2,ybn1,ybn2,xm,ym;
+            double xm1,xm2,ym1,ym2;
+            if(ELONSTICK[i].type[j+1]==1){
+                //spring to be removed has nodes
+                backnode1=ELONSTICK[i].backgroundspringn[j+1][0];
+                backnode2=ELONSTICK[i].backgroundspringn[j+1][1];
+               // cout<<"n1  "<<backnode1<<" n2  "<<backnode2<<endl;
+                
+                for(int m=0;m<springlist.size();m++){
+                    if((springlist[m].one==backnode1 && springlist[m].two==backnode2) ||
+                        (springlist[m].one==backnode2 && springlist[m].two==backnode1)){
+                        //erase one spring.
+                        wud=springlist[m].wud;
+                        wlr=springlist[m].wlr;
+                        springlist.erase(springlist.begin()+m);   
+                        //replace it by two new ones. One between backnode1 and ELONSTICK[i].nr[j]+background_size
+                        //and ELONSTICK[i].nr[j]+backgroundsize and backgnode2
+                        xbn1=Xb(backnode1);
+                        ybn1=Yb(backnode1);
+                        xbn2=Xb(backnode2);
+                        ybn2=Yb(backnode2);
+                        xm=CURRENTSTICK.x+posonsticki[j+1]*cos(CURRENTSTICK.th);
+                        ym=CURRENTSTICK.y+posonsticki[j+1]*sin(CURRENTSTICK.th);
+                        midpoint=ELONSTICK[i].nr[j+1]+background_size;
+                        
+                        
+                        if(xm>1){
+                          xm=xm-1;
+                        }
+                        if(xm<0){
+                          xm=xm+1;
+                        }
+                        if(ym>1){
+                          ym=ym-1;
+                        }
+                        if(ym<0){
+                           ym=ym+1;
+                        }
+
+                        cout<<ybn1<<"   "<<ym<<"        "<<ybn2<<endl;
+                        newspring=makespring(backnode1,midpoint,xbn1,xm,ybn1,ym,-1,1.0,1.0);
+                        springlist.push_back(newspring);
+//                         cout<<ybn1<<"   "<<ym<<"        "<<ybn2<<endl;
+//                         cout<<xbn1<<"   "<<xm<<"        "<<xbn2<<endl;
+
+                        //cout<<"newspring.wud  "<<newspring.wud<<"       "<<newspring.wlr;
+                        newspring=makespring(backnode2,midpoint,xbn2,xm,ybn2,ym,-1,1.0,1.0);
+                        springlist.push_back(newspring);
+                        //cout<<"   2newspring.wud  "<<newspring.wud<<"   "<<newspring.wlr<<endl;
+
+
+                        break;
+                    }
+                    
+                }
+            }
+            
         }
     }
     std::sort(nodes.begin(),nodes.end());
@@ -575,13 +617,29 @@ void makeSpringpairs(vector<vector<int>> &springpairs,const vector<spring> &spri
 //springpairs[i][3] ith triplet mikado nr.
 //the labels for the springs are the indexnumbers of coding the
 //springs in the springslist.    
+    
+    //first sive out the backgroundsprings
+    vector<spring> newspringlist;
+    for(int i=0;i<springlist.size();i++){
+        if(springlist[i].sticki!=-1){
+            newspringlist.push_back(springlist[i]);
+        }
+        
+    }
+    
+    
 for(std::size_t i=0;i<springlist.size()-1;i++){
-    if(springlist[i].sticki==springlist[i+1].sticki){
-        vector<int> pair(3);
-        pair[0]=i;
-        pair[1]=i+1;
-        pair[2]=springlist[i].sticki;
-        springpairs.push_back(pair);
+    for(int j=i+1;j<springlist.size();j++)
+    {
+    //if(springlist[i].sticki==springlist[i+1].sticki && springlist[i].sticki!=-1){
+        if(springlist[i].sticki==springlist[j].sticki && springlist[i].sticki!=-1){
+            vector<int> pair(3);
+            pair[0]=i;
+            pair[1]=j;
+            pair[2]=springlist[i].sticki;
+            springpairs.push_back(pair);
+            break;
+        }
     }   
 }
 }
@@ -645,4 +703,45 @@ void makeConnections(vector<connected> &Connection,
 //     }
 }
 
-
+spring makespring(int node1,int node2,double x1,double x2, double y1, double y2,int stick,double k,double stretchf)
+{
+    spring newspring;
+    newspring.one=node1;
+    newspring.two=node2;
+    newspring.rlen=sqrt((x2-x1)*(x2-x1)+(y2-y1)*(y2-y1))/stretchf;
+    newspring.k=k;
+    newspring.sticki=stick;
+    
+    if((x1<1 && x1>0)&&(x2>0&&x2<1)){ //Check if crossed wlr or wud wall.
+        newspring.wlr=0;
+    }
+    else if((x1>0&&x1<1)&&x2>1){
+        newspring.wlr=1;       
+    }
+    else if((x1>0&&x1<1)&&x2<0){
+        newspring.wlr=-1;
+    }
+    else if(x1<0&&x2<0){
+        newspring.wlr=0;
+    }
+    else if(x1>1&&x2>1){
+        newspring.wlr=0;
+    }
+    if((y1<1 && y1>0)&&(y2>0&&y2<1)){
+        newspring.wud=0;
+    }
+    else if((y1>0&&y1<1)&&y2>1){
+        newspring.wud=1;
+    }
+    else if((y1>0&&y1<1)&&y2<0){
+        newspring.wud=-1;
+    }
+    else if(y1<0&&y2<0){
+        newspring.wud=0;
+    }
+    else if(y1>1&&y2>1){
+        newspring.wud=0;
+    }
+    
+    return newspring;
+}

@@ -2,19 +2,27 @@
 <rlenshort=.0001>
 <rlenlong=0.01>
 <stretchf=1.0>
+
+<bendingOn=1>
 <kappa=1.0e-9>
+
 <k1=0.5>
 <k2=.1>
 <Lstick=.4>
-<NumberMikado=100>
+<NumberMikado=5>
+
+###Background parameters###
+<backGroundOn=1>
+Type=1 for square lattice
+<backGroundType=1>
 
 ###Conjugate gradient parameters####
 <Nit=10000000000000>
-<tolGradE=1e-8>
+<tolGradE=1e-12>
 
 ###Shear-params###
-<StepSize=.00003>
-<NumberStepsLeft=0>
-<NumberStepsRight=10000>
+<StepSize=.000001>
+<NumberStepsRight=200>
+<NumberStepsLeft=400>
 
 <END>
