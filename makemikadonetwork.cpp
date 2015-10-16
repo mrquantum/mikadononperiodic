@@ -153,41 +153,40 @@ void make_connections(vector<connected> &Connection,
   connected xtrarow, xtrarow2;
 
   //Loop over all sticks to find coordinates
-  for (int i=0;i<m.size()-1;i++){
-    for (int j=i+1;j<m.size();j++){
-      if(m[i].th!=m[j].th || m[i].nr!=m[j].nr){
-            A<<-cos(m[i].th),cos(m[j].th),-sin(m[i].th),sin(m[j].th);
-            b<<m[i].x-m[j].x,m[i].y-m[j].y;
-            st=A.lu().solve(b);
-            if ((st(0)>0.0 && st(0)<LStick)&&(st(1)>0.0 && st(1)<LStick)){
-                xtrarow.first=m[i].nr;	//[stick i stick j sij sji] 
-                xtrarow.second=m[j].nr;
-		cout<<st(0)<<"\t"<<st(1)<<endl;
-                xtrarow.s1=st(0);
-                xtrarow.s2=st(1);
-                xtrarow.nrCon=nr;
-                xtrarow.recur=0;
-                xtrarow.type=0;
-                xtrarow.backgroundspring[0]=-1;
-                xtrarow.backgroundspring[1]=-1;
-                
-                xtrarow2.first=m[j].nr;	//[stick j sticki sji sij]
-                xtrarow2.second=m[i].nr;
-                xtrarow2.s1=st(1);
-                xtrarow2.s2=st(0);
-                xtrarow2.nrCon=nr;
-                xtrarow2.recur=0;
-                xtrarow2.type=0;
-                xtrarow2.backgroundspring[0]=-1;
-                xtrarow2.backgroundspring[1]=-1;
-                Connection.push_back(xtrarow);
-                Connection.push_back(xtrarow2);
-            nr++;
+    for(int i=0;i<m.size()-1;i++){
+        for(int j=i+1;j<m.size();j++){
+            if(m[i].th!=m[j].th || m[i].nr!=m[j].nr){
+                A<<-cos(m[i].th),cos(m[j].th),-sin(m[i].th),sin(m[j].th);
+                b<<m[i].x-m[j].x,m[i].y-m[j].y;
+                st=A.lu().solve(b);
+                if ((st(0)>0.0 && st(0)<LStick)&&(st(1)>0.0 && st(1)<LStick)){
+                    xtrarow.first=m[i].nr;	//[stick i stick j sij sji] 
+                    xtrarow.second=m[j].nr;
+                    xtrarow.s1=st(0);
+                    xtrarow.s2=st(1);
+                    xtrarow.nrCon=nr;
+                    xtrarow.recur=0;
+                    xtrarow.type=0;
+                    xtrarow.backgroundspring[0]=-1;
+                    xtrarow.backgroundspring[1]=-1;
+                    
+                    xtrarow2.first=m[j].nr;	//[stick j sticki sji sij]
+                    xtrarow2.second=m[i].nr;
+                    xtrarow2.s1=st(1);
+                    xtrarow2.s2=st(0);
+                    xtrarow2.nrCon=nr;
+                    xtrarow2.recur=0;
+                    xtrarow2.type=0;
+                    xtrarow2.backgroundspring[0]=-1;
+                    xtrarow2.backgroundspring[1]=-1;
+                    Connection.push_back(xtrarow);
+                    Connection.push_back(xtrarow2);
+                    nr++;
+                }
             }
         }
     }
-  }
-  
+
   //Now loop over the background springs
     int one;
     int two;
@@ -196,141 +195,55 @@ void make_connections(vector<connected> &Connection,
     double thspr, thmik;
     double lenspring; //the coordinates + parameters of the spring 
     double s,t;
-  if(background.size()>0){//check wheather this block needs to be executed
-    cout<<"gethere1"<<endl;
-    for(int i=0; i<m.size();i++){
-        xmik=m[i].x;//+m[i].wlr;
-        ymik=m[i].y;//+m[i].wud;
-        thmik=m[i].th;
+    if(background.size()>0){//check wheather this block needs to be executed
+        for(int i=0; i<m.size();i++){
+            xmik=m[i].x;
+            ymik=m[i].y;
+            thmik=m[i].th;
 
-      for(int j=0;j<background.size();j++){
-          //calculate the intersections similar to the previous
-        one=background[j].one;
-        two=background[j].two;
-        xsb=XYb(one);
-        ysb=XYb(one+number);
-        xse=XYb(two)+background[j].wlr;
-        yse=XYb(two+number)+background[j].wud;
-        thspr=atan2((yse-ysb),(xse-xsb));
-        lenspring=sqrt(pow((yse-ysb),2)+pow((xse-xsb),2));
+            for(int j=0;j<background.size();j++){
+            //calculate the intersections similar to the previous
+                one=background[j].one;
+                two=background[j].two;
+                xsb=XYb(one);
+                ysb=XYb(one+number);
+                xse=XYb(two)+background[j].wlr;
+                yse=XYb(two+number)+background[j].wud;
+                thspr=atan2((yse-ysb),(xse-xsb));
+                lenspring=sqrt(pow((yse-ysb),2)+pow((xse-xsb),2));
         
-        if(fabs(thspr-thmik)>1e-10 && fabs(fabs(thspr-thmik)-pi)>1e-10){
-            A<<cos(thmik),-cos(thspr),sin(thmik),-sin(thspr);
-            b<<xsb-xmik,ysb-ymik;
-            st=A.lu().solve(b);
-            s=st(0);
-            t=st(1);
+                if(fabs(thspr-thmik)>1e-10 && fabs(fabs(thspr-thmik)-pi)>1e-10){
+                    A<<cos(thmik),-cos(thspr),sin(thmik),-sin(thspr);
+                    b<<xsb-xmik,ysb-ymik;
+                    st=A.lu().solve(b);
+                    s=st(0);
+                    t=st(1);
             
-            if(s>0.0 && t>0.0 && s<LStick && t<lenspring){
-                //then we found a node!   
-                xtrarow.first=m[i].nr;
-                xtrarow.second=-1; //the signature of a collision w spring
-                xtrarow.s1=s;
-                xtrarow.s2=t;
-                xtrarow.nrCon=nr;
-                xtrarow.type=1;
-                xtrarow.backgroundspring[0]=one;
-                xtrarow.backgroundspring[1]=two;
-                xtrarow.recur=0;
-                Connection.push_back(xtrarow);
-                nr++;
+                    if(s>0.0 && t>0.0 && s<LStick && t<lenspring){
+                        //then we found a node!   
+                        xtrarow.first=m[i].nr;
+                        xtrarow.second=-1; //the signature of a collision w spring
+                        xtrarow.s1=s;
+                        xtrarow.s2=t;
+                        xtrarow.nrCon=nr;
+                        xtrarow.type=1;
+                        xtrarow.backgroundspring[0]=one;
+                        xtrarow.backgroundspring[1]=two;
+                        xtrarow.recur=0;
+                        Connection.push_back(xtrarow);
+                        nr++;
+                    }
+                }
             }
-            
         }
-        
-      }
     }
-  }
-  
-  cout<<"WE FOUND THE FOLLOWING CONNECTIONS BETWEEN SPRINGS AND MIKADO"<<endl;
-  cout<<"Miknr1  Miknr2    NRCon        type    backgroundnode1 node2   s1      s2"<<endl;
-for(int i=0;i<Connection.size();i++){
-    cout<<Connection[i].first<<"\t"<<Connection[i].second<<"\t"
-    <<Connection[i].nrCon<<"\t"<<Connection[i].type<<"\t"<<Connection[i].backgroundspring[0]<<"\t"
-    <<Connection[i].backgroundspring[1]<<"\t"<<Connection[i].s1<<"\t"<<Connection[i].s2<<endl;
-}
-  cout<<"END"<<endl;
 }
 
 
 void sortELEMENTSperMIKADO(vector<elonstick> &ELONSTICK,vector<connected> &Connection)
 {
-    combineElementsOnMikado(Connection,ELONSTICK);
-
-  for(int i=0;i<ELONSTICK.size();i++){
-   cout<<"MIK NR=       "<<ELONSTICK[i].sticki<<endl;
-   
-    for(int j=0;j<ELONSTICK[i].S.size();j++){
-      cout<<ELONSTICK[i].nr[j]<<"	";
-    };
-    cout<<endl<<"**"<<endl;
-    for(int j=0;j<ELONSTICK[i].S.size();j++){
-     cout<<ELONSTICK[i].S[j]<<"	";
-    };
-    cout<<endl<<"**"<<endl;
-    for(int j=0;j<ELONSTICK[i].S.size();j++){
-     cout<<ELONSTICK[i].type[j]<<"	";
-    };
-    cout<<endl<<"!!!";
-        cout<<endl<<"**"<<endl;
-    for(int j=0;j<ELONSTICK[i].S.size();j++){
-     cout<<"("<<ELONSTICK[i].backgroundspringn[j][0]<<" "<<ELONSTICK[i].backgroundspringn[j][1]<<")";
-    };
-    cout<<endl;
-    
-   }
+  combineElementsOnMikado(Connection,ELONSTICK);
   
-//commented section below is replaced (sucesfully?) by combineElementsOnMikado function
-  
-// elonstick extrarow;
-// int sticki;
-// 
-// for(int i=0;i<Connection.size()-1;i++){
-//   vector<double> extrarowpos(1);
-//   vector<int> extrarownumber(1);
-//   vector<int> elementtype(1);
-//   
-//   if(Connection[i].type==0){
-//       if(Connection[i].recur==1){
-//             
-//             extrarowpos[0]=Connection[i].s1;
-//             extrarownumber[0]=Connection[i].nrCon;
-//             elementtype[0]=0;
-//             sticki=Connection[i].first;
-//             
-//             for(int j=i+1;j<Connection.size();j++){
-//                 if(Connection[j].recur==1 && Connection[j].type==0){
-//                     if(Connection[i].first==Connection[j].first){
-//                         Connection[j].recur=0; 
-//                         extrarownumber.push_back(Connection[j].nrCon);
-//                         extrarowpos.push_back(Connection[j].s1);
-//                         elementtype.push_back(0);
-//                     }
-//                 }
-//             }
-//        }
-//   }
-// 
-//     if(Connection[i].type==1){
-//         extrarownumber.push_back(Connection[i].nrCon);
-//         extrarowpos.push_back(Connection[i].s1);
-//         elementtype.push_back(1);
-//         sticki=Connection[i].first;
-//     }
-//        extrarow.sticki=sticki;
-//        extrarow.nr=extrarownumber;
-//        extrarow.S=extrarowpos;
-// /*       cout<<"stick     "<<sticki<<endl;
-//        for(int m=0; m<extrarowpos.size();m++)
-//        {cout<<extrarowpos[m]<<"\t";
-//        }
-//        cout<<endl*/;
-//        extrarow.type=elementtype;   
-//        ELONSTICK.push_back(extrarow);
-// 
-// }
-
-
 // now sort extrarow on descending order per stick;
 for(int j=0; j<ELONSTICK.size();j++){
     vector<double> distances=ELONSTICK[j].S;
@@ -342,31 +255,31 @@ for(int j=0; j<ELONSTICK.size();j++){
       do{
         int k=0;
         swapped=0; //this is the control parameter, checks 1 if elements are swapped
-          for(int i=0;i<distances.size()-1;i++){ //loop through the list thill the end-k-1 th element;
-            if(distances[i]>distances[i+1]){ //checks if neighbours are in right order, if not then swap en change swap parameter
-              double d1=distances[i];
-              double d2=distances[i+1];
-              distances[i]=d2;
-              distances[i+1]=d1;
-              int n1=numbers[i]; 
-              int n2=numbers[i+1];
-              numbers[i]=n2; 
-              numbers[i+1]=n1;
-              int t1=type[i];
-	      int t2=type[i+1];
-	      type[i]=t2;
-	      type[i+1]=t1;
-              int backspring1 [2]={backgroundspring[i][0],backgroundspring[i][1]};
-              int backspring2 [2]={backgroundspring[i+1][0],backgroundspring[i+1][1]};
-              backgroundspring[i][0]=backspring2[0];
-              backgroundspring[i][1]=backspring2[1];
-              backgroundspring[i+1][0]=backspring1[0];
-              backgroundspring[i+1][1]=backspring1[1];
-	      
-              swapped=1;
-              k++;
+            for(int i=0;i<distances.size()-1;i++){ //loop through the list thill the end-k-1 th element;
+                if(distances[i]>distances[i+1]){ //checks if neighbours are in right order, if not then swap en change swap parameter
+                    double d1=distances[i];
+                    double d2=distances[i+1];
+                    distances[i]=d2;
+                    distances[i+1]=d1;
+                    int n1=numbers[i]; 
+                    int n2=numbers[i+1];
+                    numbers[i]=n2; 
+                    numbers[i+1]=n1;
+                    int t1=type[i];
+                    int t2=type[i+1];
+                    type[i]=t2;
+                    type[i+1]=t1;
+                    int backspring1 [2]={backgroundspring[i][0],backgroundspring[i][1]};
+                    int backspring2 [2]={backgroundspring[i+1][0],backgroundspring[i+1][1]};
+                    backgroundspring[i][0]=backspring2[0];
+                    backgroundspring[i][1]=backspring2[1];
+                    backgroundspring[i+1][0]=backspring1[0];
+                    backgroundspring[i+1][1]=backspring1[1];
+                    
+                    swapped=1;
+                    k++;
+                }
             }
-          }
     } while(swapped==1);
         ELONSTICK[j].S=distances; //Put the new data back into the original vectors
         ELONSTICK[j].nr=numbers;
@@ -374,87 +287,11 @@ for(int j=0; j<ELONSTICK.size();j++){
         ELONSTICK[j].backgroundspringn=backgroundspring;
     }
 std::sort(ELONSTICK.begin(),ELONSTICK.end());
-
-
-//    for(int i=0;i<ELONSTICK.size();i++){
-//    cout<<"MIK NR=       "<<ELONSTICK[i].sticki<<endl;
-//    
-//     for(int j=0;j<ELONSTICK[i].S.size();j++){
-//       cout<<ELONSTICK[i].nr[j]<<"       ";
-//     };
-//     cout<<endl<<"**"<<endl;
-//     for(int j=0;j<ELONSTICK[i].S.size();j++){
-//      cout<<ELONSTICK[i].S[j]<<" ";
-//     };
-//     cout<<endl<<"**"<<endl;
-//     for(int j=0;j<ELONSTICK[i].S.size();j++){
-//      cout<<ELONSTICK[i].type[j]<<"      ";
-//     };
-//     cout<<endl<<"!!!";
-//         cout<<endl<<"**"<<endl;
-//     for(int j=0;j<ELONSTICK[i].S.size();j++){
-//      cout<<"("<<ELONSTICK[i].backgroundspringn[j][0]<<" "<<ELONSTICK[i].backgroundspringn[j][1]<<")";
-//     };
-//     cout<<endl;
-//     
-//    }
-//   
-   
-
-
-
-
-//   for(int i=0;i<ELONSTICK.size();i++){
-//    cout<<"MIK NR=       "<<ELONSTICK[i].sticki<<endl;
-//    
-//     for(int j=0;j<ELONSTICK[i].S.size();j++){
-//       cout<<ELONSTICK[i].nr[j]<<"    ";
-//     };
-//     cout<<endl<<"**"<<endl;
-//     for(int j=0;j<ELONSTICK[i].S.size();j++){
-//      cout<<ELONSTICK[i].S[j]<<"      ";
-//     };
-//     cout<<endl<<"**"<<endl;
-//     for(int j=0;j<ELONSTICK[i].S.size();j++){
-//      cout<<ELONSTICK[i].type[j]<<"   ";
-//     };
-//     cout<<endl;
-//    }
-
-
-
-// for(int j=0;j<ELONSTICK.size();j++){
-//         cout<<"STICKNR  S       type    nrcon"<<endl;
-//         cout<<"On Stick "<<ELONSTICK[j].sticki<<endl;
-//         for(int m=0;m<ELONSTICK[j].S.size();m++){
-//              cout<<"\t"<<ELONSTICK[j].S[m]<<"\t"<<ELONSTICK[j].type[m]<<"\t"<<ELONSTICK[j].nr[m]<<endl;
-//         }
-//     }
-    
-//somehow on some elements the sequence {0,0,0} occurs. 
-//I cant find an elegant way to remove it, so let's bruteforce it:
-
-// vector<elonstick> ELONSTICK2(0);
-// for(int i=0;i<ELONSTICK.size();i++){
-//     if(ELONSTICK[i].S[0]!=0){
-//         ELONSTICK2.push_back(ELONSTICK[i]);
-//     }
-// }
-// cout<<"****"<<endl;
-
-// for(int j=0;j<ELONSTICK2.size();j++){
-//         cout<<"STICKNR  S       type    nrcon"<<endl;
-//         cout<<"On Stick "<<ELONSTICK2[j].sticki<<endl;
-//         for(int m=0;m<ELONSTICK2[j].S.size();m++){
-//              cout<<"\t"<<ELONSTICK2[j].S[m]<<"\t"<<ELONSTICK2[j].type[m]<<"\t"<<ELONSTICK2[j].nr[m]<<endl;
-//         }
-//     }
-
 }
 
 void orderElonstick(vector<int> &order,vector<elonstick> &ELONSTICK)
 {
-order.push_back(0);
+    order.push_back(0);
     for(std::size_t i=0;i<ELONSTICK.size();i++){
         vector<int> numbervec=ELONSTICK[i].nr;
         for(std::size_t j=0;j<numbervec.size();j++){
@@ -463,20 +300,16 @@ order.push_back(0);
                 if(numbervec[j]==order[k]) flag=1;
             }
             if(flag==0) order.push_back(numbervec[j]);
+        }
     }
- }
-     
- std::sort(order.begin(),order.end());
-     
- for(std::size_t i=0;i<ELONSTICK.size();i++){
-  for(std::size_t j=0;j<ELONSTICK[i].nr.size();j++){
-      for(std::size_t k=0;k<order.size();k++){
-            if(ELONSTICK[i].nr[j]==order[k]) ELONSTICK[i].nr[j]=k;
-      }
-  }
-}
-
-
+    std::sort(order.begin(),order.end());
+    for(std::size_t i=0;i<ELONSTICK.size();i++){
+        for(std::size_t j=0;j<ELONSTICK[i].nr.size();j++){
+            for(std::size_t k=0;k<order.size();k++){
+                if(ELONSTICK[i].nr[j]==order[k]) ELONSTICK[i].nr[j]=k;
+            }
+        }
+    }
 }
 
 
@@ -484,8 +317,8 @@ order.push_back(0);
 void makeSpringsAndNodes(const vector<elonstick> &ELONSTICK,const vector<stick> &mikorig, vector<spring> &springlist,
 vector<node> &nodes,
 double rlenshort, double rlenlong,double k1,double k2,double stretchf,vector<spring> &background,VectorXd &XYb)
-{   
-    
+{
+
     int background_size=XYb.size()/2;
     //first make the background networks into 'nodes'
     VectorXd Xb(background_size), Yb(background_size);
@@ -502,7 +335,6 @@ double rlenshort, double rlenlong,double k1,double k2,double stretchf,vector<spr
     //we have now set up the background spring network in terms of the struct node and we the springs
     //are loaded into the springlist as the first N springs. 
     //Now we are going to append the new springs to the network.
-    
 
     for(int i=0;i<ELONSTICK.size();i++){
         int sticknr=ELONSTICK[i].sticki;
@@ -514,23 +346,20 @@ double rlenshort, double rlenlong,double k1,double k2,double stretchf,vector<spr
             spring newspring;
             node1=nodesonsticki[j]+background_size;
             node2=nodesonsticki[j+1]+background_size;
-
-            
+ 
             double x1, x2, y1, y2;
             x1=CURRENTSTICK.x+posonsticki[j]*cos(CURRENTSTICK.th); //calculate the position of the node
             x2=CURRENTSTICK.x+posonsticki[j+1]*cos(CURRENTSTICK.th);//and the position of the adjacent one
             y1=CURRENTSTICK.y+posonsticki[j]*sin(CURRENTSTICK.th);
             y2=CURRENTSTICK.y+posonsticki[j+1]*sin(CURRENTSTICK.th);
-            
             newspring=makespring(node1,node2,x1,x2,y1,y2,sticknr,1.0,stretchf);
-            
             node nodetemp1, nodetemp2;
             nodetemp1.number=newspring.one;
-            nodetemp1.x=x1;
-            nodetemp1.y=y1;
+            nodetemp1.x=x1-floor(x1);
+            nodetemp1.y=y1-floor(y1);
             nodetemp2.number=newspring.two;
-            nodetemp2.x=x2;
-            nodetemp2.y=y2;
+            nodetemp2.x=x2-floor(x2);
+            nodetemp2.y=y2-floor(y2);
             nodes.push_back(nodetemp1);
             nodes.push_back(nodetemp2);
             springlist.push_back(newspring);
@@ -539,12 +368,91 @@ double rlenshort, double rlenlong,double k1,double k2,double stretchf,vector<spr
             int wlr,wud;
             double xbn1,xbn2,ybn1,ybn2,xm,ym;
             double xm1,xm2,ym1,ym2;
+            
+            //check for the first element on the stick.
+            if(j==0 && ELONSTICK[i].type[0]==1){
+                //spring to be removed has nodes
+                backnode1=ELONSTICK[i].backgroundspringn[0][0];
+                backnode2=ELONSTICK[i].backgroundspringn[0][1];
+                for(int m=0;m<springlist.size();m++){
+                    if((springlist[m].one==backnode1 && springlist[m].two==backnode2) ||
+                        (springlist[m].one==backnode2 && springlist[m].two==backnode1)){
+                        //erase one spring.
+                        wud=springlist[m].wud;
+                        wlr=springlist[m].wlr;
+                        springlist.erase(springlist.begin()+m);   
+                        //replace it by two new ones. One between backnode1 and ELONSTICK[i].nr[j]+background_size
+                        //and ELONSTICK[i].nr[j]+backgroundsize and backgnode2
+                        xbn1=Xb(backnode1);
+                        ybn1=Yb(backnode1);
+                        xbn2=Xb(backnode2);
+                        ybn2=Yb(backnode2);
+                        xm=CURRENTSTICK.x+posonsticki[0]*cos(CURRENTSTICK.th);
+                        ym=CURRENTSTICK.y+posonsticki[0]*sin(CURRENTSTICK.th);
+                        midpoint=ELONSTICK[i].nr[0]+background_size;
+                        //place the midpoint coordinate in the box
+                        if(xm>1){
+                          xm=xm-1;
+                        }
+                        if(xm<0){
+                          xm=xm+1;
+                        }
+                        if(ym>1){
+                          ym=ym-1;
+                        }
+                        if(ym<0){
+                           ym=ym+1;
+                        }
+                        //Check how the original coordinate should be 'fealt' by the midpoint coordinate
+                        if(wlr==1) {
+                            if (fabs(xbn1-xm)<fabs(xbn2-xm)){
+                                xbn2+=1;
+                            } else {
+                                xbn1-=1;
+                            }
+                        }
+                        
+                        if(wlr==-1){
+                            if(fabs(xbn1-xm)<fabs(xbn2-xm)){
+                                xbn2-=1.0;
+                            } else{
+                                xbn1+=1.0; 
+                            }
+                        }
+                        
+                        if(wud==1) {
+                            if (fabs(ybn1-ym)<fabs(ybn2-ym)){
+                                ybn2+=1;
+                            } else {
+                                ybn1-=1;
+                            }
+                        }
+                        if(wud==-1){
+                            if(fabs(ybn1-ym)<fabs(ybn2-ym)){
+                                ybn2-=1.0;
+                            } else{
+                                ybn1+=1.0; 
+                            }
+                        }
+                        newspring=makespring(backnode1,midpoint,xbn1,xm,ybn1,ym,-1,1.0,1.0);
+                        springlist.push_back(newspring);
+                        newspring=makespring(midpoint,backnode2,xm,xbn2,ym,ybn2,-1,1.0,1.0);
+                        springlist.push_back(newspring);
+                        break;
+                    }
+                }
+            }
+
+            //check for the other elements
+//             if(ELONSTICK[i].type[j+1]==1){
+//                 makeanddeletebondsonbackground(springlist,ELONSTICK,CURRENTSTICK,posonsticki,Xb,Yb,background_size,i,j+1);
+//             }
+            
+            //THIS SHOULD BE ONE FUNCTION
             if(ELONSTICK[i].type[j+1]==1){
                 //spring to be removed has nodes
                 backnode1=ELONSTICK[i].backgroundspringn[j+1][0];
                 backnode2=ELONSTICK[i].backgroundspringn[j+1][1];
-               // cout<<"n1  "<<backnode1<<" n2  "<<backnode2<<endl;
-                
                 for(int m=0;m<springlist.size();m++){
                     if((springlist[m].one==backnode1 && springlist[m].two==backnode2) ||
                         (springlist[m].one==backnode2 && springlist[m].two==backnode1)){
@@ -562,7 +470,7 @@ double rlenshort, double rlenlong,double k1,double k2,double stretchf,vector<spr
                         ym=CURRENTSTICK.y+posonsticki[j+1]*sin(CURRENTSTICK.th);
                         midpoint=ELONSTICK[i].nr[j+1]+background_size;
                         
-                        
+                        //place the midpoint coordinate in the box
                         if(xm>1){
                           xm=xm-1;
                         }
@@ -576,24 +484,46 @@ double rlenshort, double rlenlong,double k1,double k2,double stretchf,vector<spr
                            ym=ym+1;
                         }
 
+                        //Check how the original coordinate should be 'fealt' by the midpoint coordinate
+                        if(wlr==1) {
+                            if (fabs(xbn1-xm)<fabs(xbn2-xm)){
+                                xbn2+=1;
+                            } else {
+                                xbn1-=1;
+                            }
+                        }
+                        
+                        if(wlr==-1){
+                            if(fabs(xbn1-xm)<fabs(xbn2-xm)){
+                                xbn2-=1.0;
+                            } else{
+                                xbn1+=1.0; 
+                            }
+                        }
+                        
+                        if(wud==1) {
+                            if (fabs(ybn1-ym)<fabs(ybn2-ym)){
+                                ybn2+=1;
+                            } else {
+                                ybn1-=1;
+                            }
+                        }
+                        if(wud==-1){
+                            if(fabs(ybn1-ym)<fabs(ybn2-ym)){
+                                ybn2-=1.0;
+                            } else{
+                                ybn1+=1.0; 
+                            }
+                        }
                         cout<<ybn1<<"   "<<ym<<"        "<<ybn2<<endl;
                         newspring=makespring(backnode1,midpoint,xbn1,xm,ybn1,ym,-1,1.0,1.0);
                         springlist.push_back(newspring);
-//                         cout<<ybn1<<"   "<<ym<<"        "<<ybn2<<endl;
-//                         cout<<xbn1<<"   "<<xm<<"        "<<xbn2<<endl;
-
-                        //cout<<"newspring.wud  "<<newspring.wud<<"       "<<newspring.wlr;
-                        newspring=makespring(backnode2,midpoint,xbn2,xm,ybn2,ym,-1,1.0,1.0);
+                        newspring=makespring(midpoint,backnode2,xm,xbn2,ym,ybn2,-1,1.0,1.0);
                         springlist.push_back(newspring);
-                        //cout<<"   2newspring.wud  "<<newspring.wud<<"   "<<newspring.wlr<<endl;
-
-
                         break;
                     }
-                    
                 }
             }
-            
         }
     }
     std::sort(nodes.begin(),nodes.end());
@@ -675,32 +605,7 @@ void makeConnections(vector<connected> &Connection,
                      LStick,
                      background,
                      XYb
-                    ); //Make Connections
-//     vector<connected> Connection2(1); //sives the double elements from the connections
-//     Connection2[0]=Connection[0];
-//     for(std::size_t i=0;i<Connection.size();i++){
-//         int flag=1;
-//         for(std::size_t j=0;j<Connection2.size();j++){
-//             if(Connection[i].first==Connection2[j].first && Connection[i].second==Connection2[j].second){
-//                 flag=0; 
-//                 break;
-//             }
-//         }
-//         if(flag==1){
-//             Connection2.push_back(Connection[i]);
-//         } 
-//     }
-// Connection=Connection2;
-
-//Check for pairs in the connected struct if at least a pair exists (2 points on same mikado)
-//then connection[j].recur=1; Else recur =0.
-//     for(std::size_t i=0;i<Connection.size()-1;i++){
-//         for(std::size_t j=i+1;j<Connection.size();j++){
-//             if(Connection[i].first==Connection[j].first){
-//                 Connection[i].recur=1;  Connection[j].recur=1;
-//             }
-//         }
-//     }
+                    ); 
 }
 
 spring makespring(int node1,int node2,double x1,double x2, double y1, double y2,int stick,double k,double stretchf)
@@ -724,6 +629,12 @@ spring makespring(int node1,int node2,double x1,double x2, double y1, double y2,
     else if(x1<0&&x2<0){
         newspring.wlr=0;
     }
+    else if(x2>0 && x2<1.0 && x1<0.0){
+        newspring.wlr=1;
+    }
+    else if(x2>0 && x2<1.0 && x1>1.0){
+          newspring.wlr=-1;
+    }
     else if(x1>1&&x2>1){
         newspring.wlr=0;
     }
@@ -742,6 +653,92 @@ spring makespring(int node1,int node2,double x1,double x2, double y1, double y2,
     else if(y1>1&&y2>1){
         newspring.wud=0;
     }
-    
+    else if(y2>0 && y2<1.0 && y1<0.0){
+        newspring.wud=1;
+    }
+    else if(y2>0 && y2<1.0 && y1>1.0){
+        newspring.wud=-1;
+    }
+
     return newspring;
+}
+
+void makeanddeletebondsonbackground(vector<spring> &springlist,const vector<elonstick> &ELONSTICK,
+                        stick &CURRENTSTICK,vector<double> &posonsticki,VectorXd &Xb,VectorXd &Yb,
+                        int background_size,int sticknr,int elnr)
+{
+    int wud, wlr;
+    int backnode1,backnode2,midpoint;
+    double xbn1,xbn2,xm,ybn1,ybn2,ym;
+    spring newspring;
+    //spring to be removed has nodes
+    backnode1=ELONSTICK[sticknr].backgroundspringn[0][0];
+    backnode2=ELONSTICK[sticknr].backgroundspringn[0][1];
+        for(int m=0;m<springlist.size();m++){
+            if((springlist[m].one==backnode1 && springlist[m].two==backnode2) ||
+                (springlist[m].one==backnode2 && springlist[m].two==backnode1)){
+                //erase one spring.
+                wud=springlist[m].wud;
+                wlr=springlist[m].wlr;
+                springlist.erase(springlist.begin()+m);   
+                //replace it by two new ones. One between backnode1 and ELONSTICK[i].nr[j]+background_size
+                //and ELONSTICK[i].nr[j]+backgroundsize and backgnode2
+                xbn1=Xb(backnode1);
+                ybn1=Yb(backnode1);
+                xbn2=Xb(backnode2);
+                ybn2=Yb(backnode2);
+                xm=CURRENTSTICK.x+posonsticki[elnr]*cos(CURRENTSTICK.th);
+                ym=CURRENTSTICK.y+posonsticki[elnr]*sin(CURRENTSTICK.th);
+                midpoint=ELONSTICK[sticknr].nr[elnr]+background_size;
+                //place the midpoint coordinate in the box
+                if(xm>1){
+                    xm=xm-1;
+                }
+                if(xm<0){
+                    xm=xm+1;
+                }
+                if(ym>1){
+                    ym=ym-1;
+                }
+                if(ym<0){
+                    ym=ym+1;
+                }
+                //Check how the original coordinate should be 'fealt' by the midpoint coordinate
+                if(wlr==1) {
+                    if (fabs(xbn1-xm)<fabs(xbn2-xm)){
+                        xbn2+=1;
+                        } else {
+                            xbn1-=1;
+                    }
+                }
+                if(wlr==-1){
+                    if(fabs(xbn1-xm)<fabs(xbn2-xm)){
+                        xbn2-=1.0;
+                    } else{
+                        xbn1+=1.0; 
+                    }
+                }
+                        
+                        if(wud==1) {
+                            if (fabs(ybn1-ym)<fabs(ybn2-ym)){
+                                ybn2+=1;
+                            } else {
+                                ybn1-=1;
+                            }
+                        }
+                        if(wud==-1){
+                            if(fabs(ybn1-ym)<fabs(ybn2-ym)){
+                                ybn2-=1.0;
+                            } else{
+                                ybn1+=1.0; 
+                            }
+                        }
+                        newspring=makespring(backnode1,midpoint,xbn1,xm,ybn1,ym,-1,1.0,1.0);
+                        springlist.push_back(newspring);
+                        newspring=makespring(midpoint,backnode2,xm,xbn2,ym,ybn2,-1,1.0,1.0);
+                        springlist.push_back(newspring);
+                        break;
+                    }
+                }
+
 }

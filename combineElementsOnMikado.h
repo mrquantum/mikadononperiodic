@@ -18,14 +18,12 @@ using namespace Eigen;
 
 void combineElementsOnMikado(vector<connected> &connection,vector<elonstick> &elements){
 
-
-    
-    
   vector<connected> con=connection;
   int nr;
   nr=((con[0].first>con[0].second)?con[0].first:con[0].second);
   int newnr;
   //Make a vector of elements with the lenght of the max elements nr.
+  
   for(int i=1; i<con.size();i++){
    newnr=((con[i].first>con[i].second)?con[i].first:con[i].second);
    nr=((newnr>nr)?newnr:nr);

@@ -99,10 +99,15 @@ VectorXd initiateRandomNetwork(vector<spring> &springlist,
 
     
     VectorXd X(singleNodes.size()),Y(singleNodes.size());
+    
+    
+    
     VectorXd XY(2*X.size());
     VectorXd XYn(XY.size());
     VectorXd XYcopy(XY.size());
    
+    
+
    int springone,springtwo;
    int node1,node2,node3;
     
@@ -129,6 +134,8 @@ VectorXd initiateRandomNetwork(vector<spring> &springlist,
         Y(i)=inbox(Y(i),1.0);
     }
     XY<<X,Y;
-
+    //for(int i=0;i< XY.size();i++){
+     //   cout<<XY(i)<<"!!!!?:|"<<endl;
+    //}
 return XY;
 }
