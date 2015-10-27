@@ -61,13 +61,13 @@ void shearsteps(double deltaboxdx,
             ESTRETCH=Energynetwork(springlist,XY,g11,g12,g22);
             ETOT=ESTRETCH;
             gradE=HarmonicGradient(springlist,XY,g11,g12,g22);
-            cout<<"kappa was zero and we are in the first case"<<endl;
+            cout<<"\t kappa was zero and we are in the first case"<<endl;
         } else{
             ESTRETCH=Energynetwork(springlist,XY,g11,g12,g22);
             EBEND=EbendingC(springpairs,springlist,XY,kappa,g11,g12,g22);
             ETOT=ESTRETCH+EBEND;
             gradE=HarmonicGradient(springlist,XY,g11,g12,g22)+BendingGrad(springpairs,springlist,XY,kappa,g11,g12,g22);
-            cout<<"kappa was not zero and we are in the second case"<<endl;
+            cout<<"\tkappa was not zero and we are in the second case"<<endl;
         }
         s0=-gradE;
   

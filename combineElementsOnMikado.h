@@ -41,7 +41,7 @@ void combineElementsOnMikado(vector<connected> &connection,vector<elonstick> &el
   int bspringn1, bspringn2;
   vector<int> bdeleted;
   
-  cout<<"first  second  s1      s2      type    nr      spr1    spr2"<<endl;
+ // cout<<"first  second  s1      s2      type    nr      spr1    spr2"<<endl;
   int nrELE=0;
   while(con.size()>0){
     first=con[0].first;
@@ -53,7 +53,7 @@ void combineElementsOnMikado(vector<connected> &connection,vector<elonstick> &el
     bspringn1=con[0].backgroundspring[0];
     bspringn2=con[0].backgroundspring[1];
     
-    cout<<first<<"\t"<<second<<"\t"<<s1<<"\t"<<s2<<"\t"<<type<<"\t"<<connr<<"\t"<<bspringn1<<"\t"<<bspringn2<<endl;
+   // cout<<first<<"\t"<<second<<"\t"<<s1<<"\t"<<s2<<"\t"<<type<<"\t"<<connr<<"\t"<<bspringn1<<"\t"<<bspringn2<<endl;
     int backgroundspring[2];
     
     if(type==0){

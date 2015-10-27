@@ -1,9 +1,10 @@
 #ifndef STRUCTS_H
 #define STRUCTS_H
 #include <vector>
+#include <array>
 
 struct stick{
-  double x,y,th;
+  double x,y,th,length;
   int nr, wlr, wud;
 };
 
@@ -38,8 +39,6 @@ struct node{
   double x;
   double y;
 };
-
-
 
 
 #endif

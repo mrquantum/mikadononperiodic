@@ -24,7 +24,7 @@
 #include "randomnetwork.h"
 #include "makeSpringNetworks.h"
 #include "structs.h"
-
+#include "cutsprings.h"
 
 using namespace std;
 using namespace Eigen;
@@ -149,35 +149,45 @@ int main (int argc,char **argv)
     
         vector<spring> background(0);
         VectorXd XYb;
+        VectorXd XY;
+        VectorXd gradE(XY.size());
+        VectorXd gradEn(gradE.size());
+        VectorXd s0(gradE.size());
 
         int Numberf=18;
+        //initiate the backgroundnetwork
         if(backGroundOn==1){
             XYb=makeSquareNetwork(Numberf,background);
+            cout<<"SQUARE"<<endl;
+        } else if(backGroundOn==2){             
+            XYb=triangularnetwork(Numberf,background);
+            cout<<"TRIANGLE"<<endl;
         }
+
+
     
-    VectorXd XY=initiateRandomNetwork(springlist,springpairs,mikado,mikorig,ELONSTICK,Connection,nodes,
+    
+    
+    
+    
+    //initiate the mikadonetwork
+    if(NumberMikado>0){
+        XY=initiateRandomNetwork(springlist,springpairs,mikado,mikorig,ELONSTICK,Connection,nodes,
                                 singleNodes,conmatr,Clusterv,numberdistribution,NumberMikado,background,XYb,
                                 SEED,LStick,rlenshort,rlenlong,k1,k2,stretchf,
                                 springfile,anglefile,mikadofile,clusterdistribution,cluster,
                                 clusterdata,nodefile);
-    
-    cout<<"SPRINGPAIRS"<<endl;
-    for(int i=0;i<springpairs.size();i++){
-        cout<<springpairs[i][0]<<"  "<<springpairs[i][1]<<"  "<<springpairs[i][2]<<endl;
+    } else{
+        XY=XYb;
+        springlist=background;
     }
-//     cout<<"the springs are"<<endl;
-//     for(int i=0;i<springlist.size();i++){
-//         cout<<springlist[i].one<<"\t"<<springlist[i].two<<endl;
-//         
-//     }
+
     
-   // Write_Springs_2txt(springfile,springlist);
-    VectorXd gradE(XY.size());
-    VectorXd gradEn(gradE.size());
-    VectorXd s0(gradE.size());
+    
+    
 
+    cutspring(springlist,100);
     Write_Springs_2txt(springfile,springlist);
-
     //Shearing
     vector<vector<int>> springp;
     shearsteps(deltaboxdx,NumberStepsRight,NumberStepsLeft,springlist,

@@ -134,8 +134,6 @@ VectorXd initiateRandomNetwork(vector<spring> &springlist,
         Y(i)=inbox(Y(i),1.0);
     }
     XY<<X,Y;
-    //for(int i=0;i< XY.size();i++){
-     //   cout<<XY(i)<<"!!!!?:|"<<endl;
-    //}
+
 return XY;
 }

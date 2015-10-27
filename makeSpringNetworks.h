@@ -27,6 +27,8 @@
 #include "structs.h"
 
 Eigen::VectorXd makeSquareNetwork(int Number, vector<spring> &springlist);
+Eigen::VectorXd triangularnetwork(int Number, vector<spring> &springlist);
+spring makespring(int one, int two,Eigen::VectorXd &X, Eigen::VectorXd &Y,int wlr,int wud);
 
 
 

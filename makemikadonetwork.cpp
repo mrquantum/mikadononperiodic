@@ -58,7 +58,7 @@ bool operator<(const stick &first, const stick &second)
 
 
 //Here we make the initial mikadonetwork
-std::vector<stick> make_sticks(int N)
+std::vector<stick> make_sticks(int N,double sticklen)
 {
   my_random::get_gre(2);
 std::vector<stick> m(N);
@@ -70,6 +70,7 @@ for(int i=0;i<N;i++){
   m[i].nr=i;
   m[i].wlr=0;
   m[i].wud=0;
+  m[i].length=sticklen;
   }
 return m;
  }
@@ -342,17 +343,21 @@ double rlenshort, double rlenlong,double k1,double k2,double stretchf,vector<spr
         vector<double> posonsticki=ELONSTICK[i].S;
         stick CURRENTSTICK=mikorig[sticknr];
         int node1, node2;
+        double lenspring;
+        double springconstant;
         for(int j=0;j<nodesonsticki.size()-1;j++){
             spring newspring;
             node1=nodesonsticki[j]+background_size;
             node2=nodesonsticki[j+1]+background_size;
- 
+            lenspring=posonsticki[j+1]-posonsticki[j];
+            springconstant=lenspring*k1/CURRENTSTICK.length;
+            
             double x1, x2, y1, y2;
             x1=CURRENTSTICK.x+posonsticki[j]*cos(CURRENTSTICK.th); //calculate the position of the node
             x2=CURRENTSTICK.x+posonsticki[j+1]*cos(CURRENTSTICK.th);//and the position of the adjacent one
             y1=CURRENTSTICK.y+posonsticki[j]*sin(CURRENTSTICK.th);
             y2=CURRENTSTICK.y+posonsticki[j+1]*sin(CURRENTSTICK.th);
-            newspring=makespring(node1,node2,x1,x2,y1,y2,sticknr,1.0,stretchf);
+            newspring=makespring(node1,node2,x1,x2,y1,y2,sticknr,springconstant,stretchf);
             node nodetemp1, nodetemp2;
             nodetemp1.number=newspring.one;
             nodetemp1.x=x1-floor(x1);
@@ -369,160 +374,13 @@ double rlenshort, double rlenlong,double k1,double k2,double stretchf,vector<spr
             double xbn1,xbn2,ybn1,ybn2,xm,ym;
             double xm1,xm2,ym1,ym2;
             
-            //check for the first element on the stick.
-            if(j==0 && ELONSTICK[i].type[0]==1){
-                //spring to be removed has nodes
-                backnode1=ELONSTICK[i].backgroundspringn[0][0];
-                backnode2=ELONSTICK[i].backgroundspringn[0][1];
-                for(int m=0;m<springlist.size();m++){
-                    if((springlist[m].one==backnode1 && springlist[m].two==backnode2) ||
-                        (springlist[m].one==backnode2 && springlist[m].two==backnode1)){
-                        //erase one spring.
-                        wud=springlist[m].wud;
-                        wlr=springlist[m].wlr;
-                        springlist.erase(springlist.begin()+m);   
-                        //replace it by two new ones. One between backnode1 and ELONSTICK[i].nr[j]+background_size
-                        //and ELONSTICK[i].nr[j]+backgroundsize and backgnode2
-                        xbn1=Xb(backnode1);
-                        ybn1=Yb(backnode1);
-                        xbn2=Xb(backnode2);
-                        ybn2=Yb(backnode2);
-                        xm=CURRENTSTICK.x+posonsticki[0]*cos(CURRENTSTICK.th);
-                        ym=CURRENTSTICK.y+posonsticki[0]*sin(CURRENTSTICK.th);
-                        midpoint=ELONSTICK[i].nr[0]+background_size;
-                        //place the midpoint coordinate in the box
-                        if(xm>1){
-                          xm=xm-1;
-                        }
-                        if(xm<0){
-                          xm=xm+1;
-                        }
-                        if(ym>1){
-                          ym=ym-1;
-                        }
-                        if(ym<0){
-                           ym=ym+1;
-                        }
-                        //Check how the original coordinate should be 'fealt' by the midpoint coordinate
-                        if(wlr==1) {
-                            if (fabs(xbn1-xm)<fabs(xbn2-xm)){
-                                xbn2+=1;
-                            } else {
-                                xbn1-=1;
-                            }
-                        }
-                        
-                        if(wlr==-1){
-                            if(fabs(xbn1-xm)<fabs(xbn2-xm)){
-                                xbn2-=1.0;
-                            } else{
-                                xbn1+=1.0; 
-                            }
-                        }
-                        
-                        if(wud==1) {
-                            if (fabs(ybn1-ym)<fabs(ybn2-ym)){
-                                ybn2+=1;
-                            } else {
-                                ybn1-=1;
-                            }
-                        }
-                        if(wud==-1){
-                            if(fabs(ybn1-ym)<fabs(ybn2-ym)){
-                                ybn2-=1.0;
-                            } else{
-                                ybn1+=1.0; 
-                            }
-                        }
-                        newspring=makespring(backnode1,midpoint,xbn1,xm,ybn1,ym,-1,1.0,1.0);
-                        springlist.push_back(newspring);
-                        newspring=makespring(midpoint,backnode2,xm,xbn2,ym,ybn2,-1,1.0,1.0);
-                        springlist.push_back(newspring);
-                        break;
-                    }
-                }
-            }
-
-            //check for the other elements
-//             if(ELONSTICK[i].type[j+1]==1){
-//                 makeanddeletebondsonbackground(springlist,ELONSTICK,CURRENTSTICK,posonsticki,Xb,Yb,background_size,i,j+1);
-//             }
             
-            //THIS SHOULD BE ONE FUNCTION
+            if(j==0 && ELONSTICK[i].type[0]==1){
+                makeanddeletebondsonbackground(springlist,ELONSTICK,CURRENTSTICK,posonsticki,Xb,Yb,background_size,i,0);
+            }
+            //check for the other elements
             if(ELONSTICK[i].type[j+1]==1){
-                //spring to be removed has nodes
-                backnode1=ELONSTICK[i].backgroundspringn[j+1][0];
-                backnode2=ELONSTICK[i].backgroundspringn[j+1][1];
-                for(int m=0;m<springlist.size();m++){
-                    if((springlist[m].one==backnode1 && springlist[m].two==backnode2) ||
-                        (springlist[m].one==backnode2 && springlist[m].two==backnode1)){
-                        //erase one spring.
-                        wud=springlist[m].wud;
-                        wlr=springlist[m].wlr;
-                        springlist.erase(springlist.begin()+m);   
-                        //replace it by two new ones. One between backnode1 and ELONSTICK[i].nr[j]+background_size
-                        //and ELONSTICK[i].nr[j]+backgroundsize and backgnode2
-                        xbn1=Xb(backnode1);
-                        ybn1=Yb(backnode1);
-                        xbn2=Xb(backnode2);
-                        ybn2=Yb(backnode2);
-                        xm=CURRENTSTICK.x+posonsticki[j+1]*cos(CURRENTSTICK.th);
-                        ym=CURRENTSTICK.y+posonsticki[j+1]*sin(CURRENTSTICK.th);
-                        midpoint=ELONSTICK[i].nr[j+1]+background_size;
-                        
-                        //place the midpoint coordinate in the box
-                        if(xm>1){
-                          xm=xm-1;
-                        }
-                        if(xm<0){
-                          xm=xm+1;
-                        }
-                        if(ym>1){
-                          ym=ym-1;
-                        }
-                        if(ym<0){
-                           ym=ym+1;
-                        }
-
-                        //Check how the original coordinate should be 'fealt' by the midpoint coordinate
-                        if(wlr==1) {
-                            if (fabs(xbn1-xm)<fabs(xbn2-xm)){
-                                xbn2+=1;
-                            } else {
-                                xbn1-=1;
-                            }
-                        }
-                        
-                        if(wlr==-1){
-                            if(fabs(xbn1-xm)<fabs(xbn2-xm)){
-                                xbn2-=1.0;
-                            } else{
-                                xbn1+=1.0; 
-                            }
-                        }
-                        
-                        if(wud==1) {
-                            if (fabs(ybn1-ym)<fabs(ybn2-ym)){
-                                ybn2+=1;
-                            } else {
-                                ybn1-=1;
-                            }
-                        }
-                        if(wud==-1){
-                            if(fabs(ybn1-ym)<fabs(ybn2-ym)){
-                                ybn2-=1.0;
-                            } else{
-                                ybn1+=1.0; 
-                            }
-                        }
-                        cout<<ybn1<<"   "<<ym<<"        "<<ybn2<<endl;
-                        newspring=makespring(backnode1,midpoint,xbn1,xm,ybn1,ym,-1,1.0,1.0);
-                        springlist.push_back(newspring);
-                        newspring=makespring(midpoint,backnode2,xm,xbn2,ym,ybn2,-1,1.0,1.0);
-                        springlist.push_back(newspring);
-                        break;
-                    }
-                }
+                makeanddeletebondsonbackground(springlist,ELONSTICK,CURRENTSTICK,posonsticki,Xb,Yb,background_size,i,j+1);
             }
         }
     }
@@ -576,7 +434,7 @@ for(std::size_t i=0;i<springlist.size()-1;i++){
 
 void makeSticks(vector<stick> &mikado,vector<stick> &mikorig,const int NumberMikado,const double LStick)
 {
-    mikado=make_sticks(NumberMikado);
+    mikado=make_sticks(NumberMikado,LStick);
     mikorig=mikado; //The original set of sticks
     //Find the lr wall intercepts and add a ghost to the mikado's
     vector<stick> GhostLR = make_ghost_lr(mikado, LStick, mikado.size()); 
@@ -672,14 +530,17 @@ void makeanddeletebondsonbackground(vector<spring> &springlist,const vector<elon
     double xbn1,xbn2,xm,ybn1,ybn2,ym;
     spring newspring;
     //spring to be removed has nodes
-    backnode1=ELONSTICK[sticknr].backgroundspringn[0][0];
-    backnode2=ELONSTICK[sticknr].backgroundspringn[0][1];
+    backnode1=ELONSTICK[sticknr].backgroundspringn[elnr][0];
+    backnode2=ELONSTICK[sticknr].backgroundspringn[elnr][1];
         for(int m=0;m<springlist.size();m++){
             if((springlist[m].one==backnode1 && springlist[m].two==backnode2) ||
                 (springlist[m].one==backnode2 && springlist[m].two==backnode1)){
                 //erase one spring.
                 wud=springlist[m].wud;
                 wlr=springlist[m].wlr;
+                //parameters of the to be deleted spring 
+                double springk=springlist[m].k;
+                double springrlen=springlist[m].rlen;
                 springlist.erase(springlist.begin()+m);   
                 //replace it by two new ones. One between backnode1 and ELONSTICK[i].nr[j]+background_size
                 //and ELONSTICK[i].nr[j]+backgroundsize and backgnode2
@@ -733,9 +594,16 @@ void makeanddeletebondsonbackground(vector<spring> &springlist,const vector<elon
                                 ybn1+=1.0; 
                             }
                         }
-                        newspring=makespring(backnode1,midpoint,xbn1,xm,ybn1,ym,-1,1.0,1.0);
+                        
+                        double k1,k2;
+                        double l1,l2;
+                        l1=sqrt(pow((xbn1-xm),2)+pow((ybn1-ym),2));
+                        l2=sqrt(pow((xbn2-xm),2)+pow((ybn2-ym),2));
+                        k1=springrlen*springk/l1;
+                        k2=springrlen*springk/l2;
+                        newspring=makespring(backnode1,midpoint,xbn1,xm,ybn1,ym,-1,k1,1.0);
                         springlist.push_back(newspring);
-                        newspring=makespring(midpoint,backnode2,xm,xbn2,ym,ybn2,-1,1.0,1.0);
+                        newspring=makespring(midpoint,backnode2,xm,xbn2,ym,ybn2,-1,k2,1.0);
                         springlist.push_back(newspring);
                         break;
                     }
