@@ -7,6 +7,7 @@
 #include <iomanip>
 #include <algorithm>
 #include <vector>
+#include <array>
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -57,15 +58,18 @@ void combineElementsOnMikado(vector<connected> &connection,vector<elonstick> &el
     int backgroundspring[2];
     
     if(type==0){
+      std::array<int,2> minuslist;
+      minuslist[0] = -1;
+      minuslist[1] = -1;
       Elements[first].nr.push_back(nrELE);
       Elements[first].S.push_back(s1);
       Elements[first].type.push_back(type);
-      Elements[first].backgroundspringn.push_back({-1,-1});
+      Elements[first].backgroundspringn.push_back(minuslist);
       
       Elements[second].nr.push_back(nrELE);
       Elements[second].S.push_back(s2);
       Elements[second].type.push_back(type);
-      Elements[second].backgroundspringn.push_back({-1,-1});
+      Elements[second].backgroundspringn.push_back(minuslist);
 
       nrELE++;
       con.erase(con.begin());
@@ -85,10 +89,13 @@ void combineElementsOnMikado(vector<connected> &connection,vector<elonstick> &el
     
        
     if(type==1){
+      std::array<int,2> minuslist;
       Elements[first].nr.push_back(nrELE);
       Elements[first].S.push_back(s1);
       Elements[first].type.push_back(type);
-      Elements[first].backgroundspringn.push_back({bspringn1,bspringn2});
+      minuslist[0] = bspringn1;
+      minuslist[1] = bspringn2;
+      Elements[first].backgroundspringn.push_back(minuslist);
       nrELE++;
       con.erase(con.begin());
     }
