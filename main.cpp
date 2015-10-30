@@ -25,6 +25,7 @@
 #include "makeSpringNetworks.h"
 #include "structs.h"
 #include "cutsprings.h"
+#include "connectivity.h"
 
 using namespace std;
 using namespace Eigen;
@@ -171,22 +172,30 @@ int main (int argc,char **argv)
     
     
     //initiate the mikadonetwork
-    if(NumberMikado>0){
-        XY=initiateRandomNetwork(springlist,springpairs,mikado,mikorig,ELONSTICK,Connection,nodes,
-                                singleNodes,conmatr,Clusterv,numberdistribution,NumberMikado,background,XYb,
-                                SEED,LStick,rlenshort,rlenlong,k1,k2,stretchf,
-                                springfile,anglefile,mikadofile,clusterdistribution,cluster,
-                                clusterdata,nodefile);
-    } else{
-        XY=XYb;
-        springlist=background;
-    }
+
+        double Z;
+        if(NumberMikado>0){
+            XY=initiateRandomNetwork(springlist,springpairs,mikado,mikorig,ELONSTICK,Connection,nodes,
+                                    singleNodes,conmatr,Clusterv,numberdistribution,NumberMikado,background,XYb,
+                                    SEED,LStick,rlenshort,rlenlong,k1,k2,stretchf,
+                                    springfile,anglefile,mikadofile,clusterdistribution,cluster,
+                                    clusterdata,nodefile);
+                                    cout<<"gethere"<<endl;
+        } else{
+            XY=XYb;
+            springlist=background;
+        }
+        NumberMikado++;
+        Z=Connectivity(springlist);
+
 
     
     
     
-
-    cutspring(springlist,100);
+    //double Z=Connectivity(springlist);
+    //cout<<"<Z>="<<Z<<endl;
+    cout<<springlist.size()<<endl;
+    //cutspring(springlist,100);
     Write_Springs_2txt(springfile,springlist);
     //Shearing
     vector<vector<int>> springp;

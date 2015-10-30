@@ -64,8 +64,7 @@ VectorXd initiateRandomNetwork(vector<spring> &springlist,
     makeSticks(mikado,mikorig,NumberMikado,LStick);
     Write_Mikado_2txt(mikadofile,mikado);
 //     makeConnections(Connection,mikado,LStick,background,XYb); 
-        make_connections(Connection,mikado,LStick,background,XYb); 
-
+    make_connections(Connection,mikado,LStick,background,XYb); 
     sortELEMENTSperMIKADO(ELONSTICK,Connection);
     orderElonstick(order,ELONSTICK); 
     makeSpringsAndNodes(ELONSTICK,mikorig,springlist,nodes,rlenshort,rlenlong,k1,k2,stretchf,background,XYb);//Make the springs and Nodes. 
