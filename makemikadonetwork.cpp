@@ -252,33 +252,36 @@ for(int j=0; j<ELONSTICK.size();j++){
     vector<int> type=ELONSTICK[j].type;
     vector<array<int,2>> backgroundspring=ELONSTICK[j].backgroundspringn;
 // now sort extrarow on descending order per stick;
+    
     int swapped=0;
       do{
         int k=0;
         swapped=0; //this is the control parameter, checks 1 if elements are swapped
-            for(int i=0;i<distances.size()-1;i++){ //loop through the list thill the end-k-1 th element;
-                if(distances[i]>distances[i+1]){ //checks if neighbours are in right order, if not then swap en change swap parameter
-                    double d1=distances[i];
-                    double d2=distances[i+1];
-                    distances[i]=d2;
-                    distances[i+1]=d1;
-                    int n1=numbers[i]; 
-                    int n2=numbers[i+1];
-                    numbers[i]=n2; 
-                    numbers[i+1]=n1;
-                    int t1=type[i];
-                    int t2=type[i+1];
-                    type[i]=t2;
-                    type[i+1]=t1;
-                    int backspring1 [2]={backgroundspring[i][0],backgroundspring[i][1]};
-                    int backspring2 [2]={backgroundspring[i+1][0],backgroundspring[i+1][1]};
-                    backgroundspring[i][0]=backspring2[0];
-                    backgroundspring[i][1]=backspring2[1];
-                    backgroundspring[i+1][0]=backspring1[0];
-                    backgroundspring[i+1][1]=backspring1[1];
-                    
-                    swapped=1;
-                    k++;
+            if(distances.size()>1){
+                for(int i=0;i<distances.size()-1;i++){ //loop through the list thill the end-k-1 th element;
+                    if(distances[i]>distances[i+1]){ //checks if neighbours are in right order, if not then swap en change swap parameter
+                        double d1=distances[i];
+                        double d2=distances[i+1];
+                        distances[i]=d2;
+                        distances[i+1]=d1;
+                        int n1=numbers[i]; 
+                        int n2=numbers[i+1];
+                        numbers[i]=n2; 
+                        numbers[i+1]=n1;
+                        int t1=type[i];
+                        int t2=type[i+1];
+                        type[i]=t2;
+                        type[i+1]=t1;
+                        int backspring1 [2]={backgroundspring[i][0],backgroundspring[i][1]};
+                        int backspring2 [2]={backgroundspring[i+1][0],backgroundspring[i+1][1]};
+                        backgroundspring[i][0]=backspring2[0];
+                        backgroundspring[i][1]=backspring2[1];
+                        backgroundspring[i+1][0]=backspring1[0];
+                        backgroundspring[i+1][1]=backspring1[1];
+                        
+                        swapped=1;
+                        k++;
+                    }
                 }
             }
     } while(swapped==1);
@@ -345,48 +348,76 @@ double rlenshort, double rlenlong,double k1,double k2,double stretchf,vector<spr
         int node1, node2;
         double lenspring;
         double springconstant;
-        for(int j=0;j<nodesonsticki.size()-1;j++){
-            spring newspring;
-            node1=nodesonsticki[j]+background_size;
-            node2=nodesonsticki[j+1]+background_size;
-            lenspring=posonsticki[j+1]-posonsticki[j];
-            springconstant=lenspring*k1/CURRENTSTICK.length;
-            
-            double x1, x2, y1, y2;
-            x1=CURRENTSTICK.x+posonsticki[j]*cos(CURRENTSTICK.th); //calculate the position of the node
-            x2=CURRENTSTICK.x+posonsticki[j+1]*cos(CURRENTSTICK.th);//and the position of the adjacent one
-            y1=CURRENTSTICK.y+posonsticki[j]*sin(CURRENTSTICK.th);
-            y2=CURRENTSTICK.y+posonsticki[j+1]*sin(CURRENTSTICK.th);
-            newspring=makespring(node1,node2,x1,x2,y1,y2,sticknr,springconstant,stretchf);
-            node nodetemp1, nodetemp2;
-            nodetemp1.number=newspring.one;
-            nodetemp1.x=x1-floor(x1);
-            nodetemp1.y=y1-floor(y1);
-            nodetemp2.number=newspring.two;
-            nodetemp2.x=x2-floor(x2);
-            nodetemp2.y=y2-floor(y2);
-            nodes.push_back(nodetemp1);
-            nodes.push_back(nodetemp2);
-            springlist.push_back(newspring);
-            
-            int backnode1,backnode2,midpoint;
-            int wlr,wud;
-            double xbn1,xbn2,ybn1,ybn2,xm,ym;
-            double xm1,xm2,ym1,ym2;
-            
-            
-            if(j==0 && ELONSTICK[i].type[0]==1){
-                makeanddeletebondsonbackground(springlist,ELONSTICK,CURRENTSTICK,posonsticki,Xb,Yb,background_size,i,0);
-            }
-            //check for the other elements
-            if(ELONSTICK[i].type[j+1]==1){
-                makeanddeletebondsonbackground(springlist,ELONSTICK,CURRENTSTICK,posonsticki,Xb,Yb,background_size,i,j+1);
+        if(nodesonsticki.size()>1){
+            for(int j=0;j<nodesonsticki.size()-1;j++){
+                spring newspring;
+                node1=nodesonsticki[j]+background_size;
+                node2=nodesonsticki[j+1]+background_size;
+                lenspring=posonsticki[j+1]-posonsticki[j];
+                //springconstant=lenspring*k1/CURRENTSTICK.length;
+                springconstant=0.5;
+                double x1, x2, y1, y2;
+                x1=CURRENTSTICK.x+posonsticki[j]*cos(CURRENTSTICK.th); //calculate the position of the node
+                x2=CURRENTSTICK.x+posonsticki[j+1]*cos(CURRENTSTICK.th);//and the position of the adjacent one
+                y1=CURRENTSTICK.y+posonsticki[j]*sin(CURRENTSTICK.th);
+                y2=CURRENTSTICK.y+posonsticki[j+1]*sin(CURRENTSTICK.th);
+                newspring=makespring(node1,node2,x1,x2,y1,y2,sticknr,springconstant,stretchf);
+                node nodetemp1, nodetemp2;
+                nodetemp1.number=newspring.one;
+                nodetemp1.x=x1-floor(x1);
+                nodetemp1.y=y1-floor(y1);
+                
+                nodetemp2.number=newspring.two;
+                nodetemp2.x=x2-floor(x2);
+                nodetemp2.y=y2-floor(y2);
+                nodes.push_back(nodetemp1);
+                nodes.push_back(nodetemp2);
+                springlist.push_back(newspring);
+
+                int backnode1,backnode2,midpoint;
+                int wlr,wud;
+                double xbn1,xbn2,ybn1,ybn2,xm,ym;
+                double xm1,xm2,ym1,ym2;
+                
+                
+                if(j==0 && ELONSTICK[i].type[0]==1){
+                    makeanddeletebondsonbackground(springlist,ELONSTICK,CURRENTSTICK,posonsticki,Xb,Yb,background_size,i,0);
+                }
+                //check for the other elements
+                if(ELONSTICK[i].type[j+1]==1){
+                    makeanddeletebondsonbackground(springlist,ELONSTICK,CURRENTSTICK,posonsticki,Xb,Yb,background_size,i,j+1);
+                }
             }
         }
     }
+    //sort the nodes and if the background absent remove double nodes.
+    //in the other case this happens in makeanddeletebondsonbackground
     std::sort(nodes.begin(),nodes.end());
-}
+//     for(int i=0;i<nodes.size();i++){
+//         cout<<nodes[i].number<<"\t"<<nodes[i].x<<"\t"<<nodes[i].y<<endl;
+//     }
+//     
+    
+    if(background.size()==0) {
+        ordernodes(nodes,springlist);
+    }
+    
+//       for(int i=0;i<nodes.size();i++){
+//         cout<<nodes[i].number<<"\t"<<nodes[i].x<<"\t"<<nodes[i].y<<endl;
+//     }
+    
+    int mi=0;
+    int ma=0;
+    
+    for(int i=0;i<springlist.size();i++){
+        springlist[i].one>ma ? ma=springlist[i].one : ma;
+        springlist[i].two>ma ? ma=springlist[i].two : ma;
 
+    }
+    cout<<"the max spring index is      "<<ma<<endl;
+    
+    
+}
 double inbox(double x,double boxsize){
   if(x<0){
     x=x+boxsize;
@@ -414,22 +445,24 @@ void makeSpringpairs(vector<vector<int>> &springpairs,const vector<spring> &spri
         }
         
     }
-    
-    
-for(std::size_t i=0;i<springlist.size()-1;i++){
-    for(int j=i+1;j<springlist.size();j++)
-    {
-    //if(springlist[i].sticki==springlist[i+1].sticki && springlist[i].sticki!=-1){
-        if(springlist[i].sticki==springlist[j].sticki && springlist[i].sticki!=-1){
-            vector<int> pair(3);
-            pair[0]=i;
-            pair[1]=j;
-            pair[2]=springlist[i].sticki;
-            springpairs.push_back(pair);
-            break;
+
+    for(std::size_t i=0;i<springlist.size()-1;i++){
+        if(springlist.size()>1){
+            for(int j=i+1;j<springlist.size();j++)
+            {
+            //if(springlist[i].sticki==springlist[i+1].sticki && springlist[i].sticki!=-1){
+                if(springlist[i].sticki==springlist[j].sticki && springlist[i].sticki!=-1){
+                    vector<int> pair(3);
+                    pair[0]=i;
+                    pair[1]=j;
+                    pair[2]=springlist[i].sticki;
+                    springpairs.push_back(pair);
+                    break;
+                }
+            }
         }
-    }   
-}
+    }
+
 }
 
 void makeSticks(vector<stick> &mikado,vector<stick> &mikorig,const int NumberMikado,const double LStick)
@@ -594,7 +627,6 @@ void makeanddeletebondsonbackground(vector<spring> &springlist,const vector<elon
                                 ybn1+=1.0; 
                             }
                         }
-                        
                         double k1,k2;
                         double l1,l2;
                         l1=sqrt(pow((xbn1-xm),2)+pow((ybn1-ym),2));
@@ -606,7 +638,52 @@ void makeanddeletebondsonbackground(vector<spring> &springlist,const vector<elon
                         newspring=makespring(midpoint,backnode2,xm,xbn2,ym,ybn2,-1,k2,1.0);
                         springlist.push_back(newspring);
                         break;
-                    }
-                }
+        }
+    }
 
 }
+
+void ordernodes(vector<node> &nodes,vector<spring> &springlist){
+    
+    std::sort(nodes.begin(),nodes.end());
+
+    vector<int> remove(0);
+    
+    for(int i=0;        i<nodes.size()-1;       i++){
+        if(nodes[i].number==nodes[i+1].number){
+            remove.push_back(i+1);
+        }
+    }
+    
+    //now erase the elements from the remove vector
+    int del;
+    while(remove.size()>0){
+        del=remove[remove.size()-1];
+        remove.pop_back();
+        nodes.erase(nodes.begin()+del);
+    }
+    
+    // next step: renumber and do the same to the springs
+    int num;
+    for(int i=0;        i<nodes.size(); i++){
+        if(nodes[i].number!=i){
+           num=nodes[i].number; 
+           //correct in the springlist
+           for(int j=0; j<springlist.size();    j++){
+               if(springlist[j].one==num){
+                   springlist[j].one=i;
+               } 
+               if(springlist[j].two==num){
+                   springlist[j].two=i;
+               }
+            }
+           nodes[i].number=i;
+        }
+    }
+    
+
+}
+
+
+
+

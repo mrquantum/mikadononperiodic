@@ -67,6 +67,14 @@ VectorXd initiateRandomNetwork(vector<spring> &springlist,
     make_connections(Connection,mikado,LStick,background,XYb); 
     sortELEMENTSperMIKADO(ELONSTICK,Connection);
     orderElonstick(order,ELONSTICK); 
+//     for(int i=0;i<ELONSTICK.size();i++){
+//         cout<<ELONSTICK[i].sticki<<endl;
+//             for(int j=0;j<ELONSTICK[i].nr.size();j++){
+//                 cout<<ELONSTICK[i].nr[j]<<"     ";
+//             }
+//             cout<<endl;
+//     }
+    
     makeSpringsAndNodes(ELONSTICK,mikorig,springlist,nodes,rlenshort,rlenlong,k1,k2,stretchf,background,XYb);//Make the springs and Nodes. 
     Write_Springs_2txt(springfile,springlist);
     //make a table with sticks that are connected
@@ -89,23 +97,20 @@ VectorXd initiateRandomNetwork(vector<spring> &springlist,
     Write_Clusterdata_2txt(clusterdata,NumberMikado,SEED,LStick,Clusterv);
 
     //Remove all double info
-    for(std::size_t i=0;i<nodes.size();i++){
-        if(nodes[i].number!=nodes[i+1].number){
-            node unique=nodes[i];   
-            singleNodes.push_back(unique);  
-        }
-    }
+//     for(std::size_t i=0;i<nodes.size();i++){
+//         if(nodes[i].number!=nodes[i+1].number){
+//             node unique=nodes[i];   
+//             singleNodes.push_back(unique);  
+//         }
+//     }
 
-    
-    VectorXd X(singleNodes.size()),Y(singleNodes.size());
-    
-    
-    
+    //singleNodes=nodes;
+    VectorXd X(nodes.size()),Y(nodes.size());
+    //cout<<"SINGLENODESIZE       "<<X.size()<<endl;
     VectorXd XY(2*X.size());
     VectorXd XYn(XY.size());
     VectorXd XYcopy(XY.size());
    
-    
 
    int springone,springtwo;
    int node1,node2,node3;
@@ -121,17 +126,17 @@ VectorXd initiateRandomNetwork(vector<spring> &springlist,
 
         Write_Angles_2txt(anglefile,node1,node2,node3);
     }
-    Write_Nodes_2txt(nodefile,singleNodes);
-
+    Write_Nodes_2txt(nodefile,nodes);
     //The xy positions
-    for(std::size_t i=0;i<singleNodes.size();i++){
-        X(i)=singleNodes[i].x; 
-        Y(i)=singleNodes[i].y;
+    for(std::size_t i=0;i<nodes.size();i++){
+        X(i)=nodes[i].x; 
+        Y(i)=nodes[i].y;
     }
-    for(std::size_t i=0;i<singleNodes.size();i++){
+    for(std::size_t i=0;i<nodes.size();i++){
         X(i)=inbox(X(i),1.0);
         Y(i)=inbox(Y(i),1.0);
     }
+
     XY<<X,Y;
 
 return XY;

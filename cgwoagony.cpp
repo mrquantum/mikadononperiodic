@@ -35,13 +35,13 @@ void CGAGONY(VectorXd &XY,
     int k=0;
     int j;
     int brk; //break boolean
-    int jmax=100;
+    int jmax=1000;
     int imax=1e6;
     VectorXd r(XY.size());
     VectorXd s,d;
     double deltanew,delta0,deltad,deltaold,deltamid;
-    double eps=1e-8;
-    double sigma0=0.00001;
+    double eps=1e-10;
+    double sigma0=.1;
     double alpha;
     double eta,etaprev,deta,beta;
     
@@ -57,7 +57,6 @@ void CGAGONY(VectorXd &XY,
     
     deltanew=r.dot(d);
     deltaold=deltanew;
-    
     alpha=-sigma0;
 
     //Linesearching
@@ -80,9 +79,8 @@ void CGAGONY(VectorXd &XY,
                 BendingGrad(springpairs,springlist,XY,kappa,g11,g12,g22)).dot(d);
             }
             double dsq=d.dot(d);
-           // cout<<"DSQ  "<<dsq<<endl;
             deta=etaprev-eta;
-            if(fabs(deta)>1e-18){
+            if(fabs(deta)>1e-22){
                 alpha=alpha*eta/(etaprev-eta);
                 //cout<<alpha<<"      alpha"<<endl;
                 XY=XY+alpha*d;
@@ -92,12 +90,10 @@ void CGAGONY(VectorXd &XY,
                 brk=0;
             } else{
                 brk=1;
-                cout<<"get here 1"<<endl;
                 break;
                 
             }
         }while(brk==0 && (j<jmax && alpha*alpha*deltad>eps*eps));
-        
         if(bendingon==0){
             r=-HarmonicGradient(springlist,XY+sigma0*d,g11,g12,g22);
         } else{
@@ -122,10 +118,7 @@ void CGAGONY(VectorXd &XY,
         } else {
             d=s+beta*d;
         }
-    
         i++;
-       // cout<<"i="<<i<<endl;
-        
     }
     cout<<endl;
 

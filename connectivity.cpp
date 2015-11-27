@@ -60,7 +60,7 @@ double Connectivity(vector<spring> &springlist)
     
     double totNRconnectionsd=static_cast<double>(totNRconnections);
     
-    cout<<"min "<<min<<" max  "<<max<<"  size  "<<convec.size()<<endl;
+    //cout<<"min "<<min<<" max  "<<max<<"  size  "<<convec.size()<<endl;
     return totNRconnectionsd/convec.size();
     
     

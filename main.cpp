@@ -26,6 +26,7 @@
 #include "structs.h"
 #include "cutsprings.h"
 #include "connectivity.h"
+#include "cgmethod.h"
 
 using namespace std;
 using namespace Eigen;
@@ -127,7 +128,7 @@ int main (int argc,char **argv)
     ofstream clusterdistribution(s);
 
     //double lenGrad;
-    int Nit=Mikadoparameters.Nit;  
+    int Nit=Mikadoparameters.Nit;
     double tolGradE=Mikadoparameters.tolGradE;
     int NumberMikado=Mikadoparameters.NumberMikado;
     double LStick=Mikadoparameters.LStick; //Stick Length
@@ -143,9 +144,11 @@ int main (int argc,char **argv)
     int NumberStepsLeft=Mikadoparameters.NumberStepsLeft;
     int backGroundOn=Mikadoparameters.backGroundOn;
     int backGroundType=Mikadoparameters.backGroundType;
+    int mode=Mikadoparameters.mode;
+    double Z_aim=Mikadoparameters.Z_aim;
     
-    cout<<"The number of rightssteps= "<<NumberStepsRight<<endl;
-    cout<<"The number of leftsteps= "<<NumberStepsLeft<<endl;
+//     cout<<"The number of rightssteps= "<<NumberStepsRight<<endl;
+//     cout<<"The number of leftsteps= "<<NumberStepsLeft<<endl;
 
     
         vector<spring> background(0);
@@ -154,7 +157,7 @@ int main (int argc,char **argv)
         VectorXd gradE(XY.size());
         VectorXd gradEn(gradE.size());
         VectorXd s0(gradE.size());
-
+        double Z; //Connectivity
         int Numberf=18;
         //initiate the backgroundnetwork
         if(backGroundOn==1){
@@ -166,45 +169,83 @@ int main (int argc,char **argv)
         }
 
 
+    if(mode==0){
+         if(NumberMikado>0){
+                    XY=initiateRandomNetwork(springlist,springpairs,mikado,mikorig,ELONSTICK,Connection,nodes,
+                                            singleNodes,conmatr,Clusterv,numberdistribution,NumberMikado,background,XYb,
+                                            SEED,LStick,rlenshort,rlenlong,k1,k2,stretchf,
+                                            springfile,anglefile,mikadofile,clusterdistribution,cluster,
+                                            clusterdata,nodefile);
+                } else{
+                    XY=XYb;
+                    springlist=background;
+                }
+                Z=Connectivity(springlist);
+    }
     
     
+    ofstream zfile("zfile.txt",ios_base::app | ios_base::out);
+    if(mode==1){
+        int number=50;
+        //initiate the mikadonetwork
+        do{
+            springlist.clear();
+            springpairs.clear();
+            mikado.clear();
+            mikorig.clear();
+            ELONSTICK.clear();
+            Connection.clear();
+            nodes.clear();
+            singleNodes.clear();
+            conmatr.clear();
+            NumberMikado=number;
+                if(NumberMikado>0){
+                    XY=initiateRandomNetwork(springlist,springpairs,mikado,mikorig,ELONSTICK,Connection,nodes,
+                                            singleNodes,conmatr,Clusterv,numberdistribution,NumberMikado,background,XYb,
+                                            SEED,LStick,rlenshort,rlenlong,k1,k2,stretchf,
+                                            springfile,anglefile,mikadofile,clusterdistribution,cluster,
+                                            clusterdata,nodefile);
+                } else{
+                    XY=XYb;
+                    springlist=background;
+                }
+                
+                Z=Connectivity(springlist);
+                zfile<<NumberMikado<<"\t"<<Z<<endl;
+                number++;
+        }while(Z<Z_aim);
+    }
     
-    
-    
-    //initiate the mikadonetwork
+        networkinfo info;
+        info.g11=1.0;
+        info.g12=0.0;
+        info.g22=1.0;
+        info.springlist=springlist;
+        info.size=XY.size();
+  
+        VectorXd Xi(XY.size());
+        HarmonicGradientn(XY.data(),Xi.data(),info);
+        VectorXd Xiold=HarmonicGradient(springlist,XY,1.0,0.0,1.0);
+        
+        //test for the new CG method
+        int iter;
+        double fret;
+        cout<<EnergyNetworkn(XY.data(),info)<<" FUCK NOH"<<endl;
+        frprmn(XY.data(),XY.size(),1.0e-10,&iter,&fret,EnergyNetworkn,HarmonicGradientn,info);
+        cout<<EnergyNetworkn(XY.data(),info)<<" FUCK YEAH"<<endl;
+        //end test
+        cout<<iter<<"       steps"<<endl;
 
-        double Z;
-        if(NumberMikado>0){
-            XY=initiateRandomNetwork(springlist,springpairs,mikado,mikorig,ELONSTICK,Connection,nodes,
-                                    singleNodes,conmatr,Clusterv,numberdistribution,NumberMikado,background,XYb,
-                                    SEED,LStick,rlenshort,rlenlong,k1,k2,stretchf,
-                                    springfile,anglefile,mikadofile,clusterdistribution,cluster,
-                                    clusterdata,nodefile);
-                                    cout<<"gethere"<<endl;
-        } else{
-            XY=XYb;
-            springlist=background;
-        }
-        NumberMikado++;
-        Z=Connectivity(springlist);
-
-
-    
-    
-    
-    //double Z=Connectivity(springlist);
-    //cout<<"<Z>="<<Z<<endl;
-    cout<<springlist.size()<<endl;
-    //cutspring(springlist,100);
     Write_Springs_2txt(springfile,springlist);
+
     //Shearing
-    vector<vector<int>> springp;
+    vector<vector<int>> springp(0);
     shearsteps(deltaboxdx,NumberStepsRight,NumberStepsLeft,springlist,
-               springp,XY,bendingOn,kappa,Nit,tolGradE,shearcoordinates,shearenergy);
+            springp,XY,bendingOn,kappa,Nit,tolGradE,shearcoordinates,shearenergy);
     XYfile.close();
     shearcoordinates.close();
     shearenergy.close();
-    
+    zfile.close();
     cout<<endl;
     return 0;
 }

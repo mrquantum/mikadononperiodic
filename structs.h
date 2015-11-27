@@ -40,5 +40,19 @@ struct node{
   double y;
 };
 
+struct networkinfo{
+    std::vector<spring> springlist;
+    std::vector<std::vector<int>> springpairs;
+    double g11,g12,g22;
+    int size;
+    
+};
+
+
+struct gradstruct{//this struct denotes the partiel derivative of any function wrth the ith variable. 
+    double ddxi;
+    double ddyi;
+    int i;
+};
 
 #endif

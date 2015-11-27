@@ -23,7 +23,7 @@ double prestress(const vector<spring> &springlist,
         double Est0=Energynetwork(springlist,XY,1,0,1);
         double Eben0=Ebend(springpairs,springlist,XY,1,0,1,kappa);
         double Etot0=Est0+Eben0;
-        cout<<"E0="<<Etot0<<endl;
+        //cout<<"E0="<<Etot0<<endl;
         double EstN;
         double EbenN;
         double EtotN;
@@ -48,12 +48,12 @@ double prestress(const vector<spring> &springlist,
        EstN=Energynetwork(springlist,XY,g11,g12,g22);
        EbenN=Ebend(springpairs,springlist,XY,g11,g12,g22,kappa);
        EtotN=EstN+EbenN;
-       cout<<"En="<<EtotN<<endl;
+       //cout<<"En="<<EtotN<<endl;
        double dE=EtotN-Etot0;
        double dV=2*eps;
        double P=-dE/dV;
        
-       cout<<"THE ENERGY DIFFERENCE "<<dE<<endl;
+       //cout<<"THE ENERGY DIFFERENCE "<<dE<<endl;
        return P;       
 }
 

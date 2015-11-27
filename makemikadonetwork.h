@@ -64,4 +64,7 @@ void makeanddeletebondsonbackground(vector<spring> &springlist,const vector<elon
                         stick &CURRENTSTICK,vector<double> &posonsticki,Eigen::VectorXd &Xb,Eigen::VectorXd &Yb,
                         int background_size,int sticknr,int elnr);
 
+void ordernodes(std::vector<node> &nodes,std::vector<spring> &springlist);
+
+
 #endif // MAKEMIKADONETWORK_H

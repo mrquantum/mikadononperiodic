@@ -22,6 +22,10 @@ double Energynetwork(const std::vector<spring> &springlist,
                      const double g12,
                      const double g22);
 
+
+double EnergyNetworkn(double *XY,networkinfo parameters);
+void HarmonicGradientn(double *p,double *xi,networkinfo params);
+
 double Ebend(const std::vector<std::vector<int>> &springpairs,
              const std::vector<spring> &springlist,
              const Eigen::VectorXd &XY,

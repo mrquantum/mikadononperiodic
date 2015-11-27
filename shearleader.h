@@ -40,3 +40,6 @@ void shearsteps(double deltaboxdx,
 	       double tolGradE,
 	       ofstream &shearcoordinates,
 	       ofstream &shearenergy);
+
+Eigen::VectorXd shake(int size, double Temperature);
+double EnergyNLopt(unsigned n, const double *XY, double *gradE, void *my_func_data);
