@@ -15,9 +15,9 @@
 #define CGOLD 0.3819660
 #define ZEPS 1.0e-10
 #define MOV3(a,b,c, d,e,f) (a)=(d);(b)=(e);(c)=(f);
-#include "nlopt.hpp"
+//#include "nlopt.hpp"
 #include "structs.h"
-//#include "cgmethod.h"
+#include "cgmethod.h"
 
 using namespace std;
 using namespace Eigen;
