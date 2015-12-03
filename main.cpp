@@ -205,6 +205,8 @@ int main (int argc,char **argv)
                                             SEED,LStick,rlenshort,rlenlong,k1,k2,stretchf,
                                             springfile,anglefile,mikadofile,clusterdistribution,cluster,
                                             clusterdata,nodefile);
+                    Z=Connectivity(springlist);
+                    zfile<<NumberMikado<<"\t"<<Z<<endl;
                 } else{
                     XY=XYb;
                     springlist=background;
@@ -215,29 +217,52 @@ int main (int argc,char **argv)
                 number++;
         }while(Z<Z_aim);
     }
-    
+
         networkinfo info;
         info.g11=1.0;
         info.g12=0.0;
         info.g22=1.0;
         info.springlist=springlist;
+        info.springpairs=springpairs;
         info.size=XY.size();
-  
+        info.kappa=kappa;
+
         VectorXd Xi(XY.size());
         HarmonicGradientn(XY.data(),Xi.data(),info);
         VectorXd Xiold=HarmonicGradient(springlist,XY,1.0,0.0,1.0);
-        
+
         //test for the new CG method
-        int iter;
-        double fret;
-        cout<<EnergyNetworkn(XY.data(),info)<<" FUCK NOH"<<endl;
-        frprmn(XY.data(),XY.size(),1.0e-10,&iter,&fret,EnergyNetworkn,HarmonicGradientn,info);
-        cout<<EnergyNetworkn(XY.data(),info)<<" FUCK YEAH"<<endl;
-        //end test
-        cout<<iter<<"       steps"<<endl;
+//         int iter;
+//         double fret;
+//         cout<<EnergyNetworkn(XY.data(),info)<<" FUCK NOH"<<endl;
+//         frprmn(XY.data(),XY.size(),1.0e-10,&iter,&fret,EnergyNetworkn,HarmonicGradientn,info);
+//         cout<<EnergyNetworkn(XY.data(),info)<<" FUCK YEAH"<<endl;
+//         //end test
+//         cout<<iter<<"       steps"<<endl;
 
     Write_Springs_2txt(springfile,springlist);
-
+    
+    
+    //Here some testingcodm
+//     VectorXd bendingold;
+//     VectorXd bendingnew(XY.size());
+//     for(int i=0;i<XY.size();i++){
+//         bendingnew(i)=0;
+//     }
+//     
+//     //The PHYS BEND GRAD STILL NOT OK
+//     XY(11)=XY(11)+0.01;
+//     bendingold=BendingGrad(springpairs,springlist,XY,kappa,1.0,0.0,1.0);
+//     physbendinggradient(XY.data(),bendingnew.data(),info);
+//     
+//     double su=0.0;
+//     for(int i=0;i<bendingold.size();i++){
+//         //cout<<bendingold(i)<<"\t"<<bendingnew(i)<<"\t"<<bendingold(i)-bendingnew(i)<<endl;
+//         su+=pow(bendingold(i)-bendingnew(i),2);
+//     }
+//     cout<<"diff between two grads=  "<<sqrt(su)<<endl;
+    
+    
     //Shearing
     vector<vector<int>> springp(0);
     shearsteps(deltaboxdx,NumberStepsRight,NumberStepsLeft,springlist,

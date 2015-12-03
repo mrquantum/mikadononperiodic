@@ -230,6 +230,101 @@ double thsq(double x1,double y1, double x2, double y2, double x3, double y3, dou
     
 }
 
+
+//the bendinggradient has two components: 
+//1) grad(1/l12+l23)*thsq, thsq is approximated by f
+//2) grad(thsq)*1/(l12+l23)
+
+vector<gradstruct> bendgradpart1(double f, double L12, double L23,vector<gradstruct> &gradL12,vector<gradstruct> &gradL23)
+{
+    vector<gradstruct> grad(0);
+    gradstruct element;
+    double prefactor=-f/pow((L12+L23),2);
+    for(int j=0;j<gradL12.size();j++){
+        element.ddxi=prefactor*gradL12[j].ddxi;
+        element.ddyi=prefactor*gradL12[j].ddyi;
+        element.i=gradL12[j].i;
+        grad.push_back(element);
+    }
+    
+    for(int j=0;j<gradL23.size();j++){
+        element.ddxi=prefactor*gradL23[j].ddxi;
+        element.ddyi=prefactor*gradL23[j].ddyi;
+        element.i=gradL23[j].i;
+        grad.push_back(element);
+    }
+    return grad;
+}
+
+vector<gradstruct> bendgradpart2(double L12, double L23, 
+                             double x1,double y1, double x2, double y2, double x3, double y3,
+                             int i1,int i2,int i3,
+                             vector<gradstruct> &gradL12, vector<gradstruct> &gradL23)
+{
+    gradstruct el1,el2,el3,el4,element;
+    vector<gradstruct> grad(0);
+    double prefx=2*((x2-x1)/L12-(x3-x2)/L23);
+    double prefy=2*((y2-y1)/L12-(y3-y2)/L23);
+    double prefactor1=1.0/(L12+L23);
+    double prefactor2=1.0/pow(L12,2);
+    double prefactor3=1.0/pow(L23,2);
+    
+    
+    el1.ddxi=prefactor1*prefx/L12;
+    el1.ddyi=prefactor1*prefy/L12;
+    el1.i=i2;
+    
+    el2.ddxi=-prefactor1*prefx/L12;
+    el2.ddyi=-prefactor1*prefy/L12;
+    el2.i=i1;
+    
+    el3.ddxi=-prefactor1*prefx/L23;
+    el3.ddyi=-prefactor1*prefy/L23;
+    el3.i=i3;
+    
+    el4.ddxi=prefactor1*prefx/L23;
+    el4.ddyi=prefactor1*prefy/L23;
+    el4.i=i2;
+    
+    grad.push_back(el1);
+    grad.push_back(el2);
+    grad.push_back(el3);
+    grad.push_back(el4);
+
+    double pg1=-prefactor1*prefx*(x2-x1)*prefactor2;
+    for(int k=0;k<gradL12.size();k++){
+        element.ddxi=gradL12[k].ddxi*pg1;
+        element.ddyi=gradL12[k].ddyi*pg1;
+        element.i=gradL12[k].i;
+        grad.push_back(element);
+    }
+    double pg2=prefactor1*prefx*(x3-x2)*prefactor3;
+    for(int k=0;k<gradL23.size();k++){
+        element.ddxi=gradL23[k].ddxi*pg2;
+        element.ddyi=gradL23[k].ddyi*pg2;
+        element.i=gradL23[k].i;
+        grad.push_back(element);
+    }
+    
+    double pg3=-prefactor1*prefy*(y2-y1)*prefactor2;
+    for(int k=0;k<gradL12.size();k++){
+        element.ddxi=gradL12[k].ddxi*pg3;
+        element.ddyi=gradL12[k].ddyi*pg3;
+        element.i=gradL12[k].i;
+        grad.push_back(element);
+    }
+    
+    double pg4=-prefactor1*prefy*(y3-y2)*prefactor3;
+    for(int k=0;k<gradL23.size();k++){
+        element.ddxi=gradL23[k].ddxi*pg4;
+        element.ddyi=gradL23[k].ddyi*pg4;
+        element.i=gradL23[k].i;
+        grad.push_back(element);
+    }
+    return grad;
+    
+}
+
 void physbendinggradient(double *p, double *g,networkinfo &info)
 //input: positions and gradient and the network info struct
 {
@@ -242,39 +337,68 @@ void physbendinggradient(double *p, double *g,networkinfo &info)
     double x1,y1,x2,y2,x3,y3,L12,L23;
     double thetasq;
     int num=(info.size)/2;
+    double kappa=info.kappa;
     int wlr1,wlr2,wud1,wud2;
     vector<gradstruct> gradLen12(0);
     vector<gradstruct> gradLen23(0);
+    vector<gradstruct> bendgrad1(0);
+    vector<gradstruct> bendgrad2(0);
     
     //this is gonna be a loop. 
-    springone=springpairs[0][0];
-    springtwo=springpairs[0][1];
+    for(int ii=0;ii<springpairs.size();ii++){
+        springone=springpairs[ii][0];
+        springtwo=springpairs[ii][1];
+        
+        one=springlist[springone].one;
+        two=springlist[springone].two;
+        three=springlist[springtwo].two;
+        wlr1=springlist[springone].wlr;
+        wud1=springlist[springone].wud;
+        wlr2=springlist[springtwo].wlr;
+        wud2=springlist[springtwo].wud;
+        
+        x1=p[one];
+        y1=p[one+num];
+        x2=p[two]+wlr1;
+        y2=p[two+num]+wud1;
+        x3=p[three]+wlr1+wlr2;
+        y3=p[three+num]+wud1+wud2;
+        
+        L12=L_ij(x1,y1,x2,y2);
+        L23=L_ij(x2,y2,x3,y3);
+        
+        thetasq=thsq(x1,y1,x2,y2,x3,y3,L12,L23);
+        gradLen12=gradL(one,two,x1,y1,x2,y2,L12);
+        gradLen23=gradL(two,three,x2,y2,x3,y3,L23);
+        
+        bendgrad1=bendgradpart1(thetasq,L12,L23,gradLen12,gradLen23);
+        bendgrad2=bendgradpart2(L12,L23,x1,y1,x2,y2,x3,y3,one,two,three,gradLen12,gradLen23);
     
-    one=springlist[springone].one;
-    two=springlist[springone].two;
-    three=springlist[springtwo].two;
-    wlr1=springlist[springone].wlr;
-    wud1=springlist[springone].wud;
-    wlr2=springlist[springtwo].wlr;
-    wud2=springlist[springtwo].wud;
+        //now fill the gradient vector
+        int pos;
+        for(int k=0;k<bendgrad1.size();k++){
+            pos=bendgrad1[k].i;
+            g[pos]+=kappa*bendgrad1[k].ddxi;
+            g[pos+num]+=kappa*bendgrad1[k].ddyi;
+        }
+        for(int k=0;k<bendgrad2.size();k++){
+            pos=bendgrad2[k].i;
+            g[pos]+=kappa*bendgrad2[k].ddxi;
+            g[pos+num]+=kappa*bendgrad2[k].ddyi;
+        }
+        
+        cout<<"comps first part"<<endl;
+         for(int m=0;m<bendgrad1.size();m++){
+            cout<<bendgrad1[m].i<<"  "<<bendgrad1[m].ddxi<<"  "<<bendgrad1[m].ddyi<<endl;
+        }
+        
+        cout<<"comps scnd part"<<endl;
+
+        for(int m=0;m<bendgrad2.size();m++){
+            cout<<bendgrad2[m].i<<"  "<<bendgrad2[m].ddxi<<"  "<<bendgrad2[m].ddyi<<endl;
+        }
+    }
     
-    x1=p[one];
-    y1=p[one+num];
-    x2=p[two]+wlr1;
-    y2=p[two+num]+wud1;
-    x3=p[three]+wlr1+wlr2;
-    y3=p[three+num]+wud1+wud2;
-    
-    L12=L_ij(x1,y1,x2,y2);
-    L23=L_ij(x2,y2,x3,y3);
-    
-    //gradLen12=gradL(one,two,x1,y1,x2,y2,L12);
-    //gradLen23=gradL(two,three,x2,y2,x3,y3,L23);
-    
-    thetasq=thsq(x1,y1,x2,y2,x3,y3,L12,L23);
-    
-    
-    //Tomorrow construct the gradient! 
     
 }
 

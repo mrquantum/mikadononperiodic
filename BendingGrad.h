@@ -27,6 +27,14 @@ double l_ij(int springnr, Eigen::VectorXd &XY,vector<spring> &springlist,double 
 double L_ij(double x1,double y1,double x2,double y2);
 vector<gradstruct> gradL(int one, int two,double x1,double y1,double x2,double y2,double Lij);
 double thsq(double x1,double y1, double x2, double y2, double x3, double y3, double L12, double L23);
+
+vector<gradstruct> bendgradpart1(double f, double L12, double L23,vector<gradstruct> &gradL12,vector<gradstruct> &gradL23);
+
+vector<gradstruct> bendgradpart2(double L12, double L23, 
+                             double x1,double y1, double x2, double y2, double x3, double y3,
+                             int i1,int i2,int i3,
+                             vector<gradstruct> &gradL12, vector<gradstruct> &gradL23);
+
 void physbendinggradient(double *p, double *g,networkinfo &info);
 
 

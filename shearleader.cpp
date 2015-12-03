@@ -23,7 +23,7 @@
 //#include "exportfiles.h"
 #include "writefunctions.h"
 #include "cgwoagony.h"
-#include <nlopt.h>
+//#include <nlopt.h>
 #include "cgmethod.h"
 
 using namespace std;

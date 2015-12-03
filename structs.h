@@ -44,6 +44,7 @@ struct networkinfo{
     std::vector<spring> springlist;
     std::vector<std::vector<int>> springpairs;
     double g11,g12,g22;
+    double kappa;
     int size;
     
 };
