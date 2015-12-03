@@ -7,6 +7,6 @@
 #include "EnergyandGradients.h"
 #include "BendingGrad.h"
 #include<iostream>
-#include <nlopt.hpp>
+//#include <nlopt.hpp>
 
 using namespace nlopt;

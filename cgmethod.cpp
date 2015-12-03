@@ -17,7 +17,7 @@
 #define MOV3(a,b,c, d,e,f) (a)=(d);(b)=(e);(c)=(f);
 #include "nlopt.hpp"
 #include "structs.h"
-#include "cgmethod.h"
+//#include "cgmethod.h"
 
 using namespace std;
 using namespace Eigen;
