@@ -26,4 +26,7 @@ double EbendingC(const vector< vector< int > >& springpairs,
                  const double g11, const double g12, const double g22);
 
 
+double EbendingCn(double *XY, networkinfo parameters);
+
+
 #endif

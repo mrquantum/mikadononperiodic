@@ -45,6 +45,7 @@ struct networkinfo{
     std::vector<std::vector<int>> springpairs;
     double g11,g12,g22;
     double kappa;
+    int bendingon;
     int size;
     
 };

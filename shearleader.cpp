@@ -29,6 +29,33 @@
 using namespace std;
 using namespace Eigen;
 
+double Efunc2use(double *p,networkinfo parameters){
+  double E;
+  int bendingon=parameters.bendingon;
+  if(bendingon==0){
+      E=EnergyNetworkn(p,parameters);
+  } else if(bendingon ==1){
+      E=EnergyNetworkn(p,parameters)+EbendingCn(p,parameters);
+  }
+  return E;
+}
+
+void grad2use(double *p,double *xi, networkinfo parameters)
+{
+  int bendingOn=parameters.bendingon;
+  if(bendingOn==0){
+      HarmonicGradientn(p,xi,parameters);
+  }else if(bendingOn==1){
+      HarmonicGradientn(p,xi,parameters);
+      int size=parameters.size;
+      double xb[size];
+      BendinggradN(p,xb,parameters);
+      for(int j=0;j<size;j++){
+	xi[j]=xi[j]+xb[j];
+      }
+  }
+}
+
 void shearsteps(double deltaboxdx,
                int NumberStepsRight,
                int NumberStepsLeft,
@@ -60,9 +87,11 @@ void shearsteps(double deltaboxdx,
     info.springlist=springlist;
     info.springpairs=springpairs;
     info.size=XY.size();
+    info.bendingon=bendingOn;
     //first do a calibtration
-    frprmn(XY.data(),XY.size(),1.0e-10,&iter,&fret,EnergyNetworkn,HarmonicGradientn,info);
-    
+    //frprmn(XY.data(),XY.size(),1.0e-10,&iter,&fret,EnergyNetworkn,HarmonicGradientn,info);
+    frprmn(XY.data(),XY.size(),1.0e-10,&iter,&fret,Efunc2use,grad2use,info);
+
     //CGAGONY(XY,springlist,springpairs,bendingOn,kappa,1.0,0.0,1.0);
     //then shake
     //XY=XY+shake(XY.size(),0.000001);
@@ -81,15 +110,21 @@ void shearsteps(double deltaboxdx,
         cout<<"length before Bend\t"<<sqrt(BendingGrad(springpairs,springlist,XY,kappa,g11,g12,g22)
             .dot(BendingGrad(springpairs,springlist,XY,kappa,g11,g12,g22)))<<endl;
         
-        frprmn(XY.data(),XY.size(),1.0e-6,&iter,&fret,EnergyNetworkn,HarmonicGradientn,info);
-        cout<<"Es= "<<fret<<endl;
+	  //frprmn(XY.data(),XY.size(),1.0e-6,&iter,&fret,EnergyNetworkn,HarmonicGradientn,info);
+	   frprmn(XY.data(),XY.size(),1.0e-6,&iter,&fret,Efunc2use,grad2use,info);
+	   
+        //CGAGONY(XY,springlist,springpairs,bendingOn,kappa,g11,g12,g22);
+
+	cout<<"Es= "<<fret<<endl;
 
            cout<<"length after Harm\t"<<HarmonicGradient(springlist,XY,g11,g12,g22).dot(HarmonicGradient(springlist,XY,g11,g12,g22))<<endl;
            cout<<"length after Bend\t"<<BendingGrad(springpairs,springlist,XY,kappa,g11,g12,g22).dot(BendingGrad(springpairs,springlist,XY,kappa,g11,g12,g22))<<endl;
         
         //cout<<"lengrad="<<lenGrad<<endl;
         Write_ShearCoordinates_2txt(shearcoordinates,XY);
-        Write_ShearEnergy_2txt(shearenergy,boxdx,fret,ESTRETCH,EBEND,lenGrad,conjsteps);
+	ESTRETCH=EnergyNetworkn(XY.data(),info);
+	EBEND=EbendingCn(XY.data(),info);
+	Write_ShearEnergy_2txt(shearenergy,boxdx,fret,ESTRETCH,EBEND,lenGrad,iter);
 
         if(k<NumberStepsRight){
             boxdx=boxdx+deltaboxdx;

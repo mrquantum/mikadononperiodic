@@ -28,6 +28,12 @@
 
 using namespace std;
 
+double Efunc2use(double *p,networkinfo parameters);
+void grad2use(double *p,double *xi, networkinfo parameters);
+
+
+
+
 void shearsteps(double deltaboxdx,
                int NumberStepsRight,
                int NumberStepsLeft,

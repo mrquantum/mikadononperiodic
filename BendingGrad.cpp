@@ -196,6 +196,154 @@ double F_for_bending(int springone, int springtwo,vector<spring> &springlist,Vec
 }
 
 
+void BendinggradN(double *p,double *xi,networkinfo params)
+{
+    double g11=params.g11;
+    double g12=params.g12;
+    double g22=params.g22;
+    vector<spring> springlist=params.springlist;
+    vector<vector<int>> springpairs=params.springpairs;
+    int size=params.size;
+    int one,two,num=size/2;
+    double kappa=params.kappa;
+    for(int i=0;i<size;i++){
+      xi[i]=0.0;
+    }
+    
+        for(int i=0; i<springpairs.size(); i++){
+        int springone=springpairs[i][0];
+        int springtwo=springpairs[i][1];
+        int one=springlist[springone].one;
+        int two=springlist[springone].two;
+        int three=springlist[springtwo].two;
+        
+        double x1=p[one];
+        double y1=p[one+num];
+        double x2=p[two]+springlist[springone].wlr;
+        double y2=p[two+num]+springlist[springone].wud;
+        double x3=p[three]+springlist[springone].wlr+springlist[springtwo].wlr;
+        double y3=p[three+num]+springlist[springone].wud+springlist[springtwo].wud;
+        
+        double dx12=x2-x1;
+        double dy12=y2-y1;
+        double dy23=y3-y2;
+        double dx23=x3-x2;
+        double dy13=y3-y1;
+        
+        
+        double d12squared=g11*pow(dx12,2) + 2*g12*dx12*dy12 + g22*pow(dy12,2);
+        double d23squared=g11*pow(dx23,2) + 2*g12*dx23*dy23 + g22*pow(dy23,2);
+        double d12=sqrt(d12squared);
+        double d23=sqrt(d23squared);
+    
+        xi[one]=xi[one]+
+        (
+            (
+                2*(
+                    -((-2*g11*dx12 - 2*g12*dy12)*
+            (g11*dx12 + g12*dy12))/(2.*pow(d12squared,1.5))   -g11/d12
+             
+    
+       )
+            *   (
+                    (g11*dx12 + g12*dy12)/d12 -(g11*dx23 + g12*dy23)/d23
+                ) +
+                2*(-((-2*g11*dx12 - 2*g12*dy12)*(g12*dx12 + g22*dy12))/(2.*pow(d12squared,1.5))   
+                    -g12/d12)*((g12*dx12 + g22*dy12)/d12 -(g12*dx23 + g22*dy23)/d23)  
+            )
+            /(d12 + sqrt(g11*pow(dx23,2) + 2*g12*dx23*dy13 + g22*pow(dy13,2)))  
+            -   (  (-2*g11*dx12 - 2*g12*dy12)*(  pow((g11*dx12 + g12*dy12)/d12 - (g11*dx23 + g12*dy23)
+            /d23,2) +   pow((g12*dx12 + g22*dy12)/d12 -(g12*dx23 + g22*dy23)/d23,2))  )  
+            /(2.*d12*pow(d12 + sqrt(g11*pow(dx23,2) + 2*g12*dx23*(dy13) + g22*pow(dy13,2)),2))
+        );
+        
+   
+        xi[two]=  xi[two]+( (2*  (  -(  (g11*dx12 + g12*dy12)*
+        (2*g11*dx12 + 2*g12*dy12) )/(2.*pow(d12squared,1.5))   +g11/d12   +   
+        (  (-2*g11*dx23 - 2*g12*dy23)*(g11*dx23 + g12*dy23) )/(2.*pow(d23squared,1.5))   +g11/d23  
+        )  *  (  (g11*dx12 + g12*dy12)/d12 - (g11*dx23 + g12*dy23)/d23  )    +   2*(  
+        -( (2*g11*dx12 + 2*g12*dy12)*(g12*dx12 + g22*dy12) )/(2.*pow(d12squared,1.5))   +   
+        g12/d12 +   (  (-2*g11*dx23 - 2*g12*dy23)*(g12*dx23 + g22*dy23) )/(2.*pow(d23squared,1.5))   
+        +   g12/d23  )  *   ( (g12*dx12 + g22*dy12)/d12 - (g12*dx23 + g22*dy23)/d23  )  )/  
+        (d12 + sqrt(g11*pow(dx23,2) + 2*g12*dx23*dy13 + g22*pow(dy13,2)))  -    (   (  
+        (2*g11*dx12 + 2*g12*dy12)/(2.*d12) +   
+        (-2*g11*dx23 - 2*g12*dy13)/(2.*sqrt(g11*pow(dx23,2) + 2*g12*dx23*(dy13) + g22*pow(dy13,2)))   
+        )*   (   pow((g11*dx12 + g12*dy12)/d12 -(g11*dx23 + g12*dy23)/d23,2)   
+        + pow((g12*dx12 + g22*dy12)/d12 -(g12*dx23 + g22*dy23)/d23,2)   )   )   
+        /pow(d12 +sqrt(g11*pow(dx23,2) + 2*g12*dx23*dy13 + g22*pow(dy13,2)),2));
+        
+        
+        
+        xi[three]=xi[three]+(  (2*(  (  (g11*dx23 + g12*dy23)*
+        (2*g11*dx23 + 2*g12*dy23) )/(2.*pow(d23squared,1.5))   -   
+        g11/d23)*( (g11*dx12 + g12*dy12)/d12 - (g11*dx23 + g12*dy23)/d23  ) +   
+        2*( ( (2*g11*dx23 + 2*g12*dy23)*(g12*dx23 + g22*dy23) )  
+        /(2.*pow(d23squared,1.5)) - g12/d23  )*   
+        ( (g12*dx12 + g22*dy12)/d12 - (g12*dx23 + g22*dy23)/d23  )  )  /  
+        (d12 + sqrt(g11*pow(dx23,2) + 2*g12*dx23*(dy13) + g22*pow(dy13,2))  )   -   
+        (  (2*g11*dx23 + 2*g12*(dy13))*  (pow((g11*dx12 + g12*dy12)/d12 - (g11*dx23 + g12*dy23)
+        /d23,2) +   pow((g12*dx12 + g22*dy12)/d12 - (g12*dx23 + g22*dy23)/d23,2)  )  )  /  
+        (2.*sqrt(g11*pow(dx23,2) + 2*g12*dx23*dy13 + g22*pow(dy13,2))*  
+        pow(d12 + sqrt(g11*pow(dx23,2) + 2*g12*dx23*dy13 + g22*pow(dy13,2)),2)  ));
+
+        
+        xi[one+num]=xi[one+num]+(  (2*  (-( (g11*dx12 + g12*dy12)*
+        (-2*g12*dx12 - 2*g22*dy12) )/(2.*pow(d12squared,1.5))   
+        - g12/d12)*( (g11*dx12 + g12*dy12)/d12 - (g11*dx23 + g12*dy23)/d23  )   +   
+        2*(-(  (-2*g12*dx12 - 2*g22*dy12)*
+        (g12*dx12 + g22*dy12) )/(2.*pow(d12squared,1.5)) - g22/d12)  *   
+        ( (g12*dx12 + g22*dy12)/d12 - (g12*dx23 + g22*dy23)/d23) )/  
+        (d12 + sqrt(g11*pow(dx23,2) + 2*g12*dx23*dy13 + g22*pow(dy13,2)))   -   (   
+        ( (-2*g12*dx12 - 2*g22*dy12)/(2.*d12) +   (-2*g12*dx23 - 2*g22*
+        (dy13))/(2.*sqrt(g11*pow(dx23,2) + 2*g12*dx23*(dy13) + g22*pow(dy13,2)))  )  *  (   
+        pow((g11*dx12 + g12*dy12)/d12 - (g11*dx23 + g12*dy23)/d23,2)    
+        + pow((g12*dx12 + g22*dy12)/d12 - (g12*dx23 + g22*dy23)/d23,2)  )    )/  
+        pow(d12 +sqrt(g11*pow(dx23,2) + 2*g12*dx23*(dy13) + g22*pow(dy13,2)),2));
+
+        
+        xi[two+num]= xi[two+num]+( (2*  (  -((g11*dx12 + g12*dy12)*
+        (2*g12*dx12 + 2*g22*dy12))/(2.*pow(d12squared,1.5)) +   g12/d12 +   ((g11*dx23 + g12*dy23)*
+        (-2*g12*dx23 - 2*g22*dy23))/   (2.*pow(d23squared,1.5)) +   g12/d23)*         
+        ((g11*dx12 + g12*dy12)/d12 -   (g11*dx23 + g12*dy23)/d23) +    2*(-((g12*dx12 + g22*dy12)*
+        (2*g12*dx12 + 2*g22*dy12))/   (2.*pow(d12squared,1.5)) +   g22/d12 +   
+        ((-2*g12*dx23 - 2*g22*dy23)*(g12*dx23 + g22*dy23))/   (2.*pow(d23squared,1.5)) +   
+        g22/d23)*   ((g12*dx12 + g22*dy12)/d12 -   (g12*dx23 + g22*dy23)/d23))/  (d12 +    
+        sqrt(g11*pow(dx23,2) + 2*g12*dx23*(dy13) + g22*pow(dy13,2))) -    
+        ((2*g12*dx12 + 2*g22*dy12)*(pow((g11*dx12 + g12*dy12)/  d12 -    
+        (g11*dx23 + g12*dy23)/d23,2) +   pow((g12*dx12 + g22*dy12)/d12 -    
+        (g12*dx23 + g22*dy23)/d23,2)))/  (2.*d12*   pow(d12 +   sqrt(g11*pow(dx23,2) + 2*g12*dx23*
+        (dy13) + g22*pow(dy13,2)),2)));
+        
+        xi[three+num]=xi[three+num]+( (2*(((g11*dx23 + g12*dy23)*(2*g12*dx23 + 2*g22*dy23))/   
+        (2.*pow(d23squared,1.5)) -   g12/d23)*   ((g11*dx12 + g12*dy12)/d12 -   
+        (g11*dx23 + g12*dy23)/d23) +    2*(((g12*dx23 + g22*dy23)*(2*g12*dx23 + 2*g22*dy23))/   
+        (2.*pow(d23squared,1.5)) -   g22/d23)*   ((g12*dx12 + g22*dy12)/d12 -   
+        (g12*dx23 + g22*dy23)/d23))/  (d12 +    sqrt(g11*pow(dx23,2) + 2*g12*dx23*
+        dy13 + g22*pow(dy13,2))) -    ((2*g12*dx23 + 2*g22*(dy13))*(pow((g11*dx12 + g12*dy12)/  d12 -    
+        (g11*dx23 + g12*dy23)/d23,2) +   pow((g12*dx12 + g22*dy12)/d12 -    
+        (g12*dx23 + g22*dy23)/d23,2)))/  (2.*sqrt(g11*pow(dx23,2) + 2*g12*dx23*(dy13) + g22*pow(dy13,2))*   
+        pow(d12 +   sqrt(g11*pow(dx23,2) + 2*g12*dx23*(dy13) + g22*pow(dy13,2)),2)));
+
+
+
+    }
+  for(int i=0;i<size;i++){
+    xi[i]=kappa*xi[i];
+  }
+  
+}
+
+
+
+
+
+
+
+
+
+
+
+
 
 double L_ij(double x1,double y1,double x2,double y2){
     return sqrt(pow((x2-x1),2)+pow((y2-y1),2));

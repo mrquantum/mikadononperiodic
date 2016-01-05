@@ -266,7 +266,7 @@ int main (int argc,char **argv)
     //Shearing
     vector<vector<int>> springp(0);
     shearsteps(deltaboxdx,NumberStepsRight,NumberStepsLeft,springlist,
-            springp,XY,bendingOn,kappa,Nit,tolGradE,shearcoordinates,shearenergy);
+            springpairs,XY,bendingOn,kappa,Nit,tolGradE,shearcoordinates,shearenergy);
     XYfile.close();
     shearcoordinates.close();
     shearenergy.close();
