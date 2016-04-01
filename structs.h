@@ -2,6 +2,11 @@
 #define STRUCTS_H
 #include <vector>
 #include <array>
+#include "eigen3/Eigen/Core"
+#include "eigen3/Eigen/LU"
+#include "eigen3/Eigen/Sparse"
+
+
 
 struct stick{
   double x,y,th,length;
@@ -44,17 +49,29 @@ struct networkinfo{
     std::vector<spring> springlist;
     std::vector<std::vector<int>> springpairs;
     double g11,g12,g22;
+    double sheardeformation;
     double kappa;
     int bendingon;
     int size;
-    
+    Eigen::VectorXd effkappa;
 };
 
+struct triplet{
+    std::vector<std::vector<int>> springpairs;
+    Eigen::VectorXd EffKappa; 
+};
 
 struct gradstruct{//this struct denotes the partiel derivative of any function wrth the ith variable. 
     double ddxi;
     double ddyi;
     int i;
 };
+
+struct stresstensor{
+    double sxx;
+    double syy;
+    double sxy;
+};
+
 
 #endif

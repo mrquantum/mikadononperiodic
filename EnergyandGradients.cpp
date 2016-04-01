@@ -7,6 +7,7 @@
 #include "EnergyandGradients.h"
 #include "BendingGrad.h"
 #include<iostream>
+#include "simpleBendingGrad.h"
 using namespace Eigen;
 using namespace std;
 const double pi=4.0*atan(1.0);
@@ -100,7 +101,7 @@ double EnergyNetworkn(double *XY,networkinfo parameters){
     double g12=parameters.g12;
     double g22=parameters.g22;
     int size=parameters.size;
-    
+    double sheardeformation=parameters.sheardeformation;
     double Energy=0;
     int num=size/2;
     double k,L;
@@ -108,22 +109,10 @@ double EnergyNetworkn(double *XY,networkinfo parameters){
     int one,two;
     double dE;
 
-    for(int i=0;i<springlist.size();i++){
-        //cout<<"nrs"<<springlist[i].one<<" "<<springlist[i].one+num<<"     "<<springlist[i].two<<" "<<springlist[i].two+num<<endl;
-        k=springlist[i].k;
-        L=springlist[i].rlen;
-        x1=XY[springlist[i].one];
-        x2=XY[springlist[i].two]+springlist[i].wlr;
-        y1=XY[springlist[i].one+num];
-        y2=XY[springlist[i].two+num]+springlist[i].wud;
-        dE= 0.5*k*pow(sqrt(
-            g11*(x1-x2)*(x1-x2)+
-            g22*(y1-y2)*(y1-y2)+
-            2*g12*(x1-x2)*(y1-y2))-L,2);
-        Energy=Energy+dE;
-    }
-  return Energy; 
+    Eigen::Map<Eigen::VectorXd> XY_temp( XY, size );
 
+    double E=StretchEnergy(springlist,XY_temp,sheardeformation);
+    return E;
 }
 
 
@@ -133,6 +122,7 @@ void HarmonicGradientn(double *p,double *xi,networkinfo params)
     double g11=params.g11;
     double g12=params.g12;
     double g22=params.g22;
+    double sheardeformation=params.sheardeformation;
     vector<spring> springlist=params.springlist;
     int size=params.size;
     
@@ -148,24 +138,33 @@ void HarmonicGradientn(double *p,double *xi,networkinfo params)
         xi[i]=0;
     }
     
-  
-    for(int i=0;i<springlist.size();i++){
-        one=springlist[i].one;
-        two=springlist[i].two;
-        dx=x[one]-(x[two]+springlist[i].wlr);
-        dy=y[one]-(y[two]+springlist[i].wud);
-        k=springlist[i].k;
-        L=springlist[i].rlen;
-        dist=sqrt( g11*dx*dx+ 2*g12*dx*dy+ g22*dy*dy );
-   
-        gradx= k*(dist-L)*(g11*dx+g12*dy)/dist;
-        grady= k*(dist-L)*(g22*dy+g12*dx)/dist;
+    Eigen::Map<Eigen::VectorXd> XY_temp( p, size );
 
-        xi[one] += gradx;
-        xi[two] -= gradx;
-        xi[one+num] += grady;
-        xi[two+num] -= grady;
+    VectorXd grad=HarmonicGradPhys(springlist,XY_temp,sheardeformation);
+
+    for(int i=0;i<grad.size();i++){
+        xi[i]=grad(i);
     }
+    
+    
+    
+//     for(int i=0;i<springlist.size();i++){
+//         one=springlist[i].one;
+//         two=springlist[i].two;
+//         dx=x[one]-(x[two]+springlist[i].wlr);
+//         dy=y[one]-(y[two]+springlist[i].wud);
+//         k=springlist[i].k;
+//         L=springlist[i].rlen;
+//         dist=sqrt( g11*dx*dx+ 2*g12*dx*dy+ g22*dy*dy );
+//    
+//         gradx= k*(dist-L)*(g11*dx+g12*dy)/dist;
+//         grady= k*(dist-L)*(g22*dy+g12*dx)/dist;
+// 
+//         xi[one] += gradx;
+//         xi[two] -= gradx;
+//         xi[one+num] += grady;
+//         xi[two+num] -= grady;
+//     }
 }
 
 

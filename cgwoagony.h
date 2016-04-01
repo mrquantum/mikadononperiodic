@@ -17,7 +17,7 @@ void CGAGONY(Eigen::VectorXd &XY,
              vector<vector<int>> &springpairs, 
              int bendingon, 
              double kappa, 
-             double g11, double g12, double g22);
+             double g11, double g12, double g22,double sheardeformation);
 
 void CGAGONY2(Eigen::VectorXd &XY,
              vector<spring> &springlist, 

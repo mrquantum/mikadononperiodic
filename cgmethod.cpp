@@ -15,7 +15,6 @@
 #define CGOLD 0.3819660
 #define ZEPS 1.0e-10
 #define MOV3(a,b,c, d,e,f) (a)=(d);(b)=(e);(c)=(f);
-//#include "nlopt.hpp"
 #include "structs.h"
 #include "cgmethod.h"
 
@@ -339,7 +338,7 @@ void frprmn(double p[],int n, double ftol, int *iter, double *fret,
     for(its=0;its<=ITMAX;its++){
         *iter=its; //how many cg steps
         dlinmin(p,xi,n,fret,func,dfunc,info);
-        if(2.0*fabs(*fret-fp) <=ftol*(fabs(*fret)+fabs(fp)+EPS)){
+        if(2.0*fabs(*fret-fp) <=ftol*(fabs(*fret)+fabs(fp)+EPS) && its>100){
             delete g;
             delete h;
             delete xi;

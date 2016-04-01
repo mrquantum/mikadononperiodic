@@ -27,6 +27,8 @@
 #include "cutsprings.h"
 #include "connectivity.h"
 #include "cgmethod.h"
+#include "stresstensor.h"
+#include "simpleBendingGrad.h"
 
 using namespace std;
 using namespace Eigen;
@@ -124,6 +126,7 @@ int main (int argc,char **argv)
     ofstream cluster("clusters.txt");
     ofstream clusterdata("clusterdata.txt", ios_base::app | ios_base::out);
     ofstream anglefile("angles.txt");
+    ofstream Stresstens("stresstensor.txt");
     char s[80];
     ofstream clusterdistribution(s);
 
@@ -158,7 +161,7 @@ int main (int argc,char **argv)
         VectorXd gradEn(gradE.size());
         VectorXd s0(gradE.size());
         double Z; //Connectivity
-        int Numberf=18;
+        int Numberf=5;
         //initiate the backgroundnetwork
         if(backGroundOn==1){
             XYb=makeSquareNetwork(Numberf,background);
@@ -168,7 +171,7 @@ int main (int argc,char **argv)
             cout<<"TRIANGLE"<<endl;
         }
 
-
+//mode =0 means fixed nr of sticks, mode=1 means fixed mean connectivity
     if(mode==0){
          if(NumberMikado>0){
                     XY=initiateRandomNetwork(springlist,springpairs,mikado,mikorig,ELONSTICK,Connection,nodes,
@@ -183,10 +186,15 @@ int main (int argc,char **argv)
                 Z=Connectivity(springlist);
     }
     
+    VectorXd effkappa(springpairs.size());
+    effkappa=EffKappa(springpairs,springlist,XY,kappa);
+    cout<<bendingOn<<"  BON"<<endl;
     
-    ofstream zfile("zfile.txt",ios_base::app | ios_base::out);
+    
+    //ofstream zfile("zfile.txt",ios_base::app | ios_base::out);
+    ofstream zfile("zfile.txt");
     if(mode==1){
-        int number=50;
+        int number=140;
         //initiate the mikadonetwork
         do{
             springlist.clear();
@@ -206,67 +214,38 @@ int main (int argc,char **argv)
                                             springfile,anglefile,mikadofile,clusterdistribution,cluster,
                                             clusterdata,nodefile);
                     Z=Connectivity(springlist);
-                    zfile<<NumberMikado<<"\t"<<Z<<endl;
+                    //zfile<<NumberMikado<<"\t"<<Z<<endl;
                 } else{
                     XY=XYb;
                     springlist=background;
                 }
                 
                 Z=Connectivity(springlist);
-                zfile<<NumberMikado<<"\t"<<Z<<endl;
+                //zfile<<NumberMikado<<"\t"<<Z<<endl;
+                //cout<<number<<"\t"<<Z<<endl;
                 number++;
         }while(Z<Z_aim);
     }
-
+        zfile<<NumberMikado<<"\t"<<Z<<endl;
         networkinfo info;
         info.g11=1.0;
         info.g12=0.0;
         info.g22=1.0;
+        info.sheardeformation=0.0;
         info.springlist=springlist;
         info.springpairs=springpairs;
         info.size=XY.size();
         info.kappa=kappa;
-
-        VectorXd Xi(XY.size());
-        HarmonicGradientn(XY.data(),Xi.data(),info);
-        VectorXd Xiold=HarmonicGradient(springlist,XY,1.0,0.0,1.0);
-
-        //test for the new CG method
-//         int iter;
-//         double fret;
-//         cout<<EnergyNetworkn(XY.data(),info)<<" FUCK NOH"<<endl;
-//         frprmn(XY.data(),XY.size(),1.0e-10,&iter,&fret,EnergyNetworkn,HarmonicGradientn,info);
-//         cout<<EnergyNetworkn(XY.data(),info)<<" FUCK YEAH"<<endl;
-//         //end test
-//         cout<<iter<<"       steps"<<endl;
-
+        
     Write_Springs_2txt(springfile,springlist);
-    
-    
-    //Here some testingcodm
-//     VectorXd bendingold;
-//     VectorXd bendingnew(XY.size());
-//     for(int i=0;i<XY.size();i++){
-//         bendingnew(i)=0;
-//     }
-//     
-//     //The PHYS BEND GRAD STILL NOT OK
-//     XY(11)=XY(11)+0.01;
-//     bendingold=BendingGrad(springpairs,springlist,XY,kappa,1.0,0.0,1.0);
-//     physbendinggradient(XY.data(),bendingnew.data(),info);
-//     
-//     double su=0.0;
-//     for(int i=0;i<bendingold.size();i++){
-//         //cout<<bendingold(i)<<"\t"<<bendingnew(i)<<"\t"<<bendingold(i)-bendingnew(i)<<endl;
-//         su+=pow(bendingold(i)-bendingnew(i),2);
-//     }
-//     cout<<"diff between two grads=  "<<sqrt(su)<<endl;
-    
-    
+
     //Shearing
     vector<vector<int>> springp(0);
     shearsteps(deltaboxdx,NumberStepsRight,NumberStepsLeft,springlist,
-            springpairs,XY,bendingOn,kappa,Nit,tolGradE,shearcoordinates,shearenergy);
+            springpairs,XY,bendingOn,kappa,effkappa,Nit,tolGradE,shearcoordinates,shearenergy,Stresstens);
+
+
+    
     XYfile.close();
     shearcoordinates.close();
     shearenergy.close();

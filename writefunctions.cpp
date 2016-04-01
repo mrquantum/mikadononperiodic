@@ -75,3 +75,8 @@ void Write_IndividualClusters_2txt(ofstream &cluster,vector<vector<int>> Cluster
     }
     cluster.close();
 }
+
+
+void Write_Stresstensor(ofstream &stresstens, double strain, stresstensor sigma){
+    stresstens<<strain<<"\t"<<sigma.sxx<<"\t"<<sigma.sxy<<"\t"<<sigma.syy<<"\t"<<0.5*(sigma.sxx+sigma.syy)<<endl;
+}

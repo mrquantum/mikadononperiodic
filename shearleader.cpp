@@ -25,6 +25,8 @@
 #include "cgwoagony.h"
 //#include <nlopt.h>
 #include "cgmethod.h"
+#include "stresstensor.h"
+#include "simpleBendingGrad.h"
 
 using namespace std;
 using namespace Eigen;
@@ -64,14 +66,15 @@ void shearsteps(double deltaboxdx,
                VectorXd &XY,
                 int bendingOn,
                double kappa,
+               VectorXd effkappa, 
                int Nit,
                double tolGradE,
                ofstream &shearcoordinates,
-               ofstream &shearenergy)
+               ofstream &shearenergy,
+               ofstream &Strestens)
               {
-  
+    
     double g11,g12,g22; //The components of the metric tensor
-  
     double boxdx=0.0;
     double EBEND,ESTRETCH,ETOT;
     VectorXd gradE(XY.size());
@@ -80,6 +83,7 @@ void shearsteps(double deltaboxdx,
     double lenGrad;
     int iter;
     double fret;
+    
     networkinfo info;
     info.g11=1.0;
     info.g12=0.0;
@@ -88,15 +92,13 @@ void shearsteps(double deltaboxdx,
     info.springpairs=springpairs;
     info.size=XY.size();
     info.bendingon=bendingOn;
-    //first do a calibtration
-    //frprmn(XY.data(),XY.size(),1.0e-10,&iter,&fret,EnergyNetworkn,HarmonicGradientn,info);
-    frprmn(XY.data(),XY.size(),1.0e-10,&iter,&fret,Efunc2use,grad2use,info);
-
+    info.sheardeformation=boxdx;
+    info.effkappa=effkappa;
+    frprmn(XY.data(),XY.size(),1e-20,&iter,&fret,Efunc2use,grad2use,info); //Do one calibration before shearing
     //CGAGONY(XY,springlist,springpairs,bendingOn,kappa,1.0,0.0,1.0);
-    //then shake
-    //XY=XY+shake(XY.size(),0.000001);
-    //minimize again;
-    //CGAGONY(XY,springlist,springpairs,bendingOn,kappa,1.0,0.0,1.0);
+    stresstensor S=StressTensor(springlist,XY,0.0);  
+    //cout<<"sigma_xx="<<S.sxx<<"\t sigma_xy="<<S.sxy<<"\t sigma_yy="<<S.syy<<endl;
+    Strestens<<boxdx<<"\t"<<S.sxx<<"\t"<<S.sxy<<"\t"<<S.syy<<"\t"<<0.5*(S.sxx+S.syy)<<endl;
 
     for(int k=0;k<(NumberStepsLeft+NumberStepsRight);k++){
         g11=1.0;
@@ -105,33 +107,25 @@ void shearsteps(double deltaboxdx,
         info.g11=1.0;
         info.g12=boxdx;
         info.g22=1.0+boxdx*boxdx;
-        //The right CG algorithm, works only w. harmonic springs now
-        cout<<"length before Harm\t"<<sqrt(HarmonicGradient(springlist,XY,g11,g12,g22).dot(HarmonicGradient(springlist,XY,g11,g12,g22)))<<endl;
-        cout<<"length before Bend\t"<<sqrt(BendingGrad(springpairs,springlist,XY,kappa,g11,g12,g22)
-            .dot(BendingGrad(springpairs,springlist,XY,kappa,g11,g12,g22)))<<endl;
-        
-	  //frprmn(XY.data(),XY.size(),1.0e-6,&iter,&fret,EnergyNetworkn,HarmonicGradientn,info);
-	   frprmn(XY.data(),XY.size(),1.0e-6,&iter,&fret,Efunc2use,grad2use,info);
-	   
-        //CGAGONY(XY,springlist,springpairs,bendingOn,kappa,g11,g12,g22);
+        info.sheardeformation=boxdx;
+	
+        //CGAGONY(XY,springlist,springpairs,bendingOn,kappa,g11,g12,g22,boxdx); //fast
+        frprmn(XY.data(),XY.size(),1e-30,&iter,&fret,Efunc2use,grad2use,info); //slow but better THIS ONE
+        S=StressTensor(springlist,XY,boxdx);
 
-	cout<<"Es= "<<fret<<endl;
-
-           cout<<"length after Harm\t"<<HarmonicGradient(springlist,XY,g11,g12,g22).dot(HarmonicGradient(springlist,XY,g11,g12,g22))<<endl;
-           cout<<"length after Bend\t"<<BendingGrad(springpairs,springlist,XY,kappa,g11,g12,g22).dot(BendingGrad(springpairs,springlist,XY,kappa,g11,g12,g22))<<endl;
-        
-        //cout<<"lengrad="<<lenGrad<<endl;
         Write_ShearCoordinates_2txt(shearcoordinates,XY);
-	ESTRETCH=EnergyNetworkn(XY.data(),info);
-	EBEND=EbendingCn(XY.data(),info);
-	Write_ShearEnergy_2txt(shearenergy,boxdx,fret,ESTRETCH,EBEND,lenGrad,iter);
+	//ESTRETCH=EnergyNetworkn(XY.data(),info);
+	ESTRETCH=StretchEnergy(springlist,XY,boxdx);
+        EBEND=BendEnergy(springpairs,springlist,XY,kappa,boxdx);
+
+        Write_ShearEnergy_2txt(shearenergy,boxdx,ESTRETCH+EBEND,ESTRETCH,EBEND,lenGrad,iter);
 
         if(k<NumberStepsRight){
             boxdx=boxdx+deltaboxdx;
         } else {
             boxdx=boxdx-deltaboxdx;
         }
-        cout<<"This was a shearstep     "<<k<<endl;
+        cout<<"This was a shearstep     "<<k<<" with    "<<iter<<endl;
     }
 }
 

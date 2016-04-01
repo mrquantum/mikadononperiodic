@@ -21,6 +21,7 @@
 #include <stdlib.h>
 #include "writefunctions.h"
 #include "shearleader.h"
+#include "simpleBendingGrad.h"
 
 using namespace std;
 using namespace Eigen;
@@ -30,7 +31,7 @@ void CGAGONY(VectorXd &XY,
              vector<vector<int>> &springpairs, 
              int bendingon, 
              double kappa, 
-             double g11, double g12, double g22){
+             double g11, double g12, double g22,double sheardeformation){
     int i=0;
     int k=0;
     int j;
@@ -47,7 +48,8 @@ void CGAGONY(VectorXd &XY,
     
     //Calculate the gradient
     if(bendingon==0){
-        r=HarmonicGradient(springlist,XY,g11,g12,g22);
+        //r=HarmonicGradient(springlist,XY,g11,g12,g22);
+        r=HarmonicGradPhys(springlist,XY,sheardeformation);
     } else {
         r=HarmonicGradient(springlist,XY,g11,g12,g22)+BendingGrad(springpairs,springlist,XY,kappa,g11,g12,g22);
     }
@@ -65,7 +67,8 @@ void CGAGONY(VectorXd &XY,
         sigma0=-alpha;
         deltad=d.dot(d);
         if(bendingon==0){
-            etaprev=(HarmonicGradient(springlist,XY+sigma0*d,g11,g12,g22)).dot(d);
+            //etaprev=(HarmonicGradient(springlist,XY+sigma0*d,g11,g12,g22)).dot(d);
+            etaprev=(HarmonicGradPhys(springlist,XY+sigma0*d,sheardeformation)).dot(d);
         } else{
             etaprev=(HarmonicGradient(springlist,XY+sigma0*d,g11,g12,g22)+
             BendingGrad(springpairs,springlist,XY+sigma0*d,kappa,g11,g12,g22)).dot(d);
@@ -73,7 +76,8 @@ void CGAGONY(VectorXd &XY,
         
         do{
             if(bendingon==0){
-                eta=(HarmonicGradient(springlist,XY,g11,g12,g22)).dot(d);
+                //eta=(HarmonicGradient(springlist,XY,g11,g12,g22)).dot(d);
+                eta=(HarmonicGradPhys(springlist,XY,sheardeformation)).dot(d);
              } else{
                 eta=(HarmonicGradient(springlist,XY,g11,g12,g22)+
                 BendingGrad(springpairs,springlist,XY,kappa,g11,g12,g22)).dot(d);
@@ -95,7 +99,8 @@ void CGAGONY(VectorXd &XY,
             }
         }while(brk==0 && (j<jmax && alpha*alpha*deltad>eps*eps));
         if(bendingon==0){
-            r=-HarmonicGradient(springlist,XY+sigma0*d,g11,g12,g22);
+            //r=-HarmonicGradient(springlist,XY+sigma0*d,g11,g12,g22);
+            r=-HarmonicGradPhys(springlist,XY+sigma0*d,sheardeformation);
         } else{
             r=-(HarmonicGradient(springlist,XY+sigma0*d,g11,g12,g22)+
             BendingGrad(springpairs,springlist,XY+sigma0*d,kappa,g11,g12,g22));
@@ -120,7 +125,7 @@ void CGAGONY(VectorXd &XY,
         }
         i++;
     }
-    cout<<endl;
+    cout<<i<<"  steps"<<endl;
 
 }
 

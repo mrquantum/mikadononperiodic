@@ -19,5 +19,6 @@ void Write_ShearCoordinates_2txt(ofstream &shearcoordinates,Eigen::VectorXd &XY)
 void Write_ShearEnergy_2txt(ofstream &shearenergy,double boxdx,double ETOT,double ESTRETCH, double EBEND, double lenGrad, int conjsteps);
 void Write_Angles_2txt(ofstream &anglefile,int node1,int node2,int node3);
 void Write_IndividualClusters_2txt(ofstream &cluster,vector<vector<int>> Clusterv);
+void Write_Stresstensor(ofstream &stresstens, double strain, stresstensor sigma);
 
 #endif
