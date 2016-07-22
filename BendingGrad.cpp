@@ -5,6 +5,7 @@
 #include "eigen3/Eigen/LU"
 #include "makemikadonetwork.h"
 #include "simpleBendingGrad.h"
+#include "newbendinggrad.h"
 
 const double pi=4.0*atan(1.0);
 
@@ -208,23 +209,17 @@ void BendinggradN(double *p,double *xi,networkinfo params)//wrapper function for
     int one,two,num=size/2;
     double kappa=params.kappa;
     double sheardeformation=params.sheardeformation;
-    VectorXd gradB(size);
+//     VectorXd gradB(size);
     triplet springpairsandkappa;
-    VectorXd effkappa=params.effkappa;
-    springpairsandkappa.EffKappa=effkappa;
+    //VectorXd effkappa=params.effkappa;
+    //springpairsandkappa.EffKappa=effkappa;
     springpairsandkappa.springpairs=springpairs;
     
     
-    for(int i=0;i<size;i++){
-        gradB(i)=0.0;
-    }
     Eigen::Map<Eigen::VectorXd> XY_temp( p, size );
-   
-    gradB=SimpleBendingGrad(springpairsandkappa,springlist,XY_temp,sheardeformation); //XY in
-    for(int i=0;i<gradB.size();i++){
-        xi[i]=gradB(i);
-    }
-    
+    Eigen::VectorXd XY_ref = XY_temp;
+    bendinggradnew(p,xi,size,springlist,springpairs,kappa,sheardeformation);
+
 }
 
 

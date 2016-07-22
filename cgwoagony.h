@@ -27,5 +27,6 @@ void CGAGONY2(Eigen::VectorXd &XY,
              double g11, double g12, double g22);
              
              
-             
+int cg_method(Eigen::VectorXd &XY,vector<spring> &springlist,vector<vector<int > > &springpairs,double kappa,double sheardeformation);
+
 #endif

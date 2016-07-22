@@ -354,8 +354,8 @@ double rlenshort, double rlenlong,double k1,double k2,double stretchf,vector<spr
                 node1=nodesonsticki[j]+background_size;
                 node2=nodesonsticki[j+1]+background_size;
                 lenspring=posonsticki[j+1]-posonsticki[j];
-                //springconstant=lenspring*k1/CURRENTSTICK.length;
-                springconstant=0.5;
+                springconstant=lenspring*k1/CURRENTSTICK.length;
+//                 springconstant=0.5;
                 double x1, x2, y1, y2;
                 x1=CURRENTSTICK.x+posonsticki[j]*cos(CURRENTSTICK.th); //calculate the position of the node
                 x2=CURRENTSTICK.x+posonsticki[j+1]*cos(CURRENTSTICK.th);//and the position of the adjacent one
@@ -379,7 +379,7 @@ double rlenshort, double rlenlong,double k1,double k2,double stretchf,vector<spr
                 double xbn1,xbn2,ybn1,ybn2,xm,ym;
                 double xm1,xm2,ym1,ym2;
                 
-                
+                //first and last element
                 if(j==0 && ELONSTICK[i].type[0]==1){
                     makeanddeletebondsonbackground(springlist,ELONSTICK,CURRENTSTICK,posonsticki,Xb,Yb,background_size,i,0);
                 }
@@ -393,31 +393,19 @@ double rlenshort, double rlenlong,double k1,double k2,double stretchf,vector<spr
     //sort the nodes and if the background absent remove double nodes.
     //in the other case this happens in makeanddeletebondsonbackground
     std::sort(nodes.begin(),nodes.end());
-//     for(int i=0;i<nodes.size();i++){
-//         cout<<nodes[i].number<<"\t"<<nodes[i].x<<"\t"<<nodes[i].y<<endl;
-//     }
-//     
-    
     if(background.size()==0) {
         ordernodes(nodes,springlist);
     }
-    
-//       for(int i=0;i<nodes.size();i++){
-//         cout<<nodes[i].number<<"\t"<<nodes[i].x<<"\t"<<nodes[i].y<<endl;
-//     }
-    
+ 
     int mi=0;
     int ma=0;
-    
     for(int i=0;i<springlist.size();i++){
         springlist[i].one>ma ? ma=springlist[i].one : ma;
         springlist[i].two>ma ? ma=springlist[i].two : ma;
 
     }
 }
-//    // cout<<"the max spring index is      "<<ma<<endl;
-//     
-    
+
 // void makeSpringsAndNodes(const vector<elonstick> &ELONSTICK,const vector<stick> &mikorig, vector<spring> &springlist,
 // vector<node> &nodes,
 // double rlenshort, double rlenlong,double k1,double k2,double stretchf,vector<spring> &background,VectorXd &XYb)
@@ -548,9 +536,9 @@ double rlenshort, double rlenlong,double k1,double k2,double stretchf,vector<spr
 //             }
 // 
 //             //check for the other elements
-// //             if(ELONSTICK[i].type[j+1]==1){
-// //                 makeanddeletebondsonbackground(springlist,ELONSTICK,CURRENTSTICK,posonsticki,Xb,Yb,background_size,i,j+1);
-// //             }
+//             if(ELONSTICK[i].type[j+1]==1){
+//                 makeanddeletebondsonbackground(springlist,ELONSTICK,CURRENTSTICK,posonsticki,Xb,Yb,background_size,i,j+1);
+//             }
 //             
 //             //THIS SHOULD BE ONE FUNCTION
 //             if(ELONSTICK[i].type[j+1]==1){
@@ -703,19 +691,7 @@ void makeSticks(vector<stick> &mikado,vector<stick> &mikorig,const int NumberMik
 }
     
 
-void makeConnections(vector<connected> &Connection,
-                     const vector<stick> &mikado,
-                     const double LStick,
-                     const vector<spring> &background,
-                     const Eigen::VectorXd &XYb)
-{
-    make_connections(Connection,
-                     mikado,
-                     LStick,
-                     background,
-                     XYb
-                    ); 
-}
+
 
 spring makespring(int node1,int node2,double x1,double x2, double y1, double y2,int stick,double k,double stretchf)
 {
@@ -858,7 +834,6 @@ void makeanddeletebondsonbackground(vector<spring> &springlist,const vector<elon
                         break;
         }
     }
-
 }
 
 void ordernodes(vector<node> &nodes,vector<spring> &springlist){

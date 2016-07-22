@@ -45,15 +45,17 @@ struct node{
   double y;
 };
 
-struct networkinfo{
-    std::vector<spring> springlist;
-    std::vector<std::vector<int>> springpairs;
+class networkinfo {
+public:
+    networkinfo( std::vector<spring> &springlist_in, std::vector<std::vector<int>> &springpairs_in): springlist(springlist_in), springpairs(springpairs_in){};
+    std::vector<spring>& springlist;
+    std::vector<std::vector<int>>& springpairs;
     double g11,g12,g22;
     double sheardeformation;
     double kappa;
     int bendingon;
     int size;
-    Eigen::VectorXd effkappa;
+//     Eigen::VectorXd effkappa;
 };
 
 struct triplet{

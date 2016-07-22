@@ -29,6 +29,9 @@
 #include "cgmethod.h"
 #include "stresstensor.h"
 #include "simpleBendingGrad.h"
+#include "test.h"
+#include "newbendinggrad.h"
+
 
 using namespace std;
 using namespace Eigen;
@@ -127,6 +130,7 @@ int main (int argc,char **argv)
     ofstream clusterdata("clusterdata.txt", ios_base::app | ios_base::out);
     ofstream anglefile("angles.txt");
     ofstream Stresstens("stresstensor.txt");
+    ofstream EN("relax.txt",ios_base::app | ios_base::out);
     char s[80];
     ofstream clusterdistribution(s);
 
@@ -150,8 +154,8 @@ int main (int argc,char **argv)
     int mode=Mikadoparameters.mode;
     double Z_aim=Mikadoparameters.Z_aim;
     
-//     cout<<"The number of rightssteps= "<<NumberStepsRight<<endl;
-//     cout<<"The number of leftsteps= "<<NumberStepsLeft<<endl;
+    cout<<"The number of rightssteps= "<<NumberStepsRight<<endl;
+    cout<<"The number of leftsteps= "<<NumberStepsLeft<<endl;
 
     
         vector<spring> background(0);
@@ -161,7 +165,7 @@ int main (int argc,char **argv)
         VectorXd gradEn(gradE.size());
         VectorXd s0(gradE.size());
         double Z; //Connectivity
-        int Numberf=5;
+        int Numberf=6;
         //initiate the backgroundnetwork
         if(backGroundOn==1){
             XYb=makeSquareNetwork(Numberf,background);
@@ -171,7 +175,38 @@ int main (int argc,char **argv)
             cout<<"TRIANGLE"<<endl;
         }
 
-//mode =0 means fixed nr of sticks, mode=1 means fixed mean connectivity
+        
+        //This code tests the new bending gradient
+//         vector<vector<int>> springpairtest(0);
+//         vector<int> sppair(0);
+//         sppair.push_back(0);
+//         sppair.push_back(1);
+//         springpairtest.push_back(sppair);
+//         
+//         vector<spring> testbend(0);
+//         spring testspring;
+//         testspring.one=0;
+//         testspring.two=1;
+//         testspring.wlr=0;
+//         testspring.wud=0;
+//         
+//         testbend.push_back(testspring);
+//         
+//         testspring.one=1;
+//         testspring.two=2;
+//         testspring.wlr=0;
+//         testspring.wud=0;
+//         testbend.push_back(testspring);
+//         
+// //         VectorXd XY(6);
+//         XY<<0,1,0,0.2,.4,.6;
+
+        //Till here!
+        
+
+        
+        
+// mode =0 means fixed nr of sticks, mode=1 means fixed mean connectivity
     if(mode==0){
          if(NumberMikado>0){
                     XY=initiateRandomNetwork(springlist,springpairs,mikado,mikorig,ELONSTICK,Connection,nodes,
@@ -188,7 +223,7 @@ int main (int argc,char **argv)
     
     VectorXd effkappa(springpairs.size());
     effkappa=EffKappa(springpairs,springlist,XY,kappa);
-    cout<<bendingOn<<"  BON"<<endl;
+    cout<<bendingOn<<"  Bend_ON"<<endl;
     
     
     //ofstream zfile("zfile.txt",ios_base::app | ios_base::out);
@@ -227,29 +262,31 @@ int main (int argc,char **argv)
         }while(Z<Z_aim);
     }
         zfile<<NumberMikado<<"\t"<<Z<<endl;
-        networkinfo info;
+        
+        networkinfo info(springlist,springpairs);
         info.g11=1.0;
         info.g12=0.0;
         info.g22=1.0;
         info.sheardeformation=0.0;
-        info.springlist=springlist;
-        info.springpairs=springpairs;
+//         info.springlist=springlist;
+//         info.springpairs=springpairs;
         info.size=XY.size();
         info.kappa=kappa;
         
     Write_Springs_2txt(springfile,springlist);
-
     //Shearing
     vector<vector<int>> springp(0);
     shearsteps(deltaboxdx,NumberStepsRight,NumberStepsLeft,springlist,
-            springpairs,XY,bendingOn,kappa,effkappa,Nit,tolGradE,shearcoordinates,shearenergy,Stresstens);
+            springpairs,XY,bendingOn,kappa,Nit,tolGradE,shearcoordinates,shearenergy,Stresstens,EN);
 
 
     
     XYfile.close();
     shearcoordinates.close();
     shearenergy.close();
-    zfile.close();
+//     zfile.close();
+    
+    
     cout<<endl;
     return 0;
 }

@@ -103,8 +103,6 @@ void combineElementsOnMikado(vector<connected> &connection,vector<elonstick> &el
 
    elements=Elements; 
     
-    
-  
-  
+
   
 }

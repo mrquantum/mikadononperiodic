@@ -63,20 +63,13 @@ VectorXd initiateRandomNetwork(vector<spring> &springlist,
     vector<int> order;
     makeSticks(mikado,mikorig,NumberMikado,LStick);
     Write_Mikado_2txt(mikadofile,mikado);
-//     makeConnections(Connection,mikado,LStick,background,XYb); 
     make_connections(Connection,mikado,LStick,background,XYb); 
     sortELEMENTSperMIKADO(ELONSTICK,Connection);
     orderElonstick(order,ELONSTICK); 
-//     for(int i=0;i<ELONSTICK.size();i++){
-//         cout<<ELONSTICK[i].sticki<<endl;
-//             for(int j=0;j<ELONSTICK[i].nr.size();j++){
-//                 cout<<ELONSTICK[i].nr[j]<<"     ";
-//             }
-//             cout<<endl;
-//     }
-    
     makeSpringsAndNodes(ELONSTICK,mikorig,springlist,nodes,rlenshort,rlenlong,k1,k2,stretchf,background,XYb);//Make the springs and Nodes. 
     Write_Springs_2txt(springfile,springlist);
+
+
     //make a table with sticks that are connected
 //     vector<int> NEWROW(2);
 //     vector<vector<int>> ConnectSticks;

@@ -95,8 +95,8 @@ double EbendingC(const vector< vector< int > > &springpairs,
 
 double EbendingCn(double *XY, networkinfo parameters) //This is the wrapper E funct that the CG frmp accepts
 {
-    const vector<spring> springlist=parameters.springlist;
-    const vector<vector<int>> springpairs=parameters.springpairs;
+//     const vector<spring> springlist=parameters.springlist;
+//     const vector<vector<int>> springpairs=parameters.springpairs;
     double g11=parameters.g11;
     double g12=parameters.g12;
     double g22=parameters.g22;
@@ -107,7 +107,11 @@ double EbendingCn(double *XY, networkinfo parameters) //This is the wrapper E fu
     double E=0.0;
     
     Eigen::Map<Eigen::VectorXd> XY_temp( XY, size );
-    E=BendEnergy(springpairs,springlist,XY_temp,kappa,sheardeformation);
-    
+
+//     cout << "In CG algorithm: " << XY_temp(600) << "\t" << kappa << "\t" << sheardeformation << "\t" << parameters.springpairs[80][0] << "\t" << parameters.springlist[80].one << endl;
+
+    E=BendEnergy(parameters.springpairs,parameters.springlist,XY_temp,kappa,sheardeformation);
+//     cout << "RESULT: " << E << endl;
+
     return E;
 }

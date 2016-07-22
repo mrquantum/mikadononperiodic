@@ -4,6 +4,8 @@
 #include "eigen3/Eigen/Core"
 #include "eigen3/Eigen/LU"
 #include "eigen3/Eigen/Sparse"
+#include <fstream>
+
 
 #define ITMAX 1e6
 #define EPS 1.0e-10
@@ -314,8 +316,10 @@ void mnbrak(double *ax, double *bx, double *cx, double *fa, double *fb, double *
 }
 
 void frprmn(double p[],int n, double ftol, int *iter, double *fret,
-            double (*func)(double [],networkinfo), void (*dfunc)(double [],double [],networkinfo),networkinfo info)
+            double (*func)(double [],networkinfo), void (*dfunc)(double [],double [],networkinfo),networkinfo &info,ofstream &EN)
 {
+    
+    
     
     //void dlinmin(double p[],double xi[],int n, double *fret,
     //            double (*func)(double [],networkinfo),void (*dfunc)(double[], double [],networkinfo info));
@@ -326,9 +330,10 @@ void frprmn(double p[],int n, double ftol, int *iter, double *fret,
     g=dvector(n);
     h=dvector(n);
     xi=dvector(n);
+
     fp=(*func)(p,info);
     (*dfunc)(p,xi,info); //calculates the gradient vector xi at position p
-    
+
     for(j=0;j<n;j++){
         g[j]=-xi[j];
         xi[j]=h[j]=g[j];
@@ -345,6 +350,12 @@ void frprmn(double p[],int n, double ftol, int *iter, double *fret,
             return;
         }
         fp=*fret;
+        double gsq=0.0;
+        
+        for(int ii=0;ii<n;ii++){
+            gsq=gsq+xi[ii]*xi[ii];
+        }
+        EN<<info.sheardeformation<<"\t"<<fp<<"\t"<<gsq<<endl;
         (*dfunc)(p,xi,info);
         dgg=gg=0.0;
         for(j=0;j<n;j++){

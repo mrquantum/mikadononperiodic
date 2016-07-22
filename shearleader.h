@@ -24,7 +24,8 @@
 #include "writefunctions.h"
 #include "cgwoagony.h"
 #include "structs.h"
-
+#include <iostream>
+#include <fstream>
 
 using namespace std;
 
@@ -42,12 +43,12 @@ void shearsteps(double deltaboxdx,
 	       Eigen::VectorXd &XY,
 	       int bendingOn,
 	       double kappa,
-               Eigen::VectorXd effkappa,
 	       int Nit,
 	       double tolGradE,
 	       ofstream &shearcoordinates,
 	       ofstream &shearenergy,
-               ofstream &Strestens);
+               ofstream &Strestens,
+               ofstream &EN);
 
 Eigen::VectorXd shake(int size, double Temperature);
 double EnergyNLopt(unsigned n, const double *XY, double *gradE, void *my_func_data);

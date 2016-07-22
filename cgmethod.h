@@ -2,6 +2,7 @@
 #define CGMETHOD_H
 
 #include "structs.h"
+#include <fstream>
 
 void mnbrak(double *ax, double *bx, double *cx, double *fa, double *fb, double *fc,
             double (*func)(double,networkinfo info),networkinfo info);
@@ -16,7 +17,7 @@ double brent(double ax,double bx,double cx,double (*f)(double,networkinfo info),
             double *xmin,networkinfo info);
 double *dvector( int size );
 void frprmn(double p[],int n, double ftol, int *iter, double *fret,
-            double (*func)(double [],networkinfo info), void (*dfunc)(double [],double [],networkinfo info),networkinfo info);
+            double (*func)(double [],networkinfo), void (*dfunc)(double [],double [],networkinfo),networkinfo &info,std::ofstream &EN);
 
 
 

@@ -49,11 +49,7 @@ bool operator<(const stick &first, const stick &second);
 
 void makeSticks(std::vector<stick> &mikado,std::vector<stick> &mikorig,const int NumberMikado,const double LStick);
 
-void makeConnections(std::vector<connected> &Connection,
-                     const std::vector<stick> &mikado,
-                     const double LStick,
-                     const std::vector<spring> &background,
-                     const Eigen::VectorXd &XYb);
+
 
 
 

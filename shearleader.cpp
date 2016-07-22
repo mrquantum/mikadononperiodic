@@ -27,31 +27,60 @@
 #include "cgmethod.h"
 #include "stresstensor.h"
 #include "simpleBendingGrad.h"
+#include "newbendinggrad.h"
 
 using namespace std;
 using namespace Eigen;
 
 double Efunc2use(double *p,networkinfo parameters){
   double E;
+//   cout<<"test ef"<<endl;
   int bendingon=parameters.bendingon;
   if(bendingon==0){
       E=EnergyNetworkn(p,parameters);
   } else if(bendingon ==1){
+//      cout<<"test ef"<<endl;
+
       E=EnergyNetworkn(p,parameters)+EbendingCn(p,parameters);
-  }
+
+//         cout<<"test ef"<<endl;
+
+}
   return E;
 }
 
 void grad2use(double *p,double *xi, networkinfo parameters)
 {
+//   cout<<"test g222"<<endl;
   int bendingOn=parameters.bendingon;
+  int size=parameters.size;
+//         cout << parameters.springlist.size() << endl;
+
+//   vector<spring> springlist=parameters.springlist;
+//   vector<vector<int > > springpairs=parameters.springpairs;
+  double sheardeformation=parameters.sheardeformation;
+  double kappa=parameters.kappa;
+  //Setting the gradient to 0
+  for(int i=0;i<size;i++){
+      xi[i]=0.0;
+  }
+  
   if(bendingOn==0){
-      HarmonicGradientn(p,xi,parameters);
+    HarmonicGradPhys(parameters.springlist,p,xi,size,sheardeformation);
   }else if(bendingOn==1){
-      HarmonicGradientn(p,xi,parameters);
-      int size=parameters.size;
-      double xb[size];
-      BendinggradN(p,xb,parameters);
+//       cout << parameters.springlist.size() << endl;
+    HarmonicGradPhys(parameters.springlist,p,xi,size,sheardeformation);
+//         cout<<"test g"<<endl;
+
+      double xb[size]; //define bendinggrad and set to 0.0
+      for(int j=0;j<size;j++){
+          xb[j]=0.0;
+      }
+
+      bendinggradnew(p,xb,size,parameters.springlist,parameters.springpairs,kappa,sheardeformation);
+//         cout<<"test g"<<endl;
+
+      //Contruct the total gradient.
       for(int j=0;j<size;j++){
 	xi[j]=xi[j]+xb[j];
       }
@@ -66,14 +95,13 @@ void shearsteps(double deltaboxdx,
                VectorXd &XY,
                 int bendingOn,
                double kappa,
-               VectorXd effkappa, 
                int Nit,
                double tolGradE,
                ofstream &shearcoordinates,
                ofstream &shearenergy,
-               ofstream &Strestens)
+               ofstream &Strestens,
+               ofstream &EN)
               {
-    
     double g11,g12,g22; //The components of the metric tensor
     double boxdx=0.0;
     double EBEND,ESTRETCH,ETOT;
@@ -84,20 +112,22 @@ void shearsteps(double deltaboxdx,
     int iter;
     double fret;
     
-    networkinfo info;
+    networkinfo info(springlist,springpairs);
     info.g11=1.0;
     info.g12=0.0;
     info.g22=1.0;
-    info.springlist=springlist;
-    info.springpairs=springpairs;
+//     info.springlist=springlist;
+//     info.springpairs=springpairs;
     info.size=XY.size();
     info.bendingon=bendingOn;
     info.sheardeformation=boxdx;
-    info.effkappa=effkappa;
-    frprmn(XY.data(),XY.size(),1e-20,&iter,&fret,Efunc2use,grad2use,info); //Do one calibration before shearing
-    //CGAGONY(XY,springlist,springpairs,bendingOn,kappa,1.0,0.0,1.0);
+    info.kappa=kappa;
+
+    //XY is in BOX coordinates 
+   frprmn(XY.data(),XY.size(),1e-20,&iter,&fret,Efunc2use,grad2use,info,EN); //Do one calibration before shearing
+//     frprmn(XY.data(),XY.size(),1e-12,&iter,&fret,NULL,NULL,info); //Do one calibration before shearing
+//     CGAGONY(XY,springlist,springpairs,bendingOn,kappa,1.0,0.0,1.0,0.0);
     stresstensor S=StressTensor(springlist,XY,0.0);  
-    //cout<<"sigma_xx="<<S.sxx<<"\t sigma_xy="<<S.sxy<<"\t sigma_yy="<<S.syy<<endl;
     Strestens<<boxdx<<"\t"<<S.sxx<<"\t"<<S.sxy<<"\t"<<S.syy<<"\t"<<0.5*(S.sxx+S.syy)<<endl;
 
     for(int k=0;k<(NumberStepsLeft+NumberStepsRight);k++){
@@ -109,14 +139,16 @@ void shearsteps(double deltaboxdx,
         info.g22=1.0+boxdx*boxdx;
         info.sheardeformation=boxdx;
 	
-        //CGAGONY(XY,springlist,springpairs,bendingOn,kappa,g11,g12,g22,boxdx); //fast
-        frprmn(XY.data(),XY.size(),1e-30,&iter,&fret,Efunc2use,grad2use,info); //slow but better THIS ONE
-        S=StressTensor(springlist,XY,boxdx);
+//         CGAGONY(XY,springlist,springpairs,bendingOn,kappa,g11,g12,g22,boxdx); //fast
+        frprmn(XY.data(),XY.size(),1e-15,&iter,&fret,Efunc2use,grad2use,info,EN); //slow but better THIS ONE
 
+        S=StressTensor(springlist,XY,boxdx);
         Write_ShearCoordinates_2txt(shearcoordinates,XY);
 	//ESTRETCH=EnergyNetworkn(XY.data(),info);
 	ESTRETCH=StretchEnergy(springlist,XY,boxdx);
+//         cout << "Now EBEND: " << XY(600) << "\t" << kappa << "\t" << boxdx << "\t" << springpairs[80][0] << "\t" << springlist[80].one <<  endl;
         EBEND=BendEnergy(springpairs,springlist,XY,kappa,boxdx);
+//         cout << "RESULT: " << EBEND << endl;
 
         Write_ShearEnergy_2txt(shearenergy,boxdx,ESTRETCH+EBEND,ESTRETCH,EBEND,lenGrad,iter);
 
@@ -130,16 +162,6 @@ void shearsteps(double deltaboxdx,
 }
 
 
-VectorXd shake(int size, double Temperature){
-    my_random::get_gre(2);
-    VectorXd dXY(size);
-    for(int i=0 ;i<size;        i++){
-        dXY(i)=Temperature*(randf()-0.5);
-    }
-    
-    return dXY;
-    
-}
 
 double EnergyNLopt(unsigned n, const double *XY, double *gradE, void *my_func_data)
 {       

@@ -130,21 +130,16 @@ void HarmonicGradientn(double *p,double *xi,networkinfo params)
     double dx,dy,k,L,dist;
     double gradx,grady;
         
-    double *x=p;
-    double *y=p+num;
+
     
     //make sure that the gradient is zero to begin with;
     for(int i=0;i<size;i++){
         xi[i]=0;
     }
     
-    Eigen::Map<Eigen::VectorXd> XY_temp( p, size );
 
-    VectorXd grad=HarmonicGradPhys(springlist,XY_temp,sheardeformation);
+    HarmonicGradPhys(springlist,p,xi,size,sheardeformation);
 
-    for(int i=0;i<grad.size();i++){
-        xi[i]=grad(i);
-    }
     
     
     
@@ -166,9 +161,6 @@ void HarmonicGradientn(double *p,double *xi,networkinfo params)
 //         xi[two+num] -= grady;
 //     }
 }
-
-
-
 
 
 
