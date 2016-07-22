@@ -355,7 +355,7 @@ void frprmn(double p[],int n, double ftol, int *iter, double *fret,
         for(int ii=0;ii<n;ii++){
             gsq=gsq+xi[ii]*xi[ii];
         }
-        EN<<info.sheardeformation<<"\t"<<fp<<"\t"<<gsq<<endl;
+//         EN<<info.sheardeformation<<"\t"<<fp<<"\t"<<gsq<<endl;
         (*dfunc)(p,xi,info);
         dgg=gg=0.0;
         for(j=0;j<n;j++){
